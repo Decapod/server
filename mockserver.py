@@ -4,6 +4,7 @@ It always pretends there are two cameras connected and returns images from the
 local filesystem instead of using gphoto.
 """
 
+import dserver_env
 import cherrypy
 import glob
 import os
@@ -203,7 +204,8 @@ class MockServer(object):
 
     @cherrypy.expose
     def capture(self):
-        html_path = "../capture/html/Capture.html"
+        # TODO: Hardcoded path. Remove it.
+        html_path = "../decapod-ui/components/capture/html/Capture.html"
         file = open(html_path)
         content = file.read()
         file.close()

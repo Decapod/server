@@ -5,6 +5,7 @@ deleting, generating thumbnails). It can be used with any client using the
 provided uniform interface for accessing and modifying images.
 """
 
+import dserver_env
 import cherrypy
 import glob
 import os
@@ -253,7 +254,8 @@ class DecapodServer(object):
 
     @cherrypy.expose
     def capture(self):
-        html_path = "../capture/html/Capture.html"
+        # TODO: Hardcoded path. Remove it.
+        html_path = "../decapod-ui/components/capture/html/Capture.html"
         file = open(html_path)
         content = file.read()
         file.close()
