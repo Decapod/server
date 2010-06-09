@@ -1,3 +1,3 @@
 import os.path
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
+server_dir = os.path.dirname(os.path.abspath(__file__))

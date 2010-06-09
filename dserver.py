@@ -14,7 +14,8 @@ import sys
 from PIL import Image
 
 imageIndex = 0
-imagePath = "testData/capturedImages" #TODO: change to a better path FLUID-3538
+#TODO: change to a better path FLUID-3538
+imagePath = os.path.join(dserver_env.server_dir, "testData/capturedImages")
 
 class ImageController(object):
     """Main class for manipulating images.
@@ -255,7 +256,8 @@ class DecapodServer(object):
     @cherrypy.expose
     def capture(self):
         # TODO: Hardcoded path. Remove it.
-        html_path = "../decapod-ui/components/capture/html/Capture.html"
+        html_path = os.path.join(dserver_env.server_dir, \
+                                 "../decapod-ui/components/capture/html/Capture.html")
         file = open(html_path)
         content = file.read()
         file.close()
