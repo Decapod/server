@@ -4,6 +4,7 @@ import urllib
 import cherrypy
 import simplejson
 import sys
+import glob
 sys.path.append(os.path.abspath('..'))
 import mockserver
 from cherrypy.test import helper
@@ -14,17 +15,19 @@ current_dir = os.path.abspath(os.path.dirname(__file__))
 def setup_server():
     """ Starts the server, using the cherrypy.tree.mount function """
     
-    parent = os.path.abspath(os.path.dirname('../'))
-    configPath = os.path.join(parent, 'dserver.conf')
     root = mockserver.MockServer()
     root.images = mockserver.ImageController()
     root.pdf = mockserver.Export()
-    cherrypy.tree.mount(root, "/", configPath)
+    cherrypy.tree.mount(root, "/", mockserver.resources.cherryPyConfig())
 
 class TestRequests(helper.CPWebCase):
     
-    # 
     jsonHeader = [("Accept", "application/json")]
+    
+    def tearDown(self):
+        imagePaths = glob.glob(os.path.join(mockserver.resources.filePath("capturedImages"), "*"))
+        for imagePath in imagePaths:
+            os.remove(imagePath)
     
     def assertJSON(self, numKeys=None):
         """ 
@@ -90,24 +93,24 @@ class TestRequests(helper.CPWebCase):
         secondImageName = "Image1"
         
         # Test the left and right image URLs.
-        self.assertEqual(result["left"], firstImageName + ".jpg", \
-                         "The URL for the first image should be relative to the testData resource. Actual is: " \
+        self.assertEqual(result["left"], "/capturedImages/" + firstImageName + ".jpg", \
+                         "The URL for the first image should be relative to the capturedImages resource. Actual is: " \
                          + result["left"])
-        self.assertEqual(result["right"], firstImageName + ".jpg", \
-                         "The URL for the second image should be relative to the testData resource. Actual is: " \
+        self.assertEqual(result["right"], "/capturedImages/" + secondImageName + ".jpg", \
+                         "The URL for the second image should be relative to the capturedImages resource. Actual is: " \
                          + result["right"])
         
         # Check the spread image and thumbnail URLs. They should be:
         #   * Relative to the /testData resource
         #   * a concatenation of the first and second image names
         #   * thumbnails should have -thumb suffix
-        spreadImageName = "/testData/" + firstImageName + "-" + secondImageName
+        spreadImageName = "/capturedImages/" + firstImageName + "-" + secondImageName
         self.assertEqual(result["spread"], spreadImageName + ".png", \
-                        "The URL for spread image should be relative to the testData resource. Actual value is: " \
+                        "The URL for spread image should be relative to the capturedImages resource. Actual value is: " \
                         + result["spread"])
          
-        self.assertEqual(result["thumb"], spreadImageName + "-thumb.png", \
-                         "The URL for spread thumbnail should be relative to the testData resource. Actual value is:" \
+        self.assertEqual(result["thumb"], spreadImageName + "-thumb.jpg", \
+                         "The URL for spread thumbnail should be relative to the capturedImages resource. Actual value is:" \
                          + result["thumb"])
         
 

@@ -13,12 +13,15 @@ import sys
 from PIL import Image
 
 imageIndex = 0
-resources = resourcesource.ResourceSource("decapod-resource-config.json")
+resources = resourcesource.ResourceSource(os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json"))
 
  #TODO: change to a better path FLUID-3538
 mockImagesPath = resources.filePath("mockImages")
 capturedImagesPath = resources.filePath("capturedImages")
 
+if os.path.exists(capturedImagesPath) == False:
+    os.mkdir(capturedImagesPath)
+    
 class ImageController(object):
     """Main class for manipulating images.
 
