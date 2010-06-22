@@ -5,7 +5,7 @@ deleting, generating thumbnails). It can be used with any client using the
 provided uniform interface for accessing and modifying images.
 """
 
-import dserver_env
+import resourcesource
 import cherrypy
 import glob
 import os
@@ -15,7 +15,7 @@ from PIL import Image
 
 imageIndex = 0
 #TODO: change to a better path FLUID-3538
-imagePath = os.path.join(dserver_env.server_dir, "testData/capturedImages")
+imagePath = os.path.join(resourcesource.serverBasePath, "testData/capturedImages")
 
 class ImageController(object):
     """Main class for manipulating images.
@@ -256,7 +256,7 @@ class DecapodServer(object):
     @cherrypy.expose
     def capture(self):
         # TODO: Hardcoded path. Remove it.
-        html_path = os.path.join(dserver_env.server_dir, \
+        html_path = os.path.join(resourcesource.serverBasePath, \
                                  "../decapod-ui/components/capture/html/Capture.html")
         file = open(html_path)
         content = file.read()

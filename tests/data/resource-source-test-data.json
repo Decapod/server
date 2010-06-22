@@ -1,0 +1,6 @@
+{
+	"js": {
+		"target": "/js",
+		"source": "../decapod-ui/components/capture/js"
+	}
+}

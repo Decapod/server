@@ -1,0 +1,26 @@
+{
+	"infusion": {
+		"target": "/infusion",
+		"source": "../decapod-ui/infusion"
+	},
+	
+	"components": {
+		"target": "/components",
+		"source": "../decapod-ui/components"
+	},
+	
+	"js": {
+		"target": "/js",
+		"source": "../decapod-ui/components/capture/js"
+	},
+	
+	"css": {
+		"target": "/css",
+		"source": "../decapod-ui/components/capture/css"
+	},
+	
+	"testData": {
+		"target": "/testData",
+		"source": "testData"
+	}
+}

@@ -30,7 +30,7 @@ class TestRequests(helper.CPWebCase):
         """ 
         A convenience function for testing the json data returned from a request. 
         Currently only tests that the Content-Type is 'application/json' and the 
-        length matches the numKeys arguement 
+        length matches the numKeys argument 
         """
         
         self.assertHeader("Content-Type", "application/json")
@@ -77,18 +77,40 @@ class TestRequests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertJSON(0)
     
-    def test_03_postImages(self):
+    def test_03_takeImagesPOST(self):
         """
-        Tests the POST request for adding images.
+        Tests the POST request for taking a new image.
         """
         postBody = ""
         self.getPage("/images/", method="POST", body=postBody, headers=self.jsonHeader)
         self.assertStatus(200)
-        json = self.assertJSON(4)
-        self.failUnless(json["spread"])
-        self.failUnless(json["thumb"])
-        self.failUnless(json["left"])
-        self.failUnless(json["right"])
+        result = self.assertJSON(4)
+        
+        firstImageName = "Image0"
+        secondImageName = "Image1"
+        
+        # Test the left and right image URLs.
+        self.assertEqual(result["left"], firstImageName + ".jpg", \
+                         "The URL for the first image should be relative to the testData resource. Actual is: " \
+                         + result["left"])
+        self.assertEqual(result["right"], firstImageName + ".jpg", \
+                         "The URL for the second image should be relative to the testData resource. Actual is: " \
+                         + result["right"])
+        
+        # Check the spread image and thumbnail URLs. They should be:
+        #   * Relative to the /testData resource
+        #   * a concatenation of the first and second image names
+        #   * thumbnails should have -thumb suffix
+        spreadImageName = "/testData/" + firstImageName + "-" + secondImageName
+        self.assertEqual(result["spread"], spreadImageName + ".png", \
+                        "The URL for spread image should be relative to the testData resource. Actual value is: " \
+                        + result["spread"])
+         
+        self.assertEqual(result["thumb"], spreadImageName + "-thumb.png", \
+                         "The URL for spread thumbnail should be relative to the testData resource. Actual value is:" \
+                         + result["thumb"])
+        
+
     
     def test_04_postPDF(self):
         """
