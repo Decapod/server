@@ -19,7 +19,7 @@ class ResourceSourceTest(unittest.TestCase):
         jsPath = self.resourceSource.filePath("js")
         self.assertEquals(jsPath, \
                           resourcesource.serverBasePath \
-                          + "../decapod-ui/components/capture/js")
+                          + "/" + "../decapod-ui/components/capture/js")
         
         # Test an invalid resource name
         invalidPath = self.resourceSource.filePath("invalid")

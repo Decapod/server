@@ -19,8 +19,13 @@
 		"source": "../decapod-ui/components/capture/css"
 	},
 	
-	"testData": {
-		"target": "/testData",
-		"source": "testData"
+	"capturedImages": {
+		"target": "/capturedImages",
+		"source": "captured-images"
+	},
+	
+	"mockImages": {
+		"target": "/mockImages",
+		"source": "mock-images"
 	}
 }

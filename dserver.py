@@ -14,6 +14,8 @@ import sys
 from PIL import Image
 
 imageIndex = 0
+resources = resourcesource.ResourceSource("decapod-resource-config.json")
+
 #TODO: change to a better path FLUID-3538
 imagePath = os.path.join(resourcesource.serverBasePath, "testData/capturedImages")
 
@@ -309,4 +311,4 @@ if __name__ == "__main__":
     root = DecapodServer()
     root.images = ImageController()
     root.pdf = Export()
-    cherrypy.quickstart(root, "/", "dserver.conf")
+    cherrypy.quickstart(root, "/", resources.cherryPyConfig())

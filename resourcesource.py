@@ -13,7 +13,7 @@ class ResourceSource(object):
     
     def filePath(self, resourceName):
         if resourceName in self.resources:
-            return serverBasePath + self.resources[resourceName]["source"]
+            return os.path.join(serverBasePath, self.resources[resourceName]["source"])
         else:
             return None
         

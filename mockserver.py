@@ -13,8 +13,11 @@ import sys
 from PIL import Image
 
 imageIndex = 0
+resources = resourcesource.ResourceSource("decapod-resource-config.json")
+
  #TODO: change to a better path FLUID-3538
-imagePath = os.path.join(resourcesource.serverBasePath, "testData/capturedImages")
+mockImagesPath = resources.filePath("mockImages")
+capturedImagesPath = resources.filePath("capturedImages")
 
 class ImageController(object):
     """Main class for manipulating images.
@@ -48,17 +51,27 @@ class ImageController(object):
             assert len(ports) >= 2
             assert len(models) >= 2
 
-            first_image  = self.take_picture()
-            second_image = self.take_picture()
+            # TODO: This is all lame. Move it all into the ResourceSource
+            # and express as "virtual relative paths" (e.g. ${capturedImages}/firstImageFileName)
+            
+            firstImageFileName  = self.take_picture()
+            firstImageURL = resources.webURL("capturedImages") + "/" + firstImageFileName
+            firstImagePath = os.path.join(resources.filePath("capturedImages"), firstImageFileName)
+            
+            secondImageFileName = self.take_picture()
+            secondImageURL = resources.webURL("capturedImages") + "/" + secondImageFileName
+            secondImagePath = os.path.join(resources.filePath("capturedImages"), secondImageFileName)
 
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
-            model_entry = {"left": first_image, "right": second_image}
+            model_entry = {"left": firstImageURL, "right": secondImageURL}
 
             #TODO: add page order correction.            
 
-            model_entry["spread"] = self.stitchImages (first_image, second_image)
-            model_entry["thumb"]  = self.generateThumbnail(model_entry["spread"])
+            stitchedFileName = self.stitchImages(firstImagePath, secondImagePath)
+            model_entry["spread"] = resources.webURL("capturedImages") + "/" + stitchedFileName
+            spreadPath = os.path.join(resources.filePath("capturedImages"), stitchedFileName)
+            model_entry["thumb"]  = resources.webURL("capturedImages") + "/" + self.generateThumbnail(spreadPath)
 
             self.images.append(model_entry)
             return json.dumps(model_entry)
@@ -117,24 +130,22 @@ class ImageController(object):
                 raise cherrypy.HTTPError(405)
 
     def take_picture(self, port=None, model=None):
-        """Copies an image from an image feed folder to the captured images folder."""
-        global imageIndex
-        path = os.path.join(resourcesource.serverBasePath, "testData/capturedImages/")
-        filename = ""
-
-        filename = '%sImage%d.jpg' % (path, imageIndex)
+        """Copies an image from the mock images folder to the captured images folder."""
+        global imageIndex        
+        
+        capturedFileName = "Image%d.jpg" % (imageIndex)
+        capturedFilePath = os.path.join(capturedImagesPath, capturedFileName)  
         imageIndex = imageIndex + 1
         
-        imageFeedPath = os.path.join(resourcesource.serverBasePath, "testData/imageFeed/")
-        files = glob.glob(imageFeedPath + "*")
+        files = glob.glob(os.path.join(mockImagesPath, "*"))
         files.sort()
         file_count = len(files)
 
         name_to_open = files[imageIndex % file_count]
         im = Image.open(name_to_open)
-        im.save(filename);
+        im.save(capturedFilePath);
         
-        return filename
+        return capturedFileName
 
     def delete(self, index=None):
         """Delete an image from the list of images and from the file system."""
@@ -148,22 +159,27 @@ class ImageController(object):
         size = 100, 146
         im = Image.open(filepath)
         im.thumbnail(size, Image.ANTIALIAS)
+        # TODO: idiotic
+        thumbnailFileName = filepath.split('/').pop()[:-4] + "-thumb.jpg" 
         thumbnailPath = filepath[:-4] + "-thumb.jpg"
         im.save(thumbnailPath)
-        return thumbnailPath
+        return thumbnailFileName
 
     def stitchImages (self, image_one, image_two):
-        stitchFilename = image_one.split('/').pop()
-        stitchFilename = stitchFilename[:-4] + "-" +image_two.split('/').pop()
-        stitchFilepath = imagePath + "/" + stitchFilename[:-4] + ".png"
+        # TODO: This is idiotic
+        stitchFileName = image_one.split('/').pop()
+        stitchFileName = stitchFileName[:-4] + "-" +image_two.split('/').pop()
+        stitchFileName = stitchFileName[:-4] + ".png"
+        
+        stitchFilePath = os.path.join(capturedImagesPath, stitchFileName)
 
         #Image Magick implementation
         #os.system ("convert %s %s +append %s" % (image_one, image_two, stitchFilepath))
 
         #Decapod implementation
-        os.system ("decapod-stitching -R rr %s %s -o %s" % (image_one, image_two, stitchFilepath))
+        os.system ("decapod-stitching -R rr %s %s -o %s" % (image_one, image_two, stitchFilePath))
 
-        return stitchFilepath
+        return stitchFileName
         
 class Export(object):
 
@@ -233,4 +249,4 @@ if __name__ == "__main__":
     root = MockServer()
     root.images = ImageController()
     root.pdf = Export()
-    cherrypy.quickstart(root, "/", "dserver.conf")
+    cherrypy.quickstart(root, "/", resources.cherryPyConfig())
