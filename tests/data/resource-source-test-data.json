@@ -2,5 +2,9 @@
 	"js": {
 		"target": "/js",
 		"source": "../decapod-ui/components/capture/js"
+	},
+	"testData": {
+		"target": "/testData",
+		"source": "tests/data"
 	}
 }

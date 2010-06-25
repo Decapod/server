@@ -14,7 +14,7 @@ class ResourceSourceTest(unittest.TestCase):
 
         
     def test_loadConfig(self):
-        self.assertEquals(1, len(self.resourceSource.resources))
+        self.assertEquals(2, len(self.resourceSource.resources))
     
     def test_filePathForResource(self):
         jsPath = self.resourceSource.filePathForResource("js")
@@ -82,7 +82,7 @@ class ResourceSourceTest(unittest.TestCase):
 
     def test_cherryPyConfig(self):
         config = self.resourceSource.cherryPyConfig()
-        self.assertEquals(2, len(config))
+        self.assertEquals(3, len(config))
         root = config["/"]
         self.assertEqual(root, {
             "tools.staticdir.root": resourcesource.serverBasePath                        

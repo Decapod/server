@@ -27,7 +27,8 @@ class ImageController(object):
     of images represented by a JSON file of their attributes."""
 
     images = []
-
+    processor = ImageProcessor(resources)
+    
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """Handles the /images/ URL - a collection of sets of images.
@@ -173,25 +174,10 @@ class ImageController(object):
         return
 
     def generateThumbnail (self, filepath):
-        size = 100, 146
-        im = Image.open(filepath)
-        im.thumbnail(size, Image.ANTIALIAS)
-        thumbnailPath = filepath[:-4] + "-thumb.jpg"
-        im.save(thumbnailPath)
-        return thumbnailPath
+        self.processor.thumbnail(filepath)
 
     def stitchImages (self, image_one, image_two):
-        stitchFilename = image_one.split('/').pop()
-        stitchFilename = stitchFilename[:-4] + "-" +image_two.split('/').pop()
-        stitchFilepath = imagePath + "/" + stitchFilename[:-4] + ".png"
-
-        #Image Magick implementation
-        #os.system ("convert %s %s +append %s" % (image_one, image_two, stitchFilepath))
-
-        #Decapod implementation
-        os.system ("decapod-stitching %s %s -o %s" % (image_one, image_two, stitchFilepath))
-
-        return stitchFilepath
+        return self.processor.stitch(image_one, image_two)
         
 class Export(object):
 

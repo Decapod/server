@@ -10,6 +10,7 @@ import glob
 import os
 import simplejson as json
 import sys
+import imageprocessing
 from PIL import Image
 
 imageIndex = 0
@@ -19,8 +20,8 @@ serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource
 resources = resourcesource.ResourceSource(serverConfigPath)
 
 # Create the captured images directory if needed.
-if os.path.exists(resouces.filePath("${capturedImages}")) == False:
-    os.mkdir(resouces.filePath("${capturedImages}"))
+if os.path.exists(resources.filePath("${capturedImages}")) == False:
+    os.mkdir(resources.filePath("${capturedImages}"))
     
 class ImageController(object):
     """Main class for manipulating images.
@@ -30,7 +31,8 @@ class ImageController(object):
     of images represented by a JSON file of their attributes."""
 
     images = []
-
+    processor = imageprocessing.ImageProcessor(resources)
+    
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """Handles the /images/ URL - a collection of sets of images.
@@ -153,26 +155,10 @@ class ImageController(object):
         return
 
     def generateThumbnail (self, fullSizeImagePath):
-        size = 100, 146
-        im = Image.open(resources.filePath(fullSizeImagePath))
-        im.thumbnail(size, Image.ANTIALIAS)
-        thumbnailPath = fullSizeImagePath[:-4] + "-thumb.jpg"
-        im.save(resources.filePath(thumbnailPath))
-        return thumbnailPath
+        return self.processor.thumbnail(fullSizeImagePath)
     
     def stitchImages (self, firstImagePath, secondImagePath):
-        # The stitched file should be named as a concatenation of the two image names.
-        stitchFileName = resources.getFileName(firstImagePath)[0] \
-                         + "-" + \
-                         resources.getFileName(secondImagePath)[0] \
-                         + ".png"
-        
-        # Save the stitched image in the same location as the first image.
-        stitchFilePath = resources.getPathHead(firstImagePath) + stitchFileName
-        os.system ("decapod-stitching -R rr %s %s -o %s" % (resources.filePath(firstImagePath), \
-                                                            resources.filePath(secondImagePath), \
-                                                            resources.filePath(stitchFilePath)))
-        return stitchFilePath
+        return self.processor.stitch(firstImagePath, secondImagePath)
         
 class Export(object):
 

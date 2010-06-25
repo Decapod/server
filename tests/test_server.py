@@ -25,7 +25,7 @@ class TestRequests(helper.CPWebCase):
     jsonHeader = [("Accept", "application/json")]
     
     def tearDown(self):
-        imagePaths = glob.glob(os.path.join(mockserver.resources.filePathForResource("capturedImages"), "*"))
+        imagePaths = glob.glob(mockserver.resources.filePath("${capturedImages}/*"))
         for imagePath in imagePaths:
             os.remove(imagePath)
     
