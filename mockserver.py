@@ -13,14 +13,14 @@ import sys
 from PIL import Image
 
 imageIndex = 0
-resources = resourcesource.ResourceSource(os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json"))
 
- #TODO: change to a better path FLUID-3538
-mockImagesPath = resources.filePath("mockImages")
-capturedImagesPath = resources.filePath("capturedImages")
+# Setup configuration for static resources within the server.
+serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
+resources = resourcesource.ResourceSource(serverConfigPath)
 
-if os.path.exists(capturedImagesPath) == False:
-    os.mkdir(capturedImagesPath)
+# Create the captured images directory if needed.
+if os.path.exists(resouces.filePath("${capturedImages}")) == False:
+    os.mkdir(resouces.filePath("${capturedImages}"))
     
 class ImageController(object):
     """Main class for manipulating images.
@@ -54,27 +54,21 @@ class ImageController(object):
             assert len(ports) >= 2
             assert len(models) >= 2
 
-            # TODO: This is all lame. Move it all into the ResourceSource
-            # and express as "virtual relative paths" (e.g. ${capturedImages}/firstImageFileName)
-            
-            firstImageFileName  = self.take_picture()
-            firstImageURL = resources.webURL("capturedImages") + "/" + firstImageFileName
-            firstImagePath = os.path.join(resources.filePath("capturedImages"), firstImageFileName)
-            
-            secondImageFileName = self.take_picture()
-            secondImageURL = resources.webURL("capturedImages") + "/" + secondImageFileName
-            secondImagePath = os.path.join(resources.filePath("capturedImages"), secondImageFileName)
+            firstImagePath  = self.take_picture()
+            secondImagePath = self.take_picture()
 
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
-            model_entry = {"left": firstImageURL, "right": secondImageURL}
+            model_entry = {
+                "left": resources.webURL(firstImagePath), 
+                "right": resources.webURL(secondImagePath)
+            }
 
             #TODO: add page order correction.            
-
-            stitchedFileName = self.stitchImages(firstImagePath, secondImagePath)
-            model_entry["spread"] = resources.webURL("capturedImages") + "/" + stitchedFileName
-            spreadPath = os.path.join(resources.filePath("capturedImages"), stitchedFileName)
-            model_entry["thumb"]  = resources.webURL("capturedImages") + "/" + self.generateThumbnail(spreadPath)
+            stitchedPath = self.stitchImages(firstImagePath, secondImagePath)
+            model_entry["spread"] = resources.webURL(stitchedPath)
+            thumbnailPath = self.generateThumbnail(stitchedPath)
+            model_entry["thumb"]  = resources.webURL(thumbnailPath)
 
             self.images.append(model_entry)
             return json.dumps(model_entry)
@@ -137,18 +131,18 @@ class ImageController(object):
         global imageIndex        
         
         capturedFileName = "Image%d.jpg" % (imageIndex)
-        capturedFilePath = os.path.join(capturedImagesPath, capturedFileName)  
+        capturedFilePath = "${capturedImages}/" + capturedFileName
         imageIndex = imageIndex + 1
         
-        files = glob.glob(os.path.join(mockImagesPath, "*"))
+        files = glob.glob(resources.filePath("${mockImages}/*"))
         files.sort()
         file_count = len(files)
 
         name_to_open = files[imageIndex % file_count]
         im = Image.open(name_to_open)
-        im.save(capturedFilePath);
+        im.save(resources.filePath(capturedFilePath));
         
-        return capturedFileName
+        return capturedFilePath
 
     def delete(self, index=None):
         """Delete an image from the list of images and from the file system."""
@@ -158,31 +152,27 @@ class ImageController(object):
         self.images.pop(index)
         return
 
-    def generateThumbnail (self, filepath):
+    def generateThumbnail (self, fullSizeImagePath):
         size = 100, 146
-        im = Image.open(filepath)
+        im = Image.open(resources.filePath(fullSizeImagePath))
         im.thumbnail(size, Image.ANTIALIAS)
-        # TODO: idiotic
-        thumbnailFileName = filepath.split('/').pop()[:-4] + "-thumb.jpg" 
-        thumbnailPath = filepath[:-4] + "-thumb.jpg"
-        im.save(thumbnailPath)
-        return thumbnailFileName
-
-    def stitchImages (self, image_one, image_two):
-        # TODO: This is idiotic
-        stitchFileName = image_one.split('/').pop()
-        stitchFileName = stitchFileName[:-4] + "-" +image_two.split('/').pop()
-        stitchFileName = stitchFileName[:-4] + ".png"
+        thumbnailPath = fullSizeImagePath[:-4] + "-thumb.jpg"
+        im.save(resources.filePath(thumbnailPath))
+        return thumbnailPath
+    
+    def stitchImages (self, firstImagePath, secondImagePath):
+        # The stitched file should be named as a concatenation of the two image names.
+        stitchFileName = resources.getFileName(firstImagePath)[0] \
+                         + "-" + \
+                         resources.getFileName(secondImagePath)[0] \
+                         + ".png"
         
-        stitchFilePath = os.path.join(capturedImagesPath, stitchFileName)
-
-        #Image Magick implementation
-        #os.system ("convert %s %s +append %s" % (image_one, image_two, stitchFilepath))
-
-        #Decapod implementation
-        os.system ("decapod-stitching -R rr %s %s -o %s" % (image_one, image_two, stitchFilePath))
-
-        return stitchFileName
+        # Save the stitched image in the same location as the first image.
+        stitchFilePath = resources.getPathHead(firstImagePath) + stitchFileName
+        os.system ("decapod-stitching -R rr %s %s -o %s" % (resources.filePath(firstImagePath), \
+                                                            resources.filePath(secondImagePath), \
+                                                            resources.filePath(stitchFilePath)))
+        return stitchFilePath
         
 class Export(object):
 
@@ -227,8 +217,7 @@ class MockServer(object):
     @cherrypy.expose
     def capture(self):
         # TODO: Hardcoded path. Remove it.
-        html_path = os.path.join(resourcesource.serverBasePath, \
-                                 "../decapod-ui/components/capture/html/Capture.html")
+        html_path = resources.filePath("${components}/capture/html/Capture.html")
         file = open(html_path)
         content = file.read()
         file.close()
