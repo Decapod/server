@@ -4,16 +4,14 @@ It always pretends there are two cameras connected and returns images from the
 local filesystem instead of using gphoto.
 """
 
-import resourcesource
 import cherrypy
-import glob
 import os
 import simplejson as json
 import sys
-import imageprocessing
-from PIL import Image
 
-imageIndex = 0
+import resourcesource
+import imageprocessing
+import cameras
 
 # Setup configuration for static resources within the server.
 serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
@@ -32,7 +30,11 @@ class ImageController(object):
 
     images = []
     processor = imageprocessing.ImageProcessor(resources)
+    cameraSource = None
     
+    def __init__(self, cameras):
+        self.cameraSource = cameras
+        
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """Handles the /images/ URL - a collection of sets of images.
@@ -56,9 +58,8 @@ class ImageController(object):
             assert len(ports) >= 2
             assert len(models) >= 2
 
-            firstImagePath  = self.take_picture()
-            secondImagePath = self.take_picture()
-
+            firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
+            
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
             model_entry = {
@@ -128,24 +129,6 @@ class ImageController(object):
                 cherrypy.response.headers["Allow"] = "GET"
                 raise cherrypy.HTTPError(405)
 
-    def take_picture(self, port=None, model=None):
-        """Copies an image from the mock images folder to the captured images folder."""
-        global imageIndex        
-        
-        capturedFileName = "Image%d.jpg" % (imageIndex)
-        capturedFilePath = "${capturedImages}/" + capturedFileName
-        imageIndex = imageIndex + 1
-        
-        files = glob.glob(resources.filePath("${mockImages}/*"))
-        files.sort()
-        file_count = len(files)
-
-        name_to_open = files[imageIndex % file_count]
-        im = Image.open(name_to_open)
-        im.save(resources.filePath(capturedFilePath));
-        
-        return capturedFilePath
-
     def delete(self, index=None):
         """Delete an image from the list of images and from the file system."""
 
@@ -196,13 +179,20 @@ class MockServer(object):
     Exposes the index and capture pages as a starting point for working with the
     application. Does not expose any image-related functionality."""
 
+    cameraSource = None
+
+    def __init__(self):
+        supportedCamerasJSON = open(resources.filePath("${config}/decapod-supported-cameras.json"))
+        supportedCameras = json.load(supportedCamerasJSON)
+        self.cameraSource = cameras.MockCameras(supportedCameras, resources)
+        
     @cherrypy.expose
     def index(self):
         raise cherrypy.HTTPRedirect("/capture")
 
     @cherrypy.expose
     def capture(self):
-        # TODO: Hardcoded path. Remove it.
+        # TODO: Chuck this
         html_path = resources.filePath("${components}/capture/html/Capture.html")
         file = open(html_path)
         content = file.read()
@@ -211,20 +201,13 @@ class MockServer(object):
 
     @cherrypy.expose
     def cameras(self):
-        """Pretends it detects two cameras locally attached to the PC.
-
-        Returns a JSON document, describing the cameras and their capabilities:
-        model, port, download support, and capture support."""
-
-        cameras = [{"model": "Canon Powershot SX110IS", "port": "usb:002,012", "capture": True, "download": True},
-                   {"model": "Nikon D80", "port": "usb:003,004", "capture": True, "download": True}]
-
+        cameraStatus = self.cameraSource.cameraInfo()
         cherrypy.response.headers["Content-type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Cameras.json"
-        return json.dumps(cameras)
+        return json.dumps(cameraStatus)
 
 if __name__ == "__main__":
     root = MockServer()
-    root.images = ImageController()
+    root.images = ImageController(root.cameraSource)
     root.pdf = Export()
     cherrypy.quickstart(root, "/", resources.cherryPyConfig())

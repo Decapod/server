@@ -6,5 +6,9 @@
 	"testData": {
 		"target": "/testData",
 		"source": "tests/data"
+	},
+	"config": {
+		"target": "/config",
+		"source": "config"
 	}
 }

@@ -27,5 +27,10 @@
 	"mockImages": {
 		"target": "/mockImages",
 		"source": "mock-images"
+	},
+	
+	"config": {
+		"target": "/config",
+		"source": "config"
 	}
 }

@@ -15,8 +15,9 @@ current_dir = os.path.abspath(os.path.dirname(__file__))
 def setup_server():
     """ Starts the server, using the cherrypy.tree.mount function """
     
+    # TODO: Duplicated code. Refactor and remove, allowing us to test either real or mock.
     root = mockserver.MockServer()
-    root.images = mockserver.ImageController()
+    root.images = mockserver.ImageController(root.cameraSource)
     root.pdf = mockserver.Export()
     cherrypy.tree.mount(root, "/", mockserver.resources.cherryPyConfig())
 
