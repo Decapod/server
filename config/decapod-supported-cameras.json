@@ -1,32 +1,32 @@
 {
     "Canon": [{
-        "model": "G10",
-        "deviceName": "PowerShot G10"
+        "name": "Canon PowerShot G10",
+        "label": "PowerShot G10"
     }, {
-        "model": "G11",
-        "deviceName": "PowerShot G11"
+        "name": "G11",
+        "label": "PowerShot G11"
     }, {
-        "model": "550D",
-        "deviceName": "EOS 550D"
+        "name": "550D",
+        "Label": "EOS 550D"
     }],
     "Nikon": [{
-        "model": "D90",
-        "deviceName": "D90"
+        "name": "D90",
+        "label": "D90"
     }, {
-        "model": "D300",
-        "deviceName": "D300"
+        "name": "D300",
+        "label": "D300"
     }, {
-        "model": "D3S",
-        "deviceName": "D3S"
+        "name": "D3S",
+        "label": "D3S"
     }],
     "Sony": [{
-        "model": "DSLR-A500",
-        "deviceName": "α500"
+        "name": "DSLR-A500",
+        "label": "α500"
     }, {
-        "model": "DSLR-A290",
-        "deviceName": "α290"
+        "name": "DSLR-A290",
+        "label": "α290"
     }, {
-        "model": "NEX-5",
-        "deviceName": "NEX-5"
+        "name": "NEX-5",
+        "label": "NEX-5"
     }]
 }
