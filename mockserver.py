@@ -16,10 +16,6 @@ import cameras
 # Setup configuration for static resources within the server.
 serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
 resources = resourcesource.ResourceSource(serverConfigPath)
-
-# Create the captured images directory if needed.
-if os.path.exists(resources.filePath("${capturedImages}")) == False:
-    os.mkdir(resources.filePath("${capturedImages}"))
     
 class ImageController(object):
     """Main class for manipulating images.
@@ -174,9 +170,8 @@ class MockServer(object):
     cameraSource = None
 
     def __init__(self):
-        supportedCamerasJSON = open(resources.filePath("${config}/decapod-supported-cameras.json"))
-        supportedCameras = json.load(supportedCamerasJSON)
-        self.cameraSource = cameras.MockCameras(supportedCameras, resources)
+        self.cameraSource = cameras.MockCameras(resources, \
+                                                "${config}/decapod-supported-cameras.json")
         
     @cherrypy.expose
     def index(self):

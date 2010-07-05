@@ -4,8 +4,8 @@ import urllib
 import cherrypy
 import simplejson
 import sys
-import glob
 from cherrypy.test import helper
+import testutils
 sys.path.append(os.path.abspath('..'))
 import decapod
 
@@ -28,9 +28,7 @@ class TestRequests(helper.CPWebCase):
     jsonHeader = [("Accept", "application/json")]
     
     def tearDown(self):
-        imagePaths = glob.glob("../capturedImages/*")
-        for imagePath in imagePaths:
-            os.remove(imagePath)
+        testutils.cleanUpCapturedImages()
     
     def assertJSON(self, numKeys=None):
         """ 
@@ -92,8 +90,8 @@ class TestRequests(helper.CPWebCase):
         self.assertStatus(200)
         result = self.assertJSON(4)
         
-        firstImageName = "Image0"
-        secondImageName = "Image1"
+        firstImageName = "decapod-0001"
+        secondImageName = "decapod-0002"
         
         # Test the left and right image URLs.
         self.assertEqual(result["left"], "/capturedImages/" + firstImageName + ".jpg", \

@@ -1,7 +1,7 @@
 import sys
 import os
 import unittest
-
+import testutils
 sys.path.append(os.path.abspath('..'))
 import resourcesource
 
@@ -10,10 +10,10 @@ class ResourceSourceTest(unittest.TestCase):
     jsPathBase = resourcesource.serverBasePath + "/" + "../decapod-ui/components/capture/js"
     
     def setUp(self):
-        self.resourceSource = resourcesource.ResourceSource("data/resource-source-test-data.json")
+        self.resourceSource = testutils.createTestResourceSource()
 
     def test_loadConfig(self):
-        self.assertEquals(3, len(self.resourceSource.resources))
+        self.assertEquals(4, len(self.resourceSource.resources))
     
     def test_filePathForResource(self):
         jsPath = self.resourceSource.filePathForResource("js")
@@ -81,7 +81,7 @@ class ResourceSourceTest(unittest.TestCase):
 
     def test_cherryPyConfig(self):
         config = self.resourceSource.cherryPyConfig()
-        self.assertEquals(4, len(config))
+        self.assertEquals(5, len(config))
         root = config["/"]
         self.assertEqual(root, {
             "tools.staticdir.root": resourcesource.serverBasePath                        

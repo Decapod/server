@@ -1,36 +1,80 @@
+import os
 import glob
 from PIL import Image
+import simplejson as json
+
+captureDir = "${capturedImages}/"
+imagePrefix = "decapod-"
+
+class CaptureError(Exception): pass
 
 class Cameras(object):
     
+    imageIndex = 0;
     supportedCameras = None
+    resources = None
     
-    def __init__(self, supportedCameras):
-        self.supportedCameras = supportedCameras
+    def __init__(self, resourceSource, cameraConfig):
+        self.resources = resourceSource
         
+        # Load the supported cameras configuration.
+        supportedCamerasPath = self.resources.filePath(cameraConfig)
+        supportedCamerasJSON = open(supportedCamerasPath)
+        self.supportedCameras = json.load(supportedCamerasJSON)
+        
+        # Create the captured images directory if needed.
+        if os.path.exists(self.resources.filePath("${capturedImages}")) == False:
+            os.mkdir(self.resources.filePath("${capturedImages}"))
+
     def cameraInfo(self):
-        return None
+        # TODO: Make this real!
+       return [{
+            "model": "Canon PowerShot G10",
+            "port": "usb:001,014",
+            "capture": True, 
+            "download": True
+         },
+         {
+            "model": "Canon PowerShot G10",
+            "port": "usb:001,015", 
+            "capture": True, 
+            "download": True
+         }]
 
     def status(self):
         return {
             "status": "Awesome",
             "supportedCameras": self.supportedCameras
         }
-        
-    def captureImagePair(self):
-        return None
 
-# TODO: Address the dependency creep issue where we require a ResourceSource
-# only in the mock implementation, which requires awareness of mockiness to float 
-# higher up
+    def generateImageName(self):
+        self.imageIndex += 1     
+        return "%s%04d.jpg" % (imagePrefix, self.imageIndex)
+    
+    def captureImage(self, camera):
+        # found_cameras[1]["port"], found_cameras[1]["model"]
+        imageFileName = self.generateImageName()
+        imagePath = captureDir + imageFileName
+        
+        # Capture the image using gPhoto
+        # TODO: Move this out of code and into configuration
+        status = os.system("gphoto2 --capture-image-and-download" + \
+                           " --force-overwrite --port=%s --camera='%s'" + \
+                           " --filename=%s 2>>capture.log" % \
+                           (camera.port, camera.model, imagePath))
+        if status != 0:
+            raise CaptureError, "Camera could not capture."
+
+        return imagePath
+    
+    def captureImagePair(self):
+        detectedCameras = self.cameraInfo()
+        return self.captureImage(detectedCameras[0]), \
+               self.captureImage(detectedCameras[1])
+
+
 class MockCameras(Cameras):
     
-    imageIndex = 0
-    resources = None
-    
-    def __init__(self, supportedCameras, resourceSource):
-        self.resources = resourceSource
-        
     def cameraInfo(self):
         return [{
             "model": "Canon Powershot SX110IS", 
@@ -44,11 +88,10 @@ class MockCameras(Cameras):
            "download": True
         }]
     
-    def captureImage(self):
+    def captureImage(self, camera):
         """Copies an image from the mock images folder to the captured images folder."""        
-        capturedFileName = "Image%d.jpg" % (self.imageIndex)
-        capturedFilePath = "${capturedImages}/" + capturedFileName
-        self.imageIndex = self.imageIndex + 1
+        capturedFileName = self.generateImageName()
+        capturedFilePath = captureDir + capturedFileName
         
         files = glob.glob(self.resources.filePath("${mockImages}/*"))
         files.sort()
@@ -59,6 +102,4 @@ class MockCameras(Cameras):
         im.save(self.resources.filePath(capturedFilePath));
         
         return capturedFilePath
-    
-    def captureImagePair(self):
-        return self.captureImage(), self.captureImage()
+

@@ -1,6 +1,7 @@
 import os.path
 import sys
 from cherrypy.test import test as cptest
+import testutils
 
 def run():
     # Update this list with new tests cases.
@@ -13,7 +14,8 @@ def run():
     ]
     
     cptest.TestHarness(test_list).run()
-
+    testutils.deleteTestCapturedImagesDir()
+    
 if __name__ == '__main__':
     run()
     

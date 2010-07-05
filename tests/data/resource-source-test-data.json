@@ -9,6 +9,10 @@
 	},
 	"config": {
 		"target": "/config",
-		"source": "config"
+		"source": "tests/data/config"
+	},
+	"capturedImages": {
+		"target": "/capturedImages",
+		"source": "tests/data/captured-images"
 	}
 }

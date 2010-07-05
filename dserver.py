@@ -52,18 +52,7 @@ class ImageController(object):
             return json.dumps(self.images)
 
         elif method == "POST":
-
-            # TODO: remove the ports and models param lookup, and assertions.
-            params = cherrypy.request.params
-            ports, models = [None, None], [None, None]
-            if "ports" in params and "models" in params:
-                ports, models = params["ports"], params["models"]
-            
-            assert len(ports) >= 2
-            assert len(models) >= 2
-
-            first_image  = self.take_picture(found_cameras[0]["port"], found_cameras[0]["model"])
-            second_image = self.take_picture(found_cameras[1]["port"], found_cameras[1]["model"])
+            first_image, second_image = self.cameraSource.captureImagePair()
 
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
@@ -133,46 +122,6 @@ class ImageController(object):
             else:
                 cherrypy.response.headers["Allow"] = "GET"
                 raise cherrypy.HTTPError(405)
-
-    def take_picture(self, port=None, model=None):
-        """Capture an image and save it to disk.
-
-        If the application is in testing mode, do not use a camera. Instead, get
-        an image from the local filesytem."""
-
-
-        # Filename and directory declarations.
-        captureFilename = 'newDecapodCapture.jpg'
-        decapodImagePrefix = 'decapod'
-        
-        # Check save path for images.
-        # TODO: move this to server initialization so it's only done once (FLUID-3537)
-        # TODO: change the save location for files, and change the code that is depends on the directory being testdata/capturedImages/
-        if not os.access (imagePath,os.F_OK) and os.access ("./",os.W_OK):
-            status = os.system("mkdir %s" % imagePath)
-            if status !=0:
-                raise cherrypy.HTTPError(403, "Could not create path %s." % imagePath)
-        elif not os.access ("./",os.W_OK):
-            raise cherrypy.HTTPError(403, "Can not write to directory")
-
-        status = os.system("gphoto2 --capture-image-and-download --force-overwrite --port=%s --camera='%s' --filename=%s 2>>capture.log" % (port, model,captureFilename))
-        if status != 0:
-            raise cherrypy.HTTPError(500, "Camera could not capture.")
-        
-        # create new filename for image.
-        # TODO: Move filename generation to a new function. FLUID-3538
-        global imageIndex
-        imageIndex += 1
-        
-        #TODO: change newFilename = '%s-%04d.jpg' % (decapodImagePrefix,imageIndex) FLUID-3538
-        newFilename = 'Image%d.jpg' % imageIndex
-
-        status = os.system("mv -f %s %s/%s" % (captureFilename,imagePath,newFilename))
-        if status != 0:
-            raise cherrypy.HTTPError(500, "Could not rename file %s to %s/%s" % (captureFilename,imagePath,newFilename))
-
-        newFilePath = '%s/%s' % (imagePath,newFilename)
-        return newFilePath
 
     def delete(self, index=None):
         """Delete an image from the list of images and from the file system."""
