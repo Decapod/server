@@ -5,7 +5,6 @@ deleting, generating thumbnails). It can be used with any client using the
 provided uniform interface for accessing and modifying images.
 """
 
-import resourcesource
 import cherrypy
 import glob
 import os
@@ -13,8 +12,14 @@ import simplejson as json
 import sys
 from PIL import Image
 
+import resourcesource
+import imageprocessing
+
 imageIndex = 0
-resources = resourcesource.ResourceSource("decapod-resource-config.json")
+
+# Setup configuration for static resources within the server.
+serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
+resources = resourcesource.ResourceSource(serverConfigPath)
 
 #TODO: change to a better path FLUID-3538
 imagePath = os.path.join(resourcesource.serverBasePath, "testData/capturedImages")
@@ -27,7 +32,11 @@ class ImageController(object):
     of images represented by a JSON file of their attributes."""
 
     images = []
-    processor = ImageProcessor(resources)
+    processor = imageprocessing.ImageProcessor(resources)
+    cameraSource = None
+    
+    def __init__(self, cameras):
+        self.cameraSource = cameras
     
     @cherrypy.expose
     def index(self, *args, **kwargs):
@@ -237,6 +246,8 @@ class DecapodServer(object):
     Exposes the index and capture pages as a starting point for working with the
     application. Does not expose any image-related functionality."""
 
+    cameraSource = None
+
     @cherrypy.expose
     def index(self):
         raise cherrypy.HTTPRedirect("/capture")
@@ -292,9 +303,3 @@ class DecapodServer(object):
         cherrypy.response.headers["Content-type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename=found_cameras.json"
         return json.dumps(found_cameras)
-
-if __name__ == "__main__":
-    root = DecapodServer()
-    root.images = ImageController()
-    root.pdf = Export()
-    cherrypy.quickstart(root, "/", resources.cherryPyConfig())

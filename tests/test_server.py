@@ -5,28 +5,30 @@ import cherrypy
 import simplejson
 import sys
 import glob
-sys.path.append(os.path.abspath('..'))
-import mockserver
 from cherrypy.test import helper
+sys.path.append(os.path.abspath('..'))
+import decapod
 
-current_dir = os.path.abspath(os.path.dirname(__file__))
+
+def initMockServer():
+    return decapod.mountApp("mockserver.MockServer")
+    
+def initRealServer():
+    return decapod.mountApp("dserver.DecapodServer")
 
 # must be called setup_server
 def setup_server():
-    """ Starts the server, using the cherrypy.tree.mount function """
-    
-    # TODO: Duplicated code. Refactor and remove, allowing us to test either real or mock.
-    root = mockserver.MockServer()
-    root.images = mockserver.ImageController(root.cameraSource)
-    root.pdf = mockserver.Export()
-    cherrypy.tree.mount(root, "/", mockserver.resources.cherryPyConfig())
+    if len(sys.argv) > 1 and sys.argv[1] == "--use-cameras":
+        initRealServer()
+    else:
+        initMockServer()
 
 class TestRequests(helper.CPWebCase):
     
     jsonHeader = [("Accept", "application/json")]
     
     def tearDown(self):
-        imagePaths = glob.glob(mockserver.resources.filePath("${capturedImages}/*"))
+        imagePaths = glob.glob("../capturedImages/*")
         for imagePath in imagePaths:
             os.remove(imagePath)
     

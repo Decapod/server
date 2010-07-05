@@ -50,14 +50,6 @@ class ImageController(object):
             return json.dumps(self.images)
 
         elif method == "POST":
-            params = cherrypy.request.params
-            ports, models = [None, None], [None, None]
-            if "ports" in params and "models" in params:
-                ports, models = params["ports"], params["models"]
-
-            assert len(ports) >= 2
-            assert len(models) >= 2
-
             firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
             
             cherrypy.response.headers["Content-type"] = "application/json"
@@ -205,9 +197,3 @@ class MockServer(object):
         cherrypy.response.headers["Content-type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Cameras.json"
         return json.dumps(cameraStatus)
-
-if __name__ == "__main__":
-    root = MockServer()
-    root.images = ImageController(root.cameraSource)
-    root.pdf = Export()
-    cherrypy.quickstart(root, "/", resources.cherryPyConfig())

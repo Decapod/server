@@ -1,7 +1,5 @@
 import os.path
 import sys
-sys.path.append(os.path.abspath('..'))
-from mockserver import *
 from cherrypy.test import test as cptest
 
 def run():
@@ -14,7 +12,7 @@ def run():
         "test_server"
     ]
     
-    cptest.CommandLineParser(test_list).run()
+    cptest.TestHarness(test_list).run()
 
 if __name__ == '__main__':
     run()
