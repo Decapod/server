@@ -52,16 +52,17 @@ class Cameras(object):
         return "%s%04d.jpg" % (imagePrefix, self.imageIndex)
     
     def captureImage(self, camera):
-        # found_cameras[1]["port"], found_cameras[1]["model"]
         imageFileName = self.generateImageName()
         imagePath = captureDir + imageFileName
+        fullImagePath = self.resources.filePath(imagePath)
+        port = camera["port"]
+        model = camera["model"]
         
         # Capture the image using gPhoto
         # TODO: Move this out of code and into configuration
-        status = os.system("gphoto2 --capture-image-and-download" + \
+        status = os.system(("gphoto2 --capture-image-and-download" + \
                            " --force-overwrite --port=%s --camera='%s'" + \
-                           " --filename=%s 2>>capture.log" % \
-                           (camera.port, camera.model, imagePath))
+                           " --filename=%s 2>>capture.log") % (port, model, fullImagePath))
         if status != 0:
             raise CaptureError, "Camera could not capture."
 

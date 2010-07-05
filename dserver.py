@@ -14,6 +14,7 @@ from PIL import Image
 
 import resourcesource
 import imageprocessing
+import cameras
 
 imageIndex = 0
 
@@ -197,6 +198,11 @@ class DecapodServer(object):
 
     cameraSource = None
 
+    def __init__(self):
+        # TODO: Move this to IoC so we can get rid of Decapod/Mock server distinction altogether.
+        self.cameraSource = cameras.Cameras(resources, \
+                                            "${config}/decapod-supported-cameras.json")
+                
     @cherrypy.expose
     def index(self):
         raise cherrypy.HTTPRedirect("/capture")
