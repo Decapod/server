@@ -1,12 +1,14 @@
 import os
 import glob
+import subprocess
 from PIL import Image
 import simplejson as json
 
 captureDir = "${capturedImages}/"
 imagePrefix = "decapod-"
 
-class CaptureError(Exception): pass
+class CameraError(Exception): pass
+class CaptureError(CameraError): pass
 
 class Cameras(object):
     
@@ -27,20 +29,44 @@ class Cameras(object):
             os.mkdir(self.resources.filePath("${capturedImages}"))
 
     def cameraInfo(self):
-        # TODO: Make this real!
-       return [{
-            "model": "Canon PowerShot G10",
-            "port": "usb:001,014",
-            "capture": True, 
-            "download": True
-         },
-         {
-            "model": "Canon PowerShot G10",
-            "port": "usb:001,015", 
-            "capture": True, 
-            "download": True
-         }]
+        """Detects the cameras locally attached to the PC.
+           Returns a JSON document, describing the camera and its port."""
+ 
+        detectCmd = [
+            "gphoto2",
+            "--auto-detect"
+        ]
+        detectCameraProc = subprocess.Popen(detectCmd, stdout=subprocess.PIPE)
+        autoDetectOutput = detectCameraProc.communicate()[0]
+        if detectCameraProc.returncode != 0:
+            raise CameraError, "An error occurred while attempting to detect cameras."
+        
+        allCamerasInfo = autoDetectOutput.split("\n")[2:] # TODO: Check cross-platform compatibility here.
 
+        # TODO: Is there a saner algorithm here?
+        cameras = []
+        for cameraInfo in allCamerasInfo:
+            # Skip any camera that has a port ending in ":", since these aren't real devices.
+            if cameraInfo.strip().endswith(":") is True:
+                continue
+            
+            # TODO: Can we improve this algorithm?
+            # Tokenize the line on spaces, grab the last token, and assume it's the port
+            # Then stitch the rest of the tokens back and assume that they're the model name.
+            tokens = cameraInfo.split()
+            if len(tokens) < 1:
+                continue
+            port = tokens.pop()
+            camera = {
+                "port": port,
+                "model": " ".join(tokens),
+                "capture": True, # TODO: Remove this property
+                "download": True # TODO: Remove this property
+            }
+            cameras.append(camera)
+        
+        return cameras
+    
     def status(self):
         return {
             "status": "Awesome",
@@ -60,10 +86,17 @@ class Cameras(object):
         
         # Capture the image using gPhoto
         # TODO: Move this out of code and into configuration
-        status = os.system(("gphoto2 --capture-image-and-download" + \
-                           " --force-overwrite --port=%s --camera='%s'" + \
-                           " --filename=%s 2>>capture.log") % (port, model, fullImagePath))
-        if status != 0:
+        captureCmd = [
+            "gphoto2",
+            "--capture-image-and-download",
+            "--force-overwrite",
+            "--camera='%s'" % model,
+            "--port=%s" % port,
+            "--filename=%s" % fullImagePath
+        ]
+        captureProc = subprocess.Popen(captureCmd, stdout=subprocess.PIPE)
+        captureProc.communicate()
+        if captureProc.returncode != 0:
             raise CaptureError, "Camera could not capture."
 
         return imagePath
@@ -77,6 +110,7 @@ class Cameras(object):
 class MockCameras(Cameras):
     
     def cameraInfo(self):
+        # TODO: These should be made to match the list of supported cameras.
         return [{
             "model": "Canon Powershot SX110IS", 
             "port": "usb:002,012", 

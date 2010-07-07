@@ -22,9 +22,6 @@ imageIndex = 0
 serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
 resources = resourcesource.ResourceSource(serverConfigPath)
 
-#TODO: change to a better path FLUID-3538
-imagePath = os.path.join(resourcesource.serverBasePath, "testData/capturedImages")
-
 class ImageController(object):
     """Main class for manipulating images.
 
@@ -44,25 +41,30 @@ class ImageController(object):
         """Handles the /images/ URL - a collection of sets of images.
 
         Supports getting the list of images (GET) and adding a new image to the
-        collection (POST). Also supports changing the list of images (PUT)"""
-
+        collection (POST). An option telling whether to use a camera can be
+        passed. Also supports changing the list of images (PUT)"""
+        print(self.images)
         method = cherrypy.request.method.upper()
         if method == "GET":
             cherrypy.response.headers["Content-Type"] = "application/json"
-            cherrypy.response.headers["Content-Disposition"] = "attachment; filename='Captured images.json'"
+            cherrypy.response.headers["Content-Disposition"] = "attachment; filename='CapturedImages.json'"
             return json.dumps(self.images)
 
         elif method == "POST":
-            first_image, second_image = self.cameraSource.captureImagePair()
-
+            firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
+            
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
-            model_entry = {"left": first_image, "right": second_image}
+            model_entry = {
+                "left": resources.webURL(firstImagePath), 
+                "right": resources.webURL(secondImagePath)
+            }
 
-            #TODO: add page order correction.            
-
-            model_entry["spread"] = self.stitchImages (first_image, second_image)
-            model_entry["thumb"]  = self.generateThumbnail(model_entry["spread"])
+            #TODO: add page order correction.
+            stitchedPath = self.processor.stitch(firstImagePath, secondImagePath)
+            model_entry["spread"] = resources.webURL(stitchedPath)
+            thumbnailPath =self.processor.thumbnail(stitchedPath)
+            model_entry["thumb"]  = resources.webURL(thumbnailPath)
 
             self.images.append(model_entry)
             return json.dumps(model_entry)
@@ -209,9 +211,9 @@ class DecapodServer(object):
 
     @cherrypy.expose
     def capture(self):
-        # TODO: Hardcoded path. Remove it.
-        html_path = os.path.join(resourcesource.serverBasePath, \
-                                 "../decapod-ui/components/capture/html/Capture.html")
+        # TODO: Chuck this.
+        html_path = resources.filePath("${components}/capture/html/Capture.html")
+
         file = open(html_path)
         content = file.read()
         file.close()
@@ -219,42 +221,7 @@ class DecapodServer(object):
 
     @cherrypy.expose
     def cameras(self):
-        """Detects the cameras locally attached to the PC.
-
-        Returns a JSON document, describing the camera and its capabilities:
-        model, port, download support, and capture support."""
-        global found_cameras
-
-        found_cameras = []
-        status = os.system("gphoto2 --auto-detect | grep '^Model\|^-' -v >/tmp/output.tmp")
-        if status != 0:
-            return json.dumps(found_cameras)
-
-        file = open("/tmp/output.tmp")
-        for line in file:
-            info = line.split()
-            port = info.pop().rstrip("\n")
-            if port.endswith(":"):
-                continue
-            model = " ".join(info)
-
-            status = os.system("gphoto2 --summary --camera='%s' --port=%s" % (model, port))
-            if status != 0:
-                capture = False
-                download = False
-            else:
-                status = os.system("gphoto2 --summary --camera='%s' --port=%s | grep 'Generic Image Capture'" % (model, port))
-                capture = (status == 0)
-                
-                status = os.system("gphoto2 --summary --camera='%s' --port=%s | grep 'No File Download'" % (model, port))
-                download = (status != 0)
-
-            camera = {"model": model, "port": port, "capture": capture, "download": download}
-            found_cameras.append(camera)
-
-
-        file.close()
-
+        cameraStatus = self.cameraSource.cameraInfo()
         cherrypy.response.headers["Content-type"] = "application/json"
-        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=found_cameras.json"
-        return json.dumps(found_cameras)
+        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Cameras.json"
+        return json.dumps(cameraStatus)

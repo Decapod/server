@@ -42,7 +42,7 @@ class ImageController(object):
         method = cherrypy.request.method.upper()
         if method == "GET":
             cherrypy.response.headers["Content-Type"] = "application/json"
-            cherrypy.response.headers["Content-Disposition"] = "attachment; filename='Captured images.json'"
+            cherrypy.response.headers["Content-Disposition"] = "attachment; filename='CapturedImages.json'"
             return json.dumps(self.images)
 
         elif method == "POST":
@@ -55,10 +55,10 @@ class ImageController(object):
                 "right": resources.webURL(secondImagePath)
             }
 
-            #TODO: add page order correction.            
-            stitchedPath = self.stitchImages(firstImagePath, secondImagePath)
+            #TODO: add page order correction.
+            stitchedPath = self.processor.stitch(firstImagePath, secondImagePath)
             model_entry["spread"] = resources.webURL(stitchedPath)
-            thumbnailPath = self.generateThumbnail(stitchedPath)
+            thumbnailPath =self.processor.thumbnail(stitchedPath)
             model_entry["thumb"]  = resources.webURL(thumbnailPath)
 
             self.images.append(model_entry)
@@ -108,7 +108,11 @@ class ImageController(object):
 
                 path = self.images[index][state]
                 cherrypy.response.headers["Content-type"] = "image/jpeg"
-                file = open(path)
+                try:
+                    file = open(path)
+                except IOError:
+                    raise cherrypy.HTTPError(404, "Image path can not be opened")
+                    
                 content = file.read()
                 file.close()
                 return content
@@ -125,11 +129,6 @@ class ImageController(object):
         self.images.pop(index)
         return
 
-    def generateThumbnail (self, fullSizeImagePath):
-        return self.processor.thumbnail(fullSizeImagePath)
-    
-    def stitchImages (self, firstImagePath, secondImagePath):
-        return self.processor.stitch(firstImagePath, secondImagePath)
         
 class Export(object):
 
