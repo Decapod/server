@@ -172,6 +172,7 @@ class Export(object):
             images = json.loads(cherrypy.request.params["images"])
             try:
                 self.generatedPDFPath = self.pdfGenerator.generate(self.book)
+                return resources.webURL(self.generatedPDFPath)
             except pdf.PDFGenerationError:
                 raise cherrypy.HTTPError(500, "Could not create PDF." )
         else:

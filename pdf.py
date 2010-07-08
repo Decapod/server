@@ -22,10 +22,8 @@ class PDFGenerator:
         # Clean up any previously-exported PDFs before exporting a new one.
         fullPDFPath = self.resources.filePath(pdfDir)
         if os.path.exists(fullPDFPath):
-            shutil.rmtree(fullPDFPath)
-        
+            shutil.rmtree(fullPDFPath)        
         os.mkdir(fullPDFPath)
-        os.mkdir(os.path.join(fullPDFPath, tempDir))
         
         return fullPDFPath
             
@@ -64,10 +62,10 @@ class PDFGenerator:
             os.path.join(fullPDFPath, tempDir),
             "-p",
             os.path.join(fullPDFPath, pdfName),
-            "-b",
-            os.path.join(fullPDFPath, multiPageTIFFName),
             "-v",
-            "1"
+            "1",
+            os.path.join(fullPDFPath, multiPageTIFFName)
+
         ]
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
