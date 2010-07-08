@@ -12,11 +12,12 @@ import sys
 import resourcesource
 import imageprocessing
 import cameras
+import pdf
 
 # Setup configuration for static resources within the server.
 serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
 resources = resourcesource.ResourceSource(serverConfigPath)
-    
+
 class ImageController(object):
     """Main class for manipulating images.
 
@@ -24,13 +25,21 @@ class ImageController(object):
     and sets of pictures. All URLs are considered a path to an image or to a set
     of images represented by a JSON file of their attributes."""
 
-    images = []
     processor = imageprocessing.ImageProcessor(resources)
     cameraSource = None
+    book = None
     
-    def __init__(self, cameras):
+    def __init__(self, cameras, book):
         self.cameraSource = cameras
+        self.book = book
         
+    def createPageModelForWeb(self, bookPage):
+        webModel = {}
+        for image in bookPage.keys():
+            webModel[image] = resources.webURL(bookPage[image])
+            
+        return json.dumps(webModel)
+    
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """Handles the /images/ URL - a collection of sets of images.
@@ -38,35 +47,36 @@ class ImageController(object):
         Supports getting the list of images (GET) and adding a new image to the
         collection (POST). An option telling whether to use a camera can be
         passed. Also supports changing the list of images (PUT)"""
-        print(self.images)
+
         method = cherrypy.request.method.upper()
         if method == "GET":
             cherrypy.response.headers["Content-Type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename='CapturedImages.json'"
-            return json.dumps(self.images)
+            return json.dumps(self.book)
 
         elif method == "POST":
-            firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
-            
             cherrypy.response.headers["Content-type"] = "application/json"
-            cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.images)
-            model_entry = {
-                "left": resources.webURL(firstImagePath), 
-                "right": resources.webURL(secondImagePath)
-            }
-
+            cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.book)
+   
             #TODO: add page order correction.
+            firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
             stitchedPath = self.processor.stitch(firstImagePath, secondImagePath)
-            model_entry["spread"] = resources.webURL(stitchedPath)
             thumbnailPath =self.processor.thumbnail(stitchedPath)
-            model_entry["thumb"]  = resources.webURL(thumbnailPath)
 
-            self.images.append(model_entry)
-            return json.dumps(model_entry)
+            page = {
+                "left": firstImagePath,
+                "right": secondImagePath,
+                "spread": stitchedPath,
+                "thumb": thumbnailPath
+            }
+            self.book.append(page)
+                     
+            return self.createPageModelForWeb(page)
 
         elif method == "PUT":
+            # TODO: This method looks fatal. Do we really want it?
             params = cherrypy.request.params
-            self.images = json.loads(params["images"])
+            self.book = json.loads(params["images"])
             return params["images"]
 
         else:
@@ -84,7 +94,7 @@ class ImageController(object):
         the image."""
 
         index = int(id)
-        if index < 0 or index >= len(self.images):
+        if index < 0 or index >= len(self.book):
             raise cherrypy.HTTPError(404, "The specified resource is not currently available.")
 
         method = cherrypy.request.method.upper()
@@ -92,7 +102,7 @@ class ImageController(object):
             if method == "GET":
                 cherrypy.response.headers["Content-Type"] = "application/json"
                 cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % index
-                return json.dumps(self.images[index])
+                return json.dumps(self.book[index])
 
             elif method == "DELETE":
                 return self.delete(index)
@@ -103,10 +113,10 @@ class ImageController(object):
 
         else:
             if method == "GET":
-                if not state in self.images[index]:
+                if not state in self.book[index]:
                     raise cherrypy.HTTPError(404, "The specified resource is not currently available.")
 
-                path = self.images[index][state]
+                path = self.book[index][state]
                 cherrypy.response.headers["Content-type"] = "image/jpeg"
                 try:
                     file = open(path)
@@ -124,41 +134,50 @@ class ImageController(object):
     def delete(self, index=None):
         """Delete an image from the list of images and from the file system."""
 
-        for filename in self.images[index].values():
-            os.unlink(filename)
-        self.images.pop(index)
+        for imagePath in self.book[index].values():
+            os.unlink(resources.filePath(imagePath))
+        self.book.pop(index)
         return
 
         
 class Export(object):
 
+    book = None
+    generatedPDFPath = None
+    pdfGenerator = None
+    
+    def __init__(self, book):
+        self.pdfGenerator = pdf.PDFGenerator(resources)
+        self.book = book
+        
     @cherrypy.expose
     def default(self, name=None, images=[]):
-        exportPdfPath = "pdf"
-
-        # Check save path for images.
-        # TODO: move this to server initialization so it's only done once (FLUID-3537)
-        if not os.access (exportPdfPath,os.F_OK) and os.access ("./",os.W_OK):
-            status = os.system("mkdir %s" % exportPdfPath)
-            if status !=0:
-                raise cherrypy.HTTPError(403, "Could not create path %s." % exportPdfPath)
-        elif not os.access ("./",os.W_OK):
-            raise cherrypy.HTTPError(403, "Can not write to directory")
-
-
         method = cherrypy.request.method.upper()
         if method == "GET":
-            file = open(exportPdfPath + name)
-            content = file.read()
-            file.close()
-            return content
+            # TODO: We should probably look on the file system for this,
+            # rather than just assuming we've got a reference to in memory.
+            if self.generatedPDF != None:
+                # TODO: Perhaps we should do an HTTP redirect to the actual resource here.
+                file = open(resources.filePath(self.generatedPDFPath))
+                content = file.read()
+                file.close()
+                return content
+            else:
+                raise cherrypy.HTTPError(404, 
+                                         "A PDF has not been generated yet, \
+                                         so the specified resource is not yet avaiable.")
+            
         elif method == "POST":
-            # The mockserver does not actually generate the pdf
-
-            return exportPdfPath + "/DecapodExport.pdf" 
+            # TODO: We know all the pages in the book already, why read them from the request?
+            images = json.loads(cherrypy.request.params["images"])
+            try:
+                self.generatedPDFPath = self.pdfGenerator.generate(self.book)
+            except pdf.PDFGenerationError:
+                raise cherrypy.HTTPError(500, "Could not create PDF." )
         else:
             cherrypy.response.headers["Allow"] = "GET, POST"
             raise cherrypy.HTTPError(405)
+        
 
 class MockServer(object):
     """Main class for the mock server.
@@ -167,7 +186,8 @@ class MockServer(object):
     application. Does not expose any image-related functionality."""
 
     cameraSource = None
-
+    book = []
+    
     def __init__(self):
         self.cameraSource = cameras.MockCameras(resources, \
                                                 "${config}/decapod-supported-cameras.json")

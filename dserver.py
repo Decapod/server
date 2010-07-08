@@ -10,13 +10,11 @@ import glob
 import os
 import simplejson as json
 import sys
-from PIL import Image
 
 import resourcesource
 import imageprocessing
 import cameras
-
-imageIndex = 0
+import pdf
 
 # Setup configuration for static resources within the server.
 serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
@@ -142,52 +140,36 @@ class ImageController(object):
         
 class Export(object):
 
+    generatedPDFPath = None
+    pdfGenerator = None
+    
+    def __init__(self):
+        self.pdfGenerator = pdf.PDFGenerator(resources)
+        
     @cherrypy.expose
     def default(self, name=None, images=[]):
-        exportPdfPath = "pdf"
-
-        # Check save path for images.
-        # TODO: move this to server initialization so it's only done once (FLUID-3537)
-        if not os.access (exportPdfPath,os.F_OK) and os.access ("./",os.W_OK):
-            status = os.system("mkdir %s" % exportPdfPath)
-            if status !=0:
-                raise cherrypy.HTTPError(403, "Could not create path %s." % exportPdfPath)
-        elif not os.access ("./",os.W_OK):
-            raise cherrypy.HTTPError(403, "Can not write to directory")
-
-
         method = cherrypy.request.method.upper()
         if method == "GET":
-            file = open(exportPdfPath + name)
-            content = file.read()
-            file.close()
-            return content
+            # TODO: We should probably look on the file system for this,
+            # rather than just assuming we've got a reference to in memory.
+            if self.generatedPDF != None:
+                # TODO: Perhaps we should do an HTTP redirect to the actual resource here.
+                file = open(resources.filePath(self.generatedPDFPath))
+                content = file.read()
+                file.close()
+                return content
+            else:
+                raise cherrypy.HTTPError(404, 
+                                         "A PDF has not been generated yet, \
+                                         so the specified resource is not yet avaiable.")
+            
         elif method == "POST":
+            # TODO: We know all the pages in the book already, why read them from the request?
             images = json.loads(cherrypy.request.params["images"])
-            fileStr = ''
-            for img in images:
-                fileStr += '%s %s ' % (img['left'], img['right'])
-
-            #TODO: make export asynchronous and abstracted from server.
-            #TODO: change new filename FLUID-3538
-            # hard coding the clean up of the pdf directory because a bug here can do some damage 
-            # this will be removed post 0.3 when the implementation details of pdf generation are abstracted from CherryPY
-            os.system("rm -rf pdf/tmpdir")
-            os.system("rm pdf/*")
-            status = os.system("mogrify -path %s -format tiff %s" % (exportPdfPath, fileStr))
-            if status !=0:
-                raise cherrypy.HTTPError(500, "Could not create path %s." % exportPdfPath)
-
-            status = os.system("tiffcp %s/*.tiff %s/multi-page.tiff" % (exportPdfPath, exportPdfPath))
-            if status !=0:
-                raise cherrypy.HTTPError(500, "Could not generate tiff")
-
-            status = os.system("decapod-genpdf.py -d %s/tmpdir -p %s/DecapodExport.pdf -b %s/multi-page.tiff -v 1" % (exportPdfPath, exportPdfPath, exportPdfPath)) 
-            #TODO: give a better export PDF filename
-            if status !=0:
+            try:
+                self.generatedPDFPath = self.pdfGenerator.generate(images)
+            except pdf.PDFGenerationError:
                 raise cherrypy.HTTPError(500, "Could not create PDF." )
-
-            return exportPdfPath + "/DecapodExport.pdf" 
         else:
             cherrypy.response.headers["Allow"] = "GET, POST"
             raise cherrypy.HTTPError(405)
@@ -199,7 +181,8 @@ class DecapodServer(object):
     application. Does not expose any image-related functionality."""
 
     cameraSource = None
-
+    book = []
+    
     def __init__(self):
         # TODO: Move this to IoC so we can get rid of Decapod/Mock server distinction altogether.
         self.cameraSource = cameras.Cameras(resources, \

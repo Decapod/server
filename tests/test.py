@@ -7,6 +7,7 @@ def run():
     # Update this list with new tests cases.
     # TODO: Do this dynamically by trawling the filesystem looking for test_*.py files.
     test_list = [
+        "test_decapod_utilities",
         "test_resourcesource", 
         "test_imageprocessing", 
         "test_cameras", 

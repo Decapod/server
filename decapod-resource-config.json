@@ -24,6 +24,11 @@
 		"source": "captured-images"
 	},
 	
+	"generatedPDF": {
+		"target": "/generatedPDF",
+		"source": "pdf"
+	},
+	
 	"mockImages": {
 		"target": "/mockImages",
 		"source": "mock-images"

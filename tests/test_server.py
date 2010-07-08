@@ -10,18 +10,18 @@ sys.path.append(os.path.abspath('..'))
 import decapod
 
 
-def initMockServer():
-    return decapod.mountApp("mockserver.MockServer")
+def initWithoutCameras():
+    return decapod.mountApp("cameras.MockCameras")
     
-def initRealServer():
-    return decapod.mountApp("dserver.DecapodServer")
+def initWithRealCameras():
+    return decapod.mountApp("cameras.Cameras")
 
 # must be called setup_server
 def setup_server():
     if len(sys.argv) > 1 and sys.argv[1] == "--use-cameras":
-        initRealServer()
+        initWithRealCameras()
     else:
-        initMockServer()
+        initWithoutCameras()
 
 class TestRequests(helper.CPWebCase):
     

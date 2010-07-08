@@ -3,6 +3,7 @@ import glob
 import subprocess
 from PIL import Image
 import simplejson as json
+import decapod_utilities as utils
 
 captureDir = "${capturedImages}/"
 imagePrefix = "decapod-"
@@ -24,9 +25,8 @@ class Cameras(object):
         supportedCamerasJSON = open(supportedCamerasPath)
         self.supportedCameras = json.load(supportedCamerasJSON)
         
-        # Create the captured images directory if needed.
-        if os.path.exists(self.resources.filePath("${capturedImages}")) == False:
-            os.mkdir(self.resources.filePath("${capturedImages}"))
+        utils.mkdirIfNecessary(self.resources.filePath(captureDir))
+
 
     def cameraInfo(self):
         """Detects the cameras locally attached to the PC.
@@ -36,12 +36,10 @@ class Cameras(object):
             "gphoto2",
             "--auto-detect"
         ]
-        detectCameraProc = subprocess.Popen(detectCmd, stdout=subprocess.PIPE)
-        autoDetectOutput = detectCameraProc.communicate()[0]
-        if detectCameraProc.returncode != 0:
-            raise CameraError, "An error occurred while attempting to detect cameras."
-        
-        allCamerasInfo = autoDetectOutput.split("\n")[2:] # TODO: Check cross-platform compatibility here.
+        cmdOutput = utils.invokeCommandSync(detectCmd, 
+                                            CameraError,
+                                            "An error occurred while attempting to detect cameras.")
+        allCamerasInfo = cmdOutput.split("\n")[2:] # TODO: Check cross-platform compatibility here.
 
         # TODO: Is there a saner algorithm here?
         cameras = []
@@ -94,15 +92,15 @@ class Cameras(object):
             "--port=%s" % port,
             "--filename=%s" % fullImagePath
         ]
-        captureProc = subprocess.Popen(captureCmd, stdout=subprocess.PIPE)
-        captureProc.communicate()
-        if captureProc.returncode != 0:
-            raise CaptureError, "Camera could not capture."
-
+        utils.invokeCommandSync(captureCmd, CaptureError, \
+                                "Could not capture an image with the camera %s on port %s" \
+                                % (model, port))
         return imagePath
     
     def captureImagePair(self):
         detectedCameras = self.cameraInfo()
+        if len(detectedCameras) < 2:
+            raise CaptureError, "Two connected cameras were not detected."
         return self.captureImage(detectedCameras[0]), \
                self.captureImage(detectedCameras[1])
 
