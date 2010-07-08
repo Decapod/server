@@ -169,7 +169,6 @@ class Export(object):
             
         elif method == "POST":
             # TODO: We know all the pages in the book already, why read them from the request?
-            images = json.loads(cherrypy.request.params["images"])
             try:
                 self.generatedPDFPath = self.pdfGenerator.generate(self.book)
                 return resources.webURL(self.generatedPDFPath)
@@ -239,3 +238,4 @@ def startServer():
 if __name__ == "__main__":
     mountApp(determineCamerasClass())
     startServer()
+    

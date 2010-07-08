@@ -124,5 +124,5 @@ class TestRequests(helper.CPWebCase):
         self.getPage("/pdf", method="POST", body=postBody, headers=[("Accept", "*/*")])
         self.assertStatus(200)
         self.assertHeader('Content-Type', 'text/html')
-        self.assertEqual(self.body, "pdf/DecapodExport.pdf")
+        self.assertEqual(self.body, "/generatedPDF/Decapod.pdf")
 	
