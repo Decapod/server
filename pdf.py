@@ -27,6 +27,14 @@ class PDFGenerator:
         
         return fullPDFPath
             
+    def bookPagesToArray(self, book):
+        allPages = []
+        for page in book:
+            allPages.append(self.resources.filePath(page["left"]))
+            allPages.append(self.resources.filePath(page["right"]))
+        return allPages
+            
+    # TODO: It appears we don't need this process any more. Ditch it?
     def convertPagesToTIFF(self, book, fullPDFPath):
         mogrifyCmd = [
             "mogrify",
@@ -35,14 +43,13 @@ class PDFGenerator:
             "-format",
             "tiff"
         ]
-        for page in book:
-            mogrifyCmd.append(self.resources.filePath(page["left"]))
-            mogrifyCmd.append(self.resources.filePath(page["right"]))
+        mogrifyCmd.extend(self.bookPagesToArray(book))
             
         utils.invokeCommandSync(mogrifyCmd,
                                 PDFGenerationError,
                                 "Could not convert pages to TIFF format.")
     
+    # TODO: It appears we don't need this process any more. Ditch it?
     def createMultiPageTIFF(self, tiffName, fullPDFPath):
         inputTIFFs = glob.glob(os.path.join(fullPDFPath, "*.tiff"))
         multiPageTIFFCmd = [
@@ -55,28 +62,27 @@ class PDFGenerator:
                                 PDFGenerationError,
                                 "Could not generate a multipage TIFF file.")
     
-    def generatePDFFromMultiPageTIFF(self, pdfName, multiPageTIFFName, fullPDFPath, tempDir):
+    def generatePDFFromBook(self, book, pdfPath, tempPath):
         genPDFCmd = [
             "decapod-genpdf.py",
             "-d",
-            os.path.join(fullPDFPath, tempDir),
+            tempPath,
             "-p",
-            os.path.join(fullPDFPath, pdfName),
+            pdfPath,
             "-v",
-            "1",
-            os.path.join(fullPDFPath, multiPageTIFFName)
-
+            "1"
         ]
+        genPDFCmd.extend(self.bookPagesToArray(book))
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")
     
     def generate(self, book):
             fullPDFPath = self.setupExportDir()
-
+            pdfPath = os.path.join(fullPDFPath, pdfName)
+            tempPath = os.path.join(fullPDFPath, tempDir)
+            
             # TODO: Export should be asynchronous
-            self.convertPagesToTIFF(book, fullPDFPath)
-            self.createMultiPageTIFF(multiPageTIFFName, fullPDFPath)
-            self.generatePDFFromMultiPageTIFF(pdfName, multiPageTIFFName, fullPDFPath, tempDir)
+            self.generatePDFFromBook(book, pdfPath, tempPath)
 
             return pdfDir + pdfName
