@@ -9,15 +9,11 @@
 		"source": "../decapod-ui/components"
 	},
 	
-	"js": {
-		"target": "/js",
-		"source": "../decapod-ui/components/capture/js"
+        "shared": {
+		"target": "/shared",
+		"source": "../decapod-ui/shared"
 	},
 	
-	"css": {
-		"target": "/css",
-		"source": "../decapod-ui/components/capture/css"
-	},
 	
 	"capturedImages": {
 		"target": "/capturedImages",
