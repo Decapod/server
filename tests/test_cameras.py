@@ -8,7 +8,6 @@ import cameras
 
 class CamerasTest(unittest.TestCase):
 
-    cameras = None
     resources = None
     expectedSupportedCameras = {
         "Canon": [{
@@ -20,6 +19,16 @@ class CamerasTest(unittest.TestCase):
             "label": "D90"
         }]
     }
+    expectedDefaultCalibrationModel = {
+        "left": {
+            "id": "usb:002,012",
+            "rotation": 0
+        },
+        "right": {
+            "id": "usb:003,004",
+            "rotation": 0
+        }
+    }
     
     def setUp(self):
         self.resources = testutils.createTestResourceSource()
@@ -27,11 +36,17 @@ class CamerasTest(unittest.TestCase):
     def tearDown(self):
         testutils.cleanUpCapturedImages()
         
+    def test_defaultCalibrationModel(self):
+        cams = cameras.MockCameras(self.resources,
+                                           "${testData}/supported-cameras-test-data.json")
+        calibration = cams.calibrationModel
+        self.assertEquals(calibration, self.expectedDefaultCalibrationModel);
+        
     def checkCameraInfo(self, expectedStatus, connectedCameras):
-        self.cameras = cameras.MockCameras(self.resources, 
-                                           "${testData}/supported-cameras-test-data.json", 
-                                           connectedCameras)
-        status = self.cameras.status()
+        cams = cameras.MockCameras(self.resources, 
+                                   "${testData}/supported-cameras-test-data.json", 
+                                   connectedCameras)
+        status = cams.status()
         self.assertEquals(status,{
             "status": expectedStatus,
             "supportedCameras": self.expectedSupportedCameras

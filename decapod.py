@@ -4,6 +4,10 @@ It always pretends there are two cameras connected and returns images from the
 local filesystem instead of using gphoto.
 """
 
+# TODO: File system or CouchDB persistence for the Book, including:
+#   * the images array
+#   * the calibration model
+
 import cherrypy
 import os
 import simplejson as json
@@ -139,7 +143,43 @@ class ImageController(object):
         self.book.pop(index)
         return
 
+class CamerasController(object):
+    
+    cameraSource = None
+    
+    def __init__(self, cameraSource):
+        self.cameraSource = cameraSource
         
+    @cherrypy.expose()
+    def index(self):
+        cameraStatus = self.cameraSource.status()
+        cherrypy.response.headers["Content-type"] = "application/json"
+        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=CameraStatus.json"
+        return json.dumps(cameraStatus)
+    
+class CalibrationController(object):
+    
+    cameraSource = None
+    
+    def __init__(self, cameraSource):
+        self.cameraSource = cameraSource
+    
+    @cherrypy.expose()  
+    def index(self, calibrationModel=None):
+        method = cherrypy.request.method.upper()
+        if method == "GET":
+            cherrypy.response.headers["Content-type"] = "application/json"
+            cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Calibration.json"
+            calibrationModel = self.cameraSource.calibrationModel
+            return json.dumps(calibrationModel)
+        elif method == "POST":
+            self.cameraSource.calibrationModel = json.loads(calibrationModel)
+            return calibrationModel
+        else:
+            cherrypy.response.headers["Allow"] = "GET, POST"
+            raise cherrypy.HTTPError(405)
+                
+            
 class ExportController(object):
 
     book = None
@@ -191,13 +231,6 @@ class DecapodServer(object):
     def index(self):
         raise cherrypy.HTTPRedirect(resources.webURL("${components}/bookManagement/html/bookManagement.html"))
 
-    @cherrypy.expose
-    def cameras(self):
-        cameraStatus = self.cameraSource.status()
-        cherrypy.response.headers["Content-type"] = "application/json"
-        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=CameraStatus.json"
-        return json.dumps(cameraStatus)
-
 
 # Package-level utility functions for starting the server.
 def parseClassNamePath(classNamePath):
@@ -211,15 +244,21 @@ def determineCamerasClass():
     else:
         return "cameras.Cameras"
     
-def mountApp(camerasClassName):    
+def mountApp(camerasClassName):
+    # Parse command line options, configuring the correct cameras object    
     moduleName, className = parseClassNamePath(camerasClassName)
     camerasModule = globals()[moduleName]
-    cameraClass = getattr(camerasModule, className)
+    cameraClass = getattr(camerasModule, className)    
+    cameraSource = cameraClass(resources, "${config}/decapod-supported-cameras.json")
     
-    root = DecapodServer(cameraClass(resources,
-                                     "${config}/decapod-supported-cameras.json"))
-    root.images = ImageController(root.cameraSource, root.book)
+    # Set up the server application and its controllers
+    root = DecapodServer(cameraSource)
+    root.images = ImageController(cameraSource, root.book)
     root.pdf = ExportController(root.book)
+    root.cameras = CamerasController(cameraSource)
+    root.cameras.calibration = CalibrationController(cameraSource)
+    
+    # Mount the application
     cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
     return root
         

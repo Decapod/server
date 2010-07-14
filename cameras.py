@@ -15,7 +15,9 @@ class Cameras(object):
     
     imageIndex = 0;
     cameraSupportConfig = None
+    supportedModels = None
     resources = None
+    calibrationModel = None
     
     def __init__(self, resourceSource, cameraConfig):
         self.resources = resourceSource
@@ -24,9 +26,42 @@ class Cameras(object):
         supportedCamerasPath = self.resources.filePath(cameraConfig)
         supportedCamerasJSON = open(supportedCamerasPath)
         self.cameraSupportConfig = json.load(supportedCamerasJSON)
+        self.supportedModels = self.mapSupportedCamerasToModelList()
         
+        # Setup the calibration model.
+        self.calibrationModel = self.defaultCalibrationModel()
+        
+        # Setup the book capture location.
         utils.mkdirIfNecessary(self.resources.filePath(captureDir))
 
+    def defaultCalibrationModel(self):
+        # TODO: Use a better scheme for keeping track of left and right cameras.
+        ports = self.cameraPortsAscending()
+        calibration = {
+            "left": {
+                "id": ports[0],
+                "rotation": 0
+            },
+            "right": {
+                "id": ports[1],
+                "rotation": 0
+            }                
+        }
+        return calibration
+    
+    def cameraPortsAscending(self):
+        cameraInfo = self.cameraInfo()
+        
+        if len(cameraInfo) < 2:
+            raise CameraError, "Two cameras are not currently connected."
+        
+        ports = [
+            cameraInfo[0]["port"], 
+            cameraInfo[1]["port"]
+        ]
+        ports.sort()
+        return ports
+    
     def cameraInfo(self):
         """Detects the cameras locally attached to the PC.
            Returns a JSON document, describing the camera and its port."""
@@ -75,10 +110,8 @@ class Cameras(object):
         return supportedModels
        
     def isCameraSupported(self, cameraInfo):
-        # TODO: Cache the results of this
-        supportedModels = self.mapSupportedCamerasToModelList()
         try:
-            supportedModels.index(cameraInfo["model"])
+            self.supportedModels.index(cameraInfo["model"])
             return True
         except ValueError:
             return False
@@ -165,7 +198,7 @@ class Cameras(object):
             raise CaptureError, "Two connected cameras were not detected."
         return self.captureImage(detectedCameras[0]), \
                self.captureImage(detectedCameras[1])
-
+            
 
 class MockCameras(Cameras):
     
@@ -179,14 +212,14 @@ class MockCameras(Cameras):
         if self.connectedCameras != None:
             return self.connectedCameras
         
-        return  [{
-            "model": "Canon PowerShot G10", 
-            "port": "usb:002,012", 
+        return [{
+            "model": "Canon PowerShot G10",
+            "port": "usb:003,004", 
             "capture": True, 
             "download": True
         },{
            "model": "Canon PowerShot G10", 
-           "port": "usb:003,004", 
+           "port": "usb:002,012", 
            "capture": True, 
            "download": True
         }]
