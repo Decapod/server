@@ -5,7 +5,7 @@ import shutil
 sys.path.append(os.path.abspath('..'))
 import resourcesource
 
-capturedImagesTestDir = "data/captured-images/"
+capturedImagesTestDir = "data/book/capturedImages/"
 
 def cleanUpCapturedImages():
     imagePaths = glob.glob(capturedImagesTestDir + "*")

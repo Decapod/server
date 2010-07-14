@@ -5,7 +5,7 @@ from PIL import Image
 import simplejson as json
 import decapod_utilities as utils
 
-captureDir = "${capturedImages}/"
+captureDir = "${book}/capturedImages/"
 imagePrefix = "decapod-"
 
 class CameraError(Exception): pass

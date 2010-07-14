@@ -11,8 +11,8 @@
 		"target": "/config",
 		"source": "tests/data/config"
 	},
-	"capturedImages": {
-		"target": "/capturedImages",
-		"source": "tests/data/captured-images"
+	"book": {
+		"target": "/book",
+		"source": "tests/data/book"
 	}
 }

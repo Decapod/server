@@ -9,20 +9,14 @@
 		"source": "../decapod-ui/components"
 	},
 	
-        "shared": {
+    "shared": {
 		"target": "/shared",
 		"source": "../decapod-ui/shared"
 	},
 	
-	
-	"capturedImages": {
-		"target": "/capturedImages",
-		"source": "captured-images"
-	},
-	
-	"generatedPDF": {
-		"target": "/generatedPDF",
-		"source": "pdf"
+	"book": {
+		"target": "/book",
+		"source": "book"
 	},
 	
 	"mockImages": {

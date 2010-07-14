@@ -3,7 +3,7 @@ import shutil
 import glob
 import decapod_utilities as utils
 
-pdfDir = "${generatedPDF}/"
+pdfDir = "${book}/pdf/"
 # TODO: Move these values into configuration
 multiPageTIFFName = "Decapod-multipage.tiff"
 pdfName = "Decapod.pdf"

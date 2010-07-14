@@ -43,21 +43,18 @@ class TestRequests(helper.CPWebCase):
             self.assertEqual(len(json), numKeys)
         return json
     
-    def test_00_getCapture(self):
+    def test_00_getRoot(self):
         """ 
-        Ensures that the /capture page is mounted correctly and that / redirects
-        to /capture
+        Ensures that / redirects to the book management page
         """
         
-        captureMount = "/capture"
+        captureMount = "/components/bookManagement/html/bookManagement.html"
         
         #tests the request for the capture page
         self.getPage("/")
         self.assertStatus(303)
         self.assertHeader('Location', cherrypy.url(captureMount))
         
-        #throws a 500 error because the capture.html page isn't available.
-        #will need the ui code here as well for this to work
         self.getPage(captureMount)
         self.assertStatus(200)
 
@@ -94,10 +91,10 @@ class TestRequests(helper.CPWebCase):
         secondImageName = "decapod-0002"
         
         # Test the left and right image URLs.
-        self.assertEqual(result["left"], "/capturedImages/" + firstImageName + ".jpg", \
+        self.assertEqual(result["left"], "/book/capturedImages/" + firstImageName + ".jpg", \
                          "The URL for the first image should be relative to the capturedImages resource. Actual is: " \
                          + result["left"])
-        self.assertEqual(result["right"], "/capturedImages/" + secondImageName + ".jpg", \
+        self.assertEqual(result["right"], "/book/capturedImages/" + secondImageName + ".jpg", \
                          "The URL for the second image should be relative to the capturedImages resource. Actual is: " \
                          + result["right"])
         
@@ -105,7 +102,7 @@ class TestRequests(helper.CPWebCase):
         #   * Relative to the /testData resource
         #   * a concatenation of the first and second image names
         #   * thumbnails should have -thumb suffix
-        spreadImageName = "/capturedImages/" + firstImageName + "-" + secondImageName
+        spreadImageName = "/book/capturedImages/" + firstImageName + "-" + secondImageName
         self.assertEqual(result["spread"], spreadImageName + ".png", \
                         "The URL for spread image should be relative to the capturedImages resource. Actual value is: " \
                         + result["spread"])
@@ -124,5 +121,5 @@ class TestRequests(helper.CPWebCase):
         self.getPage("/pdf", method="POST", body=postBody, headers=[("Accept", "*/*")])
         self.assertStatus(200)
         self.assertHeader('Content-Type', 'text/html')
-        self.assertEqual(self.body, "/generatedPDF/Decapod.pdf")
+        self.assertEqual(self.body, "/book/pdf/Decapod.pdf")
 	
