@@ -15,7 +15,7 @@ import cameras
 import pdf
 
 # Setup configuration for static resources within the server.
-serverConfigPath = os.path.join(resourcesource.serverBasePath, "decapod-resource-config.json")
+serverConfigPath = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
 resources = resourcesource.ResourceSource(serverConfigPath)
 
 class ImageController(object):
