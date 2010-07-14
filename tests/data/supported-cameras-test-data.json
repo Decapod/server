@@ -1,6 +1,13 @@
 {
-    "Canon": [{
-        "model": "foo",
-        "label": "bar"
-    }]
+	"allowUnsupportedCameras": false,
+	"supportedCameras": {
+	    "Canon": [{
+	        "name": "Canon PowerShot G10",
+	        "label": "PowerShot G10"
+	    }],
+	    "Nikon": [{
+	        "name": "Nikon D90",
+	        "label": "D90"
+	    }]
+	}
 }

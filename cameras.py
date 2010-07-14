@@ -14,7 +14,7 @@ class CaptureError(CameraError): pass
 class Cameras(object):
     
     imageIndex = 0;
-    supportedCameras = None
+    cameraSupportConfig = None
     resources = None
     
     def __init__(self, resourceSource, cameraConfig):
@@ -23,10 +23,9 @@ class Cameras(object):
         # Load the supported cameras configuration.
         supportedCamerasPath = self.resources.filePath(cameraConfig)
         supportedCamerasJSON = open(supportedCamerasPath)
-        self.supportedCameras = json.load(supportedCamerasJSON)
+        self.cameraSupportConfig = json.load(supportedCamerasJSON)
         
         utils.mkdirIfNecessary(self.resources.filePath(captureDir))
-
 
     def cameraInfo(self):
         """Detects the cameras locally attached to the PC.
@@ -65,11 +64,74 @@ class Cameras(object):
         
         return cameras
     
-    def status(self):
-        return {
-            "status": "Awesome",
-            "supportedCameras": self.supportedCameras
+    def mapSupportedCamerasToModelList(self):
+        supportedCameras = self.cameraSupportConfig["supportedCameras"]
+        supportedModels = []
+        
+        for brand in supportedCameras.values():
+            modelsForBrand = map(lambda model: model["name"], brand)
+            supportedModels.extend(modelsForBrand)
+        
+        return supportedModels
+       
+    def isCameraSupported(self, cameraInfo):
+        # TODO: Cache the results of this
+        supportedModels = self.mapSupportedCamerasToModelList()
+        try:
+            supportedModels.index(cameraInfo["model"])
+            return True
+        except ValueError:
+            return False
+        
+    def doCamerasMatch(self, cameraInfos):
+        if len(cameraInfos) == 2 and cameraInfos[0]["model"] == cameraInfos[1]["model"]:
+            return True
+        
+        return False
+        
+    def status(self):            
+        cameraStatus = {
+            "supportedCameras": self.cameraSupportConfig["supportedCameras"]
         }
+        connectedCameras = self.cameraInfo()
+        
+        # No cameras
+        if len(connectedCameras) is 0:
+            cameraStatus["status"] = "noCameras"
+            return cameraStatus
+        
+        # One camera
+        if len(connectedCameras) is 1:
+            if self.isCameraSupported(connectedCameras[0]) is True:
+                cameraStatus["status"] = "oneCameraCompatible"
+            else:
+                cameraStatus["status"] = "oneCameraIncompatible"
+            return cameraStatus
+        
+        # Multiple cameras
+        if self.cameraSupportConfig["allowUnsupportedCameras"] is True:
+            cameraStatus["status"] = "success"
+            return cameraStatus
+        
+        # Two unmatching cameras
+        if self.doCamerasMatch(connectedCameras) is False:
+            leftSupported = self.isCameraSupported(connectedCameras[0])
+            rightSupported = self.isCameraSupported(connectedCameras[1])
+            
+            if leftSupported and rightSupported:
+                cameraStatus["status"] = "notMatchingCompatible"
+            elif leftSupported is False and rightSupported is False:
+                cameraStatus["status"] = "notMatchingIncompatible"
+            else:
+                cameraStatus["status"] = "notMatchingOneCompatibleOneNot"
+            return cameraStatus
+        
+        # Two matching cameras
+        if self.isCameraSupported(connectedCameras[0]):
+            cameraStatus["status"] = "success"
+        else:
+            cameraStatus["status"] = "incompatible"
+        return cameraStatus
 
     def generateImageName(self):
         self.imageIndex += 1     
@@ -107,15 +169,23 @@ class Cameras(object):
 
 class MockCameras(Cameras):
     
+    connectedCameras = None
+    
+    def __init__(self, resourceSource, cameraConfig, connectedCameras = None):
+        Cameras.__init__(self, resourceSource, cameraConfig)
+        self.connectedCameras = connectedCameras
+        
     def cameraInfo(self):
-        # TODO: These should be made to match the list of supported cameras.
-        return [{
-            "model": "Canon Powershot SX110IS", 
+        if self.connectedCameras != None:
+            return self.connectedCameras
+        
+        return  [{
+            "model": "Canon PowerShot G10", 
             "port": "usb:002,012", 
             "capture": True, 
             "download": True
         },{
-           "model": "Nikon D80", 
+           "model": "Canon PowerShot G10", 
            "port": "usb:003,004", 
            "capture": True, 
            "download": True

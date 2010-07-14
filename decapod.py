@@ -140,7 +140,7 @@ class ImageController(object):
         return
 
         
-class Export(object):
+class ExportController(object):
 
     book = None
     generatedPDFPath = None
@@ -189,22 +189,13 @@ class DecapodServer(object):
         
     @cherrypy.expose
     def index(self):
-        raise cherrypy.HTTPRedirect("/capture")
-
-    @cherrypy.expose
-    def capture(self):
-        # TODO: Chuck this
-        html_path = resources.filePath("${components}/capture/html/Capture.html")
-        file = open(html_path)
-        content = file.read()
-        file.close()
-        return content
+        raise cherrypy.HTTPRedirect(resources.webURL("${components}/bookManagement/html/bookManagement.html"))
 
     @cherrypy.expose
     def cameras(self):
-        cameraStatus = self.cameraSource.cameraInfo()
+        cameraStatus = self.cameraSource.status()
         cherrypy.response.headers["Content-type"] = "application/json"
-        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Cameras.json"
+        cherrypy.response.headers["Content-Disposition"] = "attachment; filename=CameraStatus.json"
         return json.dumps(cameraStatus)
 
 
@@ -228,7 +219,7 @@ def mountApp(camerasClassName):
     root = DecapodServer(cameraClass(resources,
                                      "${config}/decapod-supported-cameras.json"))
     root.images = ImageController(root.cameraSource, root.book)
-    root.pdf = Export(root.book)
+    root.pdf = ExportController(root.book)
     cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
     return root
         

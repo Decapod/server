@@ -1,32 +1,35 @@
 {
-    "Canon": [{
-        "name": "Canon PowerShot G10",
-        "label": "PowerShot G10"
-    }, {
-        "name": "G11",
-        "label": "PowerShot G11"
-    }, {
-        "name": "550D",
-        "Label": "EOS 550D"
-    }],
-    "Nikon": [{
-        "name": "D90",
-        "label": "D90"
-    }, {
-        "name": "D300",
-        "label": "D300"
-    }, {
-        "name": "D3S",
-        "label": "D3S"
-    }],
-    "Sony": [{
-        "name": "DSLR-A500",
-        "label": "α500"
-    }, {
-        "name": "DSLR-A290",
-        "label": "α290"
-    }, {
-        "name": "NEX-5",
-        "label": "NEX-5"
-    }]
+	"allowUnsupportedCameras": false,
+    "supportedCameras": {
+        "Canon": [{
+            "name": "Canon PowerShot G10",
+            "label": "PowerShot G10"
+        }, {
+            "name": "Canon PowerShot G11",
+            "label": "PowerShot G11"
+        }, {
+            "name": "Canon 550D",
+            "label": "EOS 550D"
+        }],
+        "Nikon": [{
+            "name": "Nikon D90",
+            "label": "D90"
+        }, {
+            "name": "Nikon D300",
+            "label": "D300"
+        }, {
+            "name": "Nikon D3S",
+            "label": "D3S"
+        }],
+        "Sony": [{
+            "name": "Sony DSLR-A500",
+            "label": "α500"
+        }, {
+            "name": "Sony DSLR-A290",
+            "label": "α290"
+        }, {
+            "name": "Sony NEX-5",
+            "label": "NEX-5"
+        }]
+    }
 }
