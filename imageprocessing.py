@@ -7,12 +7,28 @@ class ImageProcessor(object):
     
     def __init__(self, resourceSource):
         self.resources = resourceSource
-        
+    
+    def resize(self, imagePath, newLongestDimension, resizedImagePath = None, filter = Image.NEAREST):
+        resizedImagePath = imagePath if resizedImagePath is None else resizedImagePath
+        fullImagePath = self.resources.filePath(imagePath)
+        im = Image.open(fullImagePath)
+        size = im.size
+        longestDim = size[1] if size[1] > size[0] else size[0]
+        resizeFactor = float(newLongestDimension) / float(longestDim)
+        newSize = (int(size[0] * resizeFactor), int(size[1] * resizeFactor))
+        resized = im.resize(newSize, filter)
+        resized.save(self.resources.filePath(resizedImagePath))
+        return resizedImagePath
+    
+    def medium(self, imagePath):
+        midPath = self.resources.appendSuffix(imagePath, "-mid")
+        return self.resize(imagePath, 900, midPath) 
+    
     def thumbnail(self, fullSizeImagePath):
         size = 100, 146
         im = Image.open(self.resources.filePath(fullSizeImagePath))
         im.thumbnail(size, Image.ANTIALIAS)
-        thumbnailPath = fullSizeImagePath[:-4] + "-thumb.jpg"
+        thumbnailPath = self.resources.appendSuffix(fullSizeImagePath, "-thumb")
         im.save(self.resources.filePath(thumbnailPath))
         return thumbnailPath
     

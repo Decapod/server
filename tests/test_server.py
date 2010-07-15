@@ -102,12 +102,13 @@ class TestRequests(helper.CPWebCase):
         #   * Relative to the /testData resource
         #   * a concatenation of the first and second image names
         #   * thumbnails should have -thumb suffix
-        spreadImageName = "/book/capturedImages/" + firstImageName + "-" + secondImageName
-        self.assertEqual(result["spread"], spreadImageName + ".png", \
+        spreadImageName = "decapod-0001-mid-decapod-0002-mid"
+        spreadImagePath = "/book/capturedImages/"
+        self.assertEqual(result["spread"], spreadImagePath + spreadImageName + ".png", \
                         "The URL for spread image should be relative to the capturedImages resource. Actual value is: " \
                         + result["spread"])
          
-        self.assertEqual(result["thumb"], spreadImageName + "-thumb.jpg", \
+        self.assertEqual(result["thumb"], spreadImagePath + spreadImageName + "-thumb.png", \
                          "The URL for spread thumbnail should be relative to the capturedImages resource. Actual value is:" \
                          + result["thumb"])
         

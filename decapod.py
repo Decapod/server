@@ -24,12 +24,12 @@ class ImageController(object):
     and sets of pictures. All URLs are considered a path to an image or to a set
     of images represented by a JSON file of their attributes."""
 
-    processor = imageprocessing.ImageProcessor(resources)
     cameraSource = None
     book = None
     
-    def __init__(self, cameras, book):
+    def __init__(self, cameras, processor, book):
         self.cameraSource = cameras
+        self.processor = processor
         self.book = book
         
     def createPageModelForWeb(self, bookPage):
@@ -39,6 +39,23 @@ class ImageController(object):
             
         return json.dumps(webModel)
     
+    def capturePageSpread(self):
+        # TODO: Image processing pipeline should not be in the controller       
+        firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
+        firstMidPath = self.processor.medium(firstImagePath)
+        secondMidPath = self.processor.medium(secondImagePath)
+        stitchedPath = self.processor.stitch(firstMidPath, secondMidPath)
+        thumbnailPath =self.processor.thumbnail(stitchedPath)
+
+        page = {
+            "left": firstImagePath,
+            "right": secondImagePath,
+            "spread": stitchedPath,
+            "thumb": thumbnailPath
+        }
+        self.book.append(page)
+        return page
+        
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """Handles the /images/ URL - a collection of sets of images.
@@ -56,21 +73,8 @@ class ImageController(object):
         elif method == "POST":
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.book)
-   
-            #TODO: add page order correction.
-            firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
-            stitchedPath = self.processor.stitch(firstImagePath, secondImagePath)
-            thumbnailPath =self.processor.thumbnail(stitchedPath)
-
-            page = {
-                "left": firstImagePath,
-                "right": secondImagePath,
-                "spread": stitchedPath,
-                "thumb": thumbnailPath
-            }
-            self.book.append(page)
-                     
-            return self.createPageModelForWeb(page)
+            pageSpread = self.capturePageSpread()
+            return self.createPageModelForWeb(pageSpread)
 
         elif method == "PUT":
             # TODO: This method looks fatal. Do we really want it?
@@ -155,11 +159,13 @@ class CamerasController(object):
 class CalibrationController(object):
     
     cameraSource = None
+    processor = None
     calibrationImages = {}
     
-    def __init__(self, cameraSource):
+    def __init__(self, cameraSource, imageProcessor):
         self.cameraSource = cameraSource
-    
+        self.processor = imageProcessor
+        
     @cherrypy.expose()  
     def index(self, calibrationModel=None):
         method = cherrypy.request.method.upper()
@@ -175,13 +181,19 @@ class CalibrationController(object):
             cherrypy.response.headers["Allow"] = "GET, POST"
             raise cherrypy.HTTPError(405)
     
+    def captureCalibrationImage(self, cameraName):
+        # TODO: Image processing pipeline code shouldn't be in controller code!
+        calibrationImagePath = self.cameraSource.captureCalibrationImage(cameraName)
+        self.processor.resize(calibrationImagePath, 640)
+        return calibrationImagePath
+        
     def calibrationImageHandler(self, cameraName):
         jsonImage = lambda : json.dumps({"image": resources.webURL(self.calibrationImages[cameraName])})
         method = cherrypy.request.method.upper()
         if method == "GET":
             return jsonImage()
         elif method == "PUT":
-            self.calibrationImages[cameraName] = self.cameraSource.captureCalibrationImage(cameraName)
+            self.calibrationImages[cameraName] = self.captureCalibrationImage(cameraName)
             return jsonImage()
         else:
             cherrypy.response.headers["Allow"] = "GET, PUT"
@@ -264,15 +276,18 @@ def mountApp(camerasClassName):
     # Parse command line options, configuring the correct cameras object    
     moduleName, className = parseClassNamePath(camerasClassName)
     camerasModule = globals()[moduleName]
-    cameraClass = getattr(camerasModule, className)    
+    cameraClass = getattr(camerasModule, className)
+    
+    # Set up shared resources
     cameraSource = cameraClass(resources, "${config}/decapod-supported-cameras.json")
+    processor = imageprocessing.ImageProcessor(resources)
     
     # Set up the server application and its controllers
     root = DecapodServer(cameraSource)
-    root.images = ImageController(cameraSource, root.book)
+    root.images = ImageController(cameraSource, processor, root.book)
     root.pdf = ExportController(root.book)
     root.cameras = CamerasController(cameraSource)
-    root.cameras.calibration = CalibrationController(cameraSource)
+    root.cameras.calibration = CalibrationController(cameraSource, processor)
     
     # Mount the application
     cherrypy.tree.mount(root, "/", resources.cherryPyConfig())

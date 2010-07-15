@@ -21,11 +21,11 @@ class CamerasTest(unittest.TestCase):
     }
     expectedDefaultCalibrationModel = {
         "left": {
-            "id": "usb:002,012",
+            "id": "abc",
             "rotation": 0
         },
         "right": {
-            "id": "usb:003,004",
+            "id": "xyz",
             "rotation": 0
         }
     }
@@ -100,3 +100,12 @@ class CamerasTest(unittest.TestCase):
         }, {
             "model": "Nikon D90"
         }])
+        
+    def test_serialNumbers(self):
+        cams = cameras.MockCameras(self.resources, 
+                                   "${testData}/supported-cameras-test-data.json")
+        serialNumbers = cams.serialNumbers()
+        self.assertEquals(2, len(serialNumbers))
+        self.assertEquals("abc", serialNumbers[0])
+        self.assertEquals("xyz", serialNumbers[1])
+        

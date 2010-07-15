@@ -65,6 +65,10 @@ class ResourceSource(object):
     def getPathHead(self, filePath):
         return filePath.rpartition("/")[0] + "/"
     
+    def appendSuffix(self, filePath, suffix):
+        fileName, extension = self.getFileName(filePath)
+        return self.getPathHead(filePath) + fileName + suffix + "." + extension
+    
     def webURLForResource(self, resourceName):
         if resourceName in self.resources:
             return self.resources[resourceName]["target"]
