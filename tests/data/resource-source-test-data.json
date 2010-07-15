@@ -11,6 +11,10 @@
 		"target": "/config",
 		"source": "tests/data/config"
 	},
+	"calibrationImages": {
+		"target": "/calibrationImages",
+		"source": "calibrationImages"
+	},
 	"book": {
 		"target": "/book",
 		"source": "tests/data/book"

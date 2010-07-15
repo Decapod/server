@@ -155,9 +155,7 @@ class CamerasController(object):
 class CalibrationController(object):
     
     cameraSource = None
-    calibrationImages = {
-    
-    }
+    calibrationImages = {}
     
     def __init__(self, cameraSource):
         self.cameraSource = cameraSource
@@ -168,10 +166,10 @@ class CalibrationController(object):
         if method == "GET":
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Calibration.json"
-            calibrationModel = self.cameraSource.calibrationModel
+            calibrationModel = self.cameraSource.calibrationModel()
             return json.dumps(calibrationModel)
         elif method == "POST":
-            self.cameraSource.calibrationModel = json.loads(calibrationModel)
+            self.cameraSource.calibrationModel(json.loads(calibrationModel))
             return calibrationModel
         else:
             cherrypy.response.headers["Allow"] = "GET, POST"

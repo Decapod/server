@@ -39,7 +39,7 @@ class CamerasTest(unittest.TestCase):
     def test_defaultCalibrationModel(self):
         cams = cameras.MockCameras(self.resources,
                                            "${testData}/supported-cameras-test-data.json")
-        calibration = cams.calibrationModel
+        calibration = cams.calibrationModel()
         self.assertEquals(calibration, self.expectedDefaultCalibrationModel);
         
     def checkCameraInfo(self, expectedStatus, connectedCameras):

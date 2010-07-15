@@ -18,7 +18,7 @@ class Cameras(object):
     cameraSupportConfig = None
     supportedModels = None
     resources = None
-    calibrationModel = None
+    calibration = None
     
     def __init__(self, resourceSource, cameraConfig):
         self.resources = resourceSource
@@ -28,14 +28,21 @@ class Cameras(object):
         supportedCamerasJSON = open(supportedCamerasPath)
         self.cameraSupportConfig = json.load(supportedCamerasJSON)
         self.supportedModels = self.mapSupportedCamerasToModelList()
-
-        # Setup the calibration model.
-        self.calibrationModel = self.defaultCalibrationModel()
                 
         # Setup the capture locations.
         utils.mkdirIfNecessary(self.resources.filePath(CAPTURE_DIR))
         utils.remakeDir(self.resources.filePath(CALIBRATION_DIR))
 
+    def calibrationModel(self, updatedModel=None):
+        # Get
+        if updatedModel is None:
+            if self.calibration is None:
+                self.calibration = self.defaultCalibrationModel()
+            return self.calibration
+        
+        # Set
+        self.calibration = updatedModel
+        
     def defaultCalibrationModel(self):
         # TODO: Use a better scheme for keeping track of left and right cameras.
         ports = self.cameraPortsAscending()
