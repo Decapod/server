@@ -5,7 +5,8 @@ from PIL import Image
 import simplejson as json
 import decapod_utilities as utils
 
-captureDir = "${book}/capturedImages/"
+CAPTURE_DIR = "${book}/capturedImages/"
+CALIBRATION_DIR = "${calibrationImages}/"
 imagePrefix = "decapod-"
 
 class CameraError(Exception): pass
@@ -27,12 +28,13 @@ class Cameras(object):
         supportedCamerasJSON = open(supportedCamerasPath)
         self.cameraSupportConfig = json.load(supportedCamerasJSON)
         self.supportedModels = self.mapSupportedCamerasToModelList()
-        
+
         # Setup the calibration model.
         self.calibrationModel = self.defaultCalibrationModel()
-        
-        # Setup the book capture location.
-        utils.mkdirIfNecessary(self.resources.filePath(captureDir))
+                
+        # Setup the capture locations.
+        utils.mkdirIfNecessary(self.resources.filePath(CAPTURE_DIR))
+        utils.remakeDir(self.resources.filePath(CALIBRATION_DIR))
 
     def defaultCalibrationModel(self):
         # TODO: Use a better scheme for keeping track of left and right cameras.
@@ -170,10 +172,7 @@ class Cameras(object):
         self.imageIndex += 1     
         return "%s%04d.jpg" % (imagePrefix, self.imageIndex)
     
-    def captureImage(self, camera):
-        imageFileName = self.generateImageName()
-        imagePath = captureDir + imageFileName
-        fullImagePath = self.resources.filePath(imagePath)
+    def capture(self, camera, imageFilePath):
         port = camera["port"]
         model = camera["model"]
         
@@ -185,21 +184,45 @@ class Cameras(object):
             "--force-overwrite",
             "--camera='%s'" % model,
             "--port=%s" % port,
-            "--filename=%s" % fullImagePath
+            "--filename=%s" % imageFilePath
         ]
         utils.invokeCommandSync(captureCmd, CaptureError, \
                                 "Could not capture an image with the camera %s on port %s" \
                                 % (model, port))
+        return imageFilePath
+    
+    def capturePage(self, camera):
+        imageFileName = self.generateImageName()
+        imagePath = CAPTURE_DIR + imageFileName
+        self.capture(camera, self.resources.filePath(imagePath))
         return imagePath
     
-    def captureImagePair(self):
-        detectedCameras = self.cameraInfo()
-        if len(detectedCameras) < 2:
+    def capturePageSpread(self):
+        connectedCameras = self.cameraInfo()
+        if len(connectedCameras) < 2:
             raise CaptureError, "Two connected cameras were not detected."
-        return self.captureImage(detectedCameras[0]), \
-               self.captureImage(detectedCameras[1])
-            
+        firstImage, secondImage = self.capturePage(connectedCameras[0]), self.capturePage(connectedCameras[1])
+        return firstImage, secondImage
 
+    def captureCalibrationImage(self, cameraName):
+        cameraID = self.calibrationModel[cameraName]["id"]
+        connectedCameras = self.cameraInfo()
+        cameraWithID = None
+        for camera in connectedCameras:
+            if camera["port"] is cameraID:
+                cameraWithID = camera
+        
+        imagePath = CALIBRATION_DIR + cameraName + "Calibration.jpg"
+        self.capture(camera, self.resources.filePath(imagePath))
+        return imagePath
+    
+    def captureLeftCalibrationImage(self):
+        return captureCalibrationImage("left")
+    
+    def captureRightCalibrationImage(self):
+        return captureCalibrationImage("right")
+
+        
 class MockCameras(Cameras):
     
     connectedCameras = None
@@ -224,18 +247,15 @@ class MockCameras(Cameras):
            "download": True
         }]
     
-    def captureImage(self, camera):
-        """Copies an image from the mock images folder to the captured images folder."""        
-        capturedFileName = self.generateImageName()
-        capturedFilePath = captureDir + capturedFileName
-        
+    def capture(self, camera, imageFileName):
+        """Copies an image from the mock images folder to the specified image file path."""        
+
         files = glob.glob(self.resources.filePath("${mockImages}/*"))
         files.sort()
         file_count = len(files)
 
         name_to_open = files[self.imageIndex % file_count]
         im = Image.open(name_to_open)
-        im.save(self.resources.filePath(capturedFilePath));
+        im.save(imageFileName)
         
-        return capturedFilePath
-
+        return imageFileName

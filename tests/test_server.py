@@ -64,7 +64,7 @@ class TestRequests(helper.CPWebCase):
         Tests the GET request for retrieving the camera info
         """
         #tests the GET request for retrieving the camera info
-        self.getPage("/cameras")
+        self.getPage("/cameras/")
         self.assertStatus(200)
         self.assertJSON(2)
         

@@ -1,8 +1,3 @@
-"""Module contains a mock Decapod server for testing purposes.
-
-It always pretends there are two cameras connected and returns images from the
-local filesystem instead of using gphoto.
-"""
 
 # TODO: File system or CouchDB persistence for the Book, including:
 #   * the images array
@@ -63,7 +58,7 @@ class ImageController(object):
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.book)
    
             #TODO: add page order correction.
-            firstImagePath, secondImagePath = self.cameraSource.captureImagePair()
+            firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
             stitchedPath = self.processor.stitch(firstImagePath, secondImagePath)
             thumbnailPath =self.processor.thumbnail(stitchedPath)
 
@@ -160,6 +155,9 @@ class CamerasController(object):
 class CalibrationController(object):
     
     cameraSource = None
+    calibrationImages = {
+    
+    }
     
     def __init__(self, cameraSource):
         self.cameraSource = cameraSource
@@ -178,7 +176,27 @@ class CalibrationController(object):
         else:
             cherrypy.response.headers["Allow"] = "GET, POST"
             raise cherrypy.HTTPError(405)
-                
+    
+    def calibrationImageHandler(self, cameraName):
+        jsonImage = lambda : json.dumps({"image": resources.webURL(self.calibrationImages[cameraName])})
+        method = cherrypy.request.method.upper()
+        if method == "GET":
+            return jsonImage()
+        elif method == "PUT":
+            self.calibrationImages[cameraName] = self.cameraSource.captureCalibrationImage(cameraName)
+            return jsonImage()
+        else:
+            cherrypy.response.headers["Allow"] = "GET, PUT"
+            raise cherrypy.HTTPError(405)
+        
+    @cherrypy.expose()
+    def left(self):
+        return self.calibrationImageHandler("left")
+    
+    @cherrypy.expose()
+    def right(self):
+        return self.calibrationImageHandler("right")
+            
             
 class ExportController(object):
 
