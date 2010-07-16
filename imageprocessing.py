@@ -22,7 +22,7 @@ class ImageProcessor(object):
     
     def medium(self, imagePath):
         midPath = self.resources.appendSuffix(imagePath, "-mid")
-        return self.resize(imagePath, 900, midPath) 
+        return self.resize(imagePath, 800, midPath) 
     
     def thumbnail(self, fullSizeImagePath):
         size = 100, 146
