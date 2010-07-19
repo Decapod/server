@@ -5,46 +5,47 @@ import testutils
 sys.path.append(os.path.abspath('..'))
 import resourcesource
 
+JS_PATH_ROOT = resourcesource.serverBasePath + "/" + "../decapod-ui/components/capture/js"
+
 class ResourceSourceTest(unittest.TestCase):
     resourceSource = None
-    jsPathBase = resourcesource.serverBasePath + "/" + "../decapod-ui/components/capture/js"
     
     def setUp(self):
         self.resourceSource = testutils.createTestResourceSource()
-
+    
+    def test_parsePathHead(self):
+        head = resourcesource.parsePathHead("${js}/foo/bar.jpg")
+        self.assertEquals("${js}/foo/", head)
+        
     def test_loadConfig(self):
         self.assertEquals(5, len(self.resourceSource.resources))
     
     def test_filePathForResource(self):
         jsPath = self.resourceSource.filePathForResource("js")
-        self.assertEquals(jsPath, self.jsPathBase)
+        self.assertEquals(jsPath, JS_PATH_ROOT)
         
         # Test an invalid resource name
         invalidPath = self.resourceSource.filePathForResource("invalid")
         self.assertEquals(invalidPath, None)
         
-    def test_getFileName(self):
-        name = self.resourceSource.getFileName("${js}/foo/bar.jpg")
+    def test_parseFileName(self):
+        name = resourcesource.parseFileName("${js}/foo/bar.jpg")
         self.assertEquals(2, len(name))
         self.assertEquals("bar", name[0])
         self.assertEquals("jpg", name[1])
         
-    def test_getPathHead(self):
-        head = self.resourceSource.getPathHead("${js}/foo/bar.jpg")
-        self.assertEquals("${js}/foo/", head)
-        
     def test_filePath(self):
         # Test just the resource token
         path = self.resourceSource.filePath("${js}")
-        self.assertEquals(path, self.jsPathBase)
+        self.assertEquals(path, JS_PATH_ROOT)
         
         # Test the resource token with additional path segments
         path = self.resourceSource.filePath("${js}/cat/dog")
-        self.assertEquals(path, self.jsPathBase + "/cat/dog")
+        self.assertEquals(path, JS_PATH_ROOT + "/cat/dog")
         
         # Test with a file at the end of the path 
         path = self.resourceSource.filePath("${js}/cat/dog/hamster.js")
-        self.assertEquals(path, self.jsPathBase + "/cat/dog/hamster.js")
+        self.assertEquals(path, JS_PATH_ROOT + "/cat/dog/hamster.js")
 
         # Test with no resource token
         invalidURL = self.resourceSource.filePath("invalid")
@@ -53,6 +54,15 @@ class ResourceSourceTest(unittest.TestCase):
         # Test with an invalid token name
         invalidURL = self.resourceSource.filePath("${invalid}/cat/dog")
         self.assertEquals(invalidURL, None)
+        
+    def test_virtualPath(self):
+        absolutePath = JS_PATH_ROOT + "/cat/dog"
+        result = self.resourceSource.virtualPath(absolutePath)
+        self.assertEquals(result, "${js}/cat/dog")
+        
+        absolutePath = "/invalid/path/cat/dog"
+        result = self.resourceSource.virtualPath(absolutePath)
+        self.assertEquals(result, absolutePath)
         
     def test_webURLForResource(self):
         jsURL = self.resourceSource.webURLForResource("js")

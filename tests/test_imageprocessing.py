@@ -12,10 +12,12 @@ class ImageProcessingTest(unittest.TestCase):
     
     resources = None
     processor = None
-
+    testDataDir = None
+    
     def setUp(self):
         self.resources = resourcesource.ResourceSource("data/resource-source-test-data.json")
-        self.processor = imageprocessing.ImageProcessor(self.resources)
+        self.testDataDir = self.resources.filePath("${testData}")
+        
         # Copy the images directory to a temporary directory we can clean up.
         shutil.copytree(self.resources.filePath("${testData}/images"), \
                         self.resources.filePath("${testData}/images/tmp"))
@@ -25,17 +27,17 @@ class ImageProcessingTest(unittest.TestCase):
         shutil.rmtree(self.resources.filePath("${testData}/images/tmp"))
 
     def test_thumbnail(self):
-        thumbPath = self.processor.thumbnail("${testData}/images/tmp/cat.jpg")
-        self.assertEquals(thumbPath, "${testData}/images/tmp/cat-thumb.jpg")
-        self.assertTrue(os.path.exists(self.resources.filePath(thumbPath)))
+        thumbPath = imageprocessing.thumbnail(self.testDataDir + "/images/tmp/cat.jpg")
+        self.assertEquals(thumbPath, self.testDataDir + "/images/tmp/cat-thumb.jpg")
+        self.assertTrue(os.path.exists(thumbPath))
     
     def test_stitch(self):
-        stitchPath = self.processor.stitch("${testData}/images/tmp/cat.jpg",\
-                                           "${testData}/images/tmp/cactus.jpg")
-        self.assertEquals(stitchPath, "${testData}/images/tmp/cat-cactus.png")
-        self.assertTrue(os.path.exists(self.resources.filePath(stitchPath)))
+        stitchPath = imageprocessing.stitch(self.testDataDir + "/images/tmp/cat.jpg",\
+                                            self.testDataDir + "/images/tmp/cactus.jpg")
+        self.assertEquals(stitchPath, self.testDataDir + "/images/tmp/cat-cactus.png")
+        self.assertTrue(os.path.exists(stitchPath))
 
         # Ensure that the stitched image is correctly oriented relative to the input images
         expectedHeight = 600 # px
-        stitched = Image.open(self.resources.filePath(stitchPath))
+        stitched = Image.open(stitchPath)
         self.assertEquals(expectedHeight, stitched.size[1])

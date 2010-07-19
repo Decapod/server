@@ -27,9 +27,8 @@ class ImageController(object):
     cameraSource = None
     book = None
     
-    def __init__(self, cameras, processor, book):
+    def __init__(self, cameras, book):
         self.cameraSource = cameras
-        self.processor = processor
         self.book = book
         
     def createPageModelForWeb(self, bookPage):
@@ -41,16 +40,19 @@ class ImageController(object):
     def capturePageSpread(self):
         # TODO: Image processing pipeline should not be in the controller       
         firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
-        firstMidPath = self.processor.medium(firstImagePath)
-        secondMidPath = self.processor.medium(secondImagePath)
-        stitchedPath = self.processor.stitch(firstMidPath, secondMidPath)
-        thumbnailPath =self.processor.thumbnail(stitchedPath)
+        absFirstImagePath = resources.filePath(firstImagePath)
+        absSecondImagePath = resources.filePath(secondImagePath)
+        
+        firstMidPath = imageprocessing.medium(absFirstImagePath)
+        secondMidPath = imageprocessing.medium(absSecondImagePath)
+        stitchedPath = imageprocessing.stitch(firstMidPath, secondMidPath)
+        thumbnailPath = imageprocessing.thumbnail(stitchedPath)
 
         page = {
             "left": firstImagePath,
             "right": secondImagePath,
-            "spread": stitchedPath,
-            "thumb": thumbnailPath
+            "spread": resources.virtualPath(stitchedPath),
+            "thumb": resources.virtualPath(thumbnailPath)
         }
         self.book.append(page)
         return page
@@ -162,9 +164,8 @@ class CalibrationController(object):
     processor = None
     calibrationImages = {}
     
-    def __init__(self, cameraSource, imageProcessor):
+    def __init__(self, cameraSource):
         self.cameraSource = cameraSource
-        self.processor = imageProcessor
         
     @cherrypy.expose()  
     def index(self, calibrationModel=None):
@@ -184,7 +185,7 @@ class CalibrationController(object):
     def captureCalibrationImage(self, cameraName):
         # TODO: Image processing pipeline code shouldn't be in controller code!
         calibrationImagePath = self.cameraSource.captureCalibrationImage(cameraName)
-        self.processor.resize(calibrationImagePath, 640)
+        imageprocessing.resize(calibrationImagePath, 640)
         return calibrationImagePath
         
     def calibrationImageHandler(self, cameraName):
@@ -280,14 +281,13 @@ def mountApp(camerasClassName):
     
     # Set up shared resources
     cameraSource = cameraClass(resources, "${config}/decapod-supported-cameras.json")
-    processor = imageprocessing.ImageProcessor(resources)
     
     # Set up the server application and its controllers
     root = DecapodServer(cameraSource)
-    root.images = ImageController(cameraSource, processor, root.book)
+    root.images = ImageController(cameraSource, root.book)
     root.pdf = ExportController(root.book)
     root.cameras = CamerasController(cameraSource)
-    root.cameras.calibration = CalibrationController(cameraSource, processor)
+    root.cameras.calibration = CalibrationController(cameraSource)
     
     # Mount the application
     cherrypy.tree.mount(root, "/", resources.cherryPyConfig())

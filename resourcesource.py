@@ -4,6 +4,28 @@ import json
 
 serverBasePath = os.path.dirname(os.path.abspath(__file__))
 
+##########################
+# Free utility functions #
+##########################
+
+def parseFileName (filePath):
+    """Returns a tuple containing (file name, extension)."""
+    lastSeg = filePath.rpartition("/")[2]
+    splitName = lastSeg.partition(".")
+    return (splitName[0], splitName[2])
+
+def parsePathHead(filePath):
+    return filePath.rpartition("/")[0] + "/"
+
+def appendSuffix(filePath, suffix):
+    fileName, extension = parseFileName(filePath)
+    return parsePathHead(filePath) + fileName + suffix + "." + extension
+
+
+##################
+# ResourceSource #
+##################
+
 class ResourceSource(object):
     resources = {}
     
@@ -21,7 +43,18 @@ class ResourceSource(object):
             return None, None
         
         return resourceToken[2:-1], tokens[1:]
+
+    def virtualPath(self, absolutePath):
+        if absolutePath is None:
+            return None
         
+        for resourceName in self.resources:
+            resourcePath = self.filePathForResource(resourceName)
+            if absolutePath.find(resourcePath) is 0:
+                return absolutePath.replace(resourcePath, ("${%s}" % resourceName))
+            
+        return absolutePath
+    
     def filePath(self, virtualPath):
         resourceName, pathSegs = self.parseVirtualPath(virtualPath)
         resourcePath = self.filePathForResource(resourceName)
@@ -55,19 +88,6 @@ class ResourceSource(object):
             return os.path.join(serverBasePath, self.resources[resourceName]["source"])
         else:
             return None
-        
-    def getFileName (self, filePath):
-        """Returns a tuple containing (file name, extension)."""
-        lastSeg = filePath.rpartition("/")[2]
-        splitName = lastSeg.partition(".")
-        return (splitName[0], splitName[2])
-    
-    def getPathHead(self, filePath):
-        return filePath.rpartition("/")[0] + "/"
-    
-    def appendSuffix(self, filePath, suffix):
-        fileName, extension = self.getFileName(filePath)
-        return self.getPathHead(filePath) + fileName + suffix + "." + extension
     
     def webURLForResource(self, resourceName):
         if resourceName in self.resources:
