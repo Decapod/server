@@ -14,8 +14,7 @@ import cameras
 import pdf
 
 # Setup configuration for static resources within the server.
-serverConfigPath = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
-resources = resourcesource.ResourceSource(serverConfigPath)
+DECAPOD_CONFIG = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
 
 class ImageController(object):
     """Main class for manipulating images.
@@ -23,25 +22,26 @@ class ImageController(object):
     Exposes operations such as capturing, post-processing and deleting pictures
     and sets of pictures. All URLs are considered a path to an image or to a set
     of images represented by a JSON file of their attributes."""
-
+    resources = None
     cameraSource = None
     book = None
     
-    def __init__(self, cameras, book):
+    def __init__(self, resourceSource, cameras, book):
+        self.resources = resourceSource
         self.cameraSource = cameras
         self.book = book
         
     def createPageModelForWeb(self, bookPage):
         webModel = {}
         for image in bookPage.keys():
-            webModel[image] = resources.webURL(bookPage[image])
+            webModel[image] = self.resources.webURL(bookPage[image])
         return webModel
         
     def capturePageSpread(self):
         # TODO: Image processing pipeline should not be in the controller       
         firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
-        absFirstImagePath = resources.filePath(firstImagePath)
-        absSecondImagePath = resources.filePath(secondImagePath)
+        absFirstImagePath = self.resources.filePath(firstImagePath)
+        absSecondImagePath = self.resources.filePath(secondImagePath)
         
         firstMidPath = imageprocessing.medium(absFirstImagePath)
         secondMidPath = imageprocessing.medium(absSecondImagePath)
@@ -51,8 +51,8 @@ class ImageController(object):
         page = {
             "left": firstImagePath,
             "right": secondImagePath,
-            "spread": resources.virtualPath(stitchedPath),
-            "thumb": resources.virtualPath(thumbnailPath)
+            "spread": self.resources.virtualPath(stitchedPath),
+            "thumb": self.resources.virtualPath(thumbnailPath)
         }
         self.book.append(page)
         return page
@@ -140,15 +140,17 @@ class ImageController(object):
         """Delete an image from the list of images and from the file system."""
 
         for imagePath in self.book[index].values():
-            os.unlink(resources.filePath(imagePath))
+            os.unlink(self.resources.filePath(imagePath))
         self.book.pop(index)
         return
 
 class CamerasController(object):
     
+    resources = None
     cameraSource = None
     
-    def __init__(self, cameraSource):
+    def __init__(self, resourceSource, cameraSource):
+        self.resources = resourceSource
         self.cameraSource = cameraSource
         
     @cherrypy.expose()
@@ -160,11 +162,13 @@ class CamerasController(object):
     
 class CalibrationController(object):
     
+    resources = None
     cameraSource = None
     processor = None
     calibrationImages = {}
     
-    def __init__(self, cameraSource):
+    def __init__(self, resourceSource, cameraSource):
+        self.resources = resourceSource
         self.cameraSource = cameraSource
         
     @cherrypy.expose()  
@@ -189,7 +193,7 @@ class CalibrationController(object):
         return calibrationImagePath
         
     def calibrationImageHandler(self, cameraName):
-        jsonImage = lambda : json.dumps({"image": resources.webURL(self.calibrationImages[cameraName])})
+        jsonImage = lambda : json.dumps({"image": self.resources.webURL(self.calibrationImages[cameraName])})
         method = cherrypy.request.method.upper()
         if method == "GET":
             return jsonImage()
@@ -211,12 +215,14 @@ class CalibrationController(object):
             
 class ExportController(object):
 
+    resources = None
     book = None
     generatedPDFPath = None
     pdfGenerator = None
     
-    def __init__(self, book):
-        self.pdfGenerator = pdf.PDFGenerator(resources)
+    def __init__(self, resourceSource, book):
+        self.resources = resourceSource
+        self.pdfGenerator = pdf.PDFGenerator(self.resources)
         self.book = book
         
     @cherrypy.expose
@@ -227,7 +233,7 @@ class ExportController(object):
             # rather than just assuming we've got a reference to in memory.
             if self.generatedPDF != None:
                 # TODO: Perhaps we should do an HTTP redirect to the actual resource here.
-                file = open(resources.filePath(self.generatedPDFPath))
+                file = open(self.resources.filePath(self.generatedPDFPath))
                 content = file.read()
                 file.close()
                 return content
@@ -240,7 +246,7 @@ class ExportController(object):
             # TODO: We know all the pages in the book already, why read them from the request?
             try:
                 self.generatedPDFPath = self.pdfGenerator.generate(self.book)
-                return resources.webURL(self.generatedPDFPath)
+                return self.resources.webURL(self.generatedPDFPath)
             except pdf.PDFGenerationError:
                 raise cherrypy.HTTPError(500, "Could not create PDF." )
         else:
@@ -250,15 +256,17 @@ class ExportController(object):
 
 class DecapodServer(object):
 
+    resources = None
     cameraSource = None
     book = []
     
-    def __init__(self, cameras):
+    def __init__(self, resourceSource, cameras):
+        self.resources = resourceSource
         self.cameraSource = cameras
         
     @cherrypy.expose
     def index(self):
-        raise cherrypy.HTTPRedirect(resources.webURL("${components}/bookManagement/html/bookManagement.html"))
+        raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
 
 
 # Package-level utility functions for starting the server.
@@ -280,14 +288,15 @@ def mountApp(camerasClassName):
     cameraClass = getattr(camerasModule, className)
     
     # Set up shared resources
+    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
     cameraSource = cameraClass(resources, "${config}/decapod-supported-cameras.json")
     
     # Set up the server application and its controllers
-    root = DecapodServer(cameraSource)
-    root.images = ImageController(cameraSource, root.book)
-    root.pdf = ExportController(root.book)
-    root.cameras = CamerasController(cameraSource)
-    root.cameras.calibration = CalibrationController(cameraSource)
+    root = DecapodServer(resources, cameraSource)
+    root.images = ImageController(resources, cameraSource, root.book)
+    root.pdf = ExportController(resources, root.book)
+    root.cameras = CamerasController(resources, cameraSource)
+    root.cameras.calibration = CalibrationController(resources, cameraSource)
     
     # Mount the application
     cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
