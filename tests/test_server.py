@@ -9,6 +9,7 @@ import testutils
 sys.path.append(os.path.abspath('..'))
 import decapod
 
+CAPTURED_IMAGES_ROOT = "/book/capturedImages/"
 
 def initWithoutCameras():
     return decapod.mountApp("cameras.MockCameras")
@@ -43,21 +44,47 @@ class TestRequests(helper.CPWebCase):
             self.assertEqual(len(json), numKeys)
         return json
     
+    def takePicture(self):
+        postBody = ""
+        self.getPage("/images/", method="POST", body=postBody, headers=self.jsonHeader)
+        return postBody
+    
+    def checkPageSpread(self, pageSpread, firstImageName, secondImageName):
+        # Test the left and right image URLs.
+        self.assertEqual(pageSpread["left"], CAPTURED_IMAGES_ROOT + firstImageName + ".jpg", \
+                         "The URL for the first image should be relative to the capturedImages resource. Actual is: " \
+                         + pageSpread["left"])
+        self.assertEqual(pageSpread["right"], CAPTURED_IMAGES_ROOT + secondImageName + ".jpg", \
+                         "The URL for the second image should be relative to the capturedImages resource. Actual is: " \
+                         + pageSpread["right"])
+        
+        # Check the spread image and thumbnail URLs. They should be:
+        #   * Relative to the /testData resource
+        #   * a concatenation of the first and second image names
+        #   * thumbnails should have -thumb suffix
+        spreadImageName = firstImageName + "-mid" + "-" + secondImageName + "-mid"
+        self.assertEqual(pageSpread["spread"], CAPTURED_IMAGES_ROOT + spreadImageName + ".png", \
+                        "The URL for spread image should be relative to the capturedImages resource. Actual value is: " \
+                        + pageSpread["spread"])
+         
+        self.assertEqual(pageSpread["thumb"], CAPTURED_IMAGES_ROOT + spreadImageName + "-thumb.png", \
+                         "The URL for spread thumbnail should be relative to the capturedImages resource. Actual value is:" \
+                         + pageSpread["thumb"])
+    
     def test_00_getRoot(self):
         """ 
         Ensures that / redirects to the book management page
         """
         
-        captureMount = "/components/bookManagement/html/bookManagement.html"
+        expectedRedirectURL = "/components/bookManagement/html/bookManagement.html"
         
         #tests the request for the capture page
         self.getPage("/")
         self.assertStatus(303)
-        self.assertHeader('Location', cherrypy.url(captureMount))
+        self.assertHeader('Location', cherrypy.url(expectedRedirectURL))
         
-        self.getPage(captureMount)
+        self.getPage(expectedRedirectURL)
         self.assertStatus(200)
-
         
     def test_01_getCameras(self):
         """
@@ -77,43 +104,17 @@ class TestRequests(helper.CPWebCase):
         self.getPage("/images/")
         self.assertStatus(200)
         self.assertJSON(0)
-    
+
     def test_03_takeImagesPOST(self):
         """
         Tests the POST request for taking a new image.
         """
-        postBody = ""
-        self.getPage("/images/", method="POST", body=postBody, headers=self.jsonHeader)
+        self.takePicture()
         self.assertStatus(200)
         result = self.assertJSON(4)
+        self.checkPageSpread(result, "decapod-0001", "decapod-0002")
         
-        firstImageName = "decapod-0001"
-        secondImageName = "decapod-0002"
-        
-        # Test the left and right image URLs.
-        self.assertEqual(result["left"], "/book/capturedImages/" + firstImageName + ".jpg", \
-                         "The URL for the first image should be relative to the capturedImages resource. Actual is: " \
-                         + result["left"])
-        self.assertEqual(result["right"], "/book/capturedImages/" + secondImageName + ".jpg", \
-                         "The URL for the second image should be relative to the capturedImages resource. Actual is: " \
-                         + result["right"])
-        
-        # Check the spread image and thumbnail URLs. They should be:
-        #   * Relative to the /testData resource
-        #   * a concatenation of the first and second image names
-        #   * thumbnails should have -thumb suffix
-        spreadImageName = "decapod-0001-mid-decapod-0002-mid"
-        spreadImagePath = "/book/capturedImages/"
-        self.assertEqual(result["spread"], spreadImagePath + spreadImageName + ".png", \
-                        "The URL for spread image should be relative to the capturedImages resource. Actual value is: " \
-                        + result["spread"])
-         
-        self.assertEqual(result["thumb"], spreadImagePath + spreadImageName + "-thumb.png", \
-                         "The URL for spread thumbnail should be relative to the capturedImages resource. Actual value is:" \
-                         + result["thumb"])
-        
-
-    
+    # NOTE: This test is quite slow (due to genpdf being slow), so run it before capturing a lot of images.
     def test_04_postPDF(self):
         """
         Tests the POST request for generating a PDF
@@ -123,4 +124,12 @@ class TestRequests(helper.CPWebCase):
         self.assertStatus(200)
         self.assertHeader('Content-Type', 'text/html')
         self.assertEqual(self.body, "/book/pdf/Decapod.pdf")
-	
+        
+    def test_05_getImages_after_capture(self):
+        self.takePicture()
+        self.getPage("/images/")
+        self.assertStatus(200)
+        result = self.assertJSON(2)
+        self.checkPageSpread(result[0], "decapod-0001", "decapod-0002")
+        self.checkPageSpread(result[1], "decapod-0003", "decapod-0004")        
+    

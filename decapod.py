@@ -36,9 +36,8 @@ class ImageController(object):
         webModel = {}
         for image in bookPage.keys():
             webModel[image] = resources.webURL(bookPage[image])
-            
-        return json.dumps(webModel)
-    
+        return webModel
+        
     def capturePageSpread(self):
         # TODO: Image processing pipeline should not be in the controller       
         firstImagePath, secondImagePath = self.cameraSource.capturePageSpread()
@@ -68,13 +67,14 @@ class ImageController(object):
         if method == "GET":
             cherrypy.response.headers["Content-Type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename='CapturedImages.json'"
-            return json.dumps(self.book)
+            webBook = map(self.createPageModelForWeb, self.book)
+            return json.dumps(webBook)
 
         elif method == "POST":
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Image%d.json" % len(self.book)
             pageSpread = self.capturePageSpread()
-            return self.createPageModelForWeb(pageSpread)
+            return json.dumps(self.createPageModelForWeb(pageSpread))
 
         elif method == "PUT":
             # TODO: This method looks fatal. Do we really want it?
