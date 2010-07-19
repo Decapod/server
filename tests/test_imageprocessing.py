@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import unittest
+from PIL import Image
 
 sys.path.append(os.path.abspath('..'))
 import imageprocessing
@@ -33,3 +34,8 @@ class ImageProcessingTest(unittest.TestCase):
                                            "${testData}/images/tmp/cactus.jpg")
         self.assertEquals(stitchPath, "${testData}/images/tmp/cat-cactus.png")
         self.assertTrue(os.path.exists(self.resources.filePath(stitchPath)))
+
+        # Ensure that the stitched image is correctly oriented relative to the input images
+        expectedHeight = 600 # px
+        stitched = Image.open(self.resources.filePath(stitchPath))
+        self.assertEquals(expectedHeight, stitched.size[1])

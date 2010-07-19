@@ -1,5 +1,8 @@
 import os
 from PIL import Image
+import decapod_utilities as utils
+
+class ImageProcessingError(Exception): pass
 
 class ImageProcessor(object):
     
@@ -46,8 +49,15 @@ class ImageProcessor(object):
         absFirstPath = self.resources.filePath(firstImagePath)
         absSecondPath = self.resources.filePath(secondImagePath)
         absStitchPath = self.resources.filePath(stitchFilePath)
-        os.system ("decapod-stitching %s %s -o %s" % (absFirstPath, \
-                                                      absSecondPath, \
-                                                      absStitchPath))
+        
+        stitchCmd = [
+            "decapod-stitching",
+            "-Rnn",
+            absFirstPath,
+            absSecondPath,
+            "-o",
+            absStitchPath   
+        ]
+        utils.invokeCommandSync(stitchCmd, ImageProcessingError, "An error occurred while trying to stitch images.")
         return stitchFilePath
     
