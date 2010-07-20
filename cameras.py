@@ -246,12 +246,13 @@ class Cameras(object):
         
         # Rotate based on the user's calibration model.
         absRotatedPath = self.resources.filePath(capturedPath)
-        imageprocessing.rotate(absRotatedPath, self.calibrationModel[cameraName]["rotation"])
+        rotation = self.calibrationModel[cameraName]["rotation"]
+        if rotation is not 0:
+            imageprocessing.rotate(absRotatedPath, rotation)
+            
         return capturedPath
     
     def capturePageSpread(self):
-        # TODO: Do we need to refresh this frequently?
-        self.refreshConnectedCameras()
         if len(self.connectedCameras) < 2:
             raise CaptureError, "Two connected cameras were not detected."
 
@@ -260,8 +261,6 @@ class Cameras(object):
         return firstImage, secondImage
     
     def captureCalibrationImage(self, cameraName):
-        # TODO: Do we need to refresh this frequently?
-        self.refreshConnectedCameras()
         imagePath = CALIBRATION_DIR + cameraName + "Calibration.jpg"
         return self.captureImageWithCamera(cameraName, imagePath)
     

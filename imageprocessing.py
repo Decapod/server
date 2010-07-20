@@ -52,6 +52,9 @@ def stitch(firstImagePath, secondImagePath):
     return stitchFilePath
     
 def rotate(imagePath, rotationDegrees):
+    if rotationDegrees is 0:
+        return imagePath
+    
     im = Image.open(imagePath)
     rotated = im.rotate(rotationDegrees)
     rotated.save(imagePath)
