@@ -4,6 +4,7 @@ import subprocess
 from PIL import Image
 import simplejson as json
 import decapod_utilities as utils
+import imageprocessing
 
 CAPTURE_DIR = "${book}/capturedImages/"
 CALIBRATION_DIR = "${calibrationImages}/"
@@ -12,15 +13,87 @@ imagePrefix = "decapod-"
 class CameraError(Exception): pass
 class CaptureError(CameraError): pass
 
+
+#########################################
+# Free camera-related utility functions #
+#########################################
+
+def detectCameras():
+    """Detects the cameras locally attached to the PC.
+       Returns a JSON document, describing the camera and its port."""
+    
+    detectCmd = [
+        "gphoto2",
+        "--auto-detect"
+    ]
+    cmdOutput = utils.invokeCommandSync(detectCmd, 
+                                        CameraError,
+                                        "An error occurred while attempting to detect cameras.")
+    allCamerasInfo = cmdOutput.split("\n")[2:] # TODO: Check cross-platform compatibility here.
+    
+    # TODO: Is there a saner algorithm here?
+    cameras = []
+    for cameraInfo in allCamerasInfo:
+        # Skip any camera that has a port ending in ":", since these aren't real devices.
+        if cameraInfo.strip().endswith(":") is True:
+            continue
+        
+        # Tokenize the line on spaces, grab the last token, and assume it's the port
+        # Then stitch the rest of the tokens back and assume that they're the model name.
+        tokens = cameraInfo.split()
+        if len(tokens) < 1:
+            continue
+        port = tokens.pop()
+        camera = {
+            "port": port,
+            "model": " ".join(tokens),
+            "id": serialNumberForPort(port),
+            "capture": True, # TODO: Remove this property
+            "download": True # TODO: Remove this property
+        }
+        cameras.append(camera)
+        
+    return cameras
+
+def serialNumberForPort(port):
+    serialNumberToken = "Serial Number: "
+    serialNumberTokenLen = 15
+    
+    summaryCmd = [
+        "gphoto2",
+        "--summary",
+        "--port=%s" % port
+    ]
+    summary = utils.invokeCommandSync(summaryCmd, 
+                                     CameraError,
+                                     "An error occurred while attempting to summarize the camera connected on port %s." \
+                                     % port)
+    summaryLines = summary.split("\n") # TODO: Check cross-platform compatibility here.
+    
+    # Return the first match found after the string "Serial Number: "
+    for line in summaryLines:
+        serialNumIdx = line.find(serialNumberToken)
+        if serialNumIdx > -1:
+            serialNumIdx = serialNumIdx + serialNumberTokenLen
+            serialNum = line[serialNumIdx:]
+            return serialNum
+    
+    return None
+    
+
+###########
+# Cameras #
+###########
+
 class Cameras(object):
     
+    resources = None
     imageIndex = 0;
     cameraSupportConfig = None
     supportedModels = None
-    resources = None
-    _calibration = None
-    serialNumberPortMap = {}
-    
+    connectedCameras = []
+    calibrationModel = {}
+
     def __init__(self, resourceSource, cameraConfig):
         self.resources = resourceSource
         
@@ -34,116 +107,35 @@ class Cameras(object):
         utils.mkdirIfNecessary(self.resources.filePath(CAPTURE_DIR))
         utils.remakeDir(self.resources.filePath(CALIBRATION_DIR))
 
-    def calibrationModel(self, updatedModel=None):
-        # TODO: This code sucks.
-        # Get
-        if updatedModel is None:
-            if self._calibration is None:
-                self._calibration = self.defaultCalibrationModel()
-            return self._calibration
-        
-        # Set
-        self._calibration = updatedModel
+        # Setup the camera and calibration models
+        self.refreshConnectedCameras()
     
-    def serialNumberForPort(self, port):
-        serialNumberToken = "Serial Number: "
-        serialNumberTokenLen = 15
-        
-        summaryCmd = [
-            "gphoto2",
-            "--summary",
-            "--port=%s" % port
-        ]
-        summary = utils.invokeCommandSync(summaryCmd, 
-                                         CameraError,
-                                         "An error occurred while attempting to summarize the camera connected on port %s." \
-                                         % port)
-        summaryLines = summary.split("\n") # TODO: Check cross-platform compatibility here.
-        
-        # Return the first match found after the string "Serial Number: "
-        for line in summaryLines:
-            serialNumIdx = line.find(serialNumberToken)
-            if serialNumIdx > -1:
-                serialNumIdx = serialNumIdx + serialNumberTokenLen
-                serialNum = line[serialNumIdx:]
-                return serialNum
-        
-        return None
-    
-    def serialNumbers(self):
-        ports = self.cameraPortsAscending()
-        serials = []
-        for port in ports:
-            serial = self.serialNumberForPort(port)
-            self.serialNumberPortMap[serial] = port
-            serials.append(serial)
-        return serials
-
-    
-    def cameraPortsAscending(self):
-        cameraInfo = self.cameraInfo()
-        
-        if len(cameraInfo) < 2:
-            raise CameraError, "Two cameras are not currently connected."
-        
-        ports = [
-            cameraInfo[0]["port"], 
-            cameraInfo[1]["port"]
-        ]
-        ports.sort()
-        return ports
-        
-    def defaultCalibrationModel(self):
-        cameraIDs = self.serialNumbers()
-        calibration = {
-            "left": {
-                "id": cameraIDs[0],
-                "rotation": 0
-            },
-            "right": {
-                "id": cameraIDs[1],
-                "rotation": 0
-            }                
-        }
-        return calibration
-    
-    def cameraInfo(self):
-        """Detects the cameras locally attached to the PC.
-           Returns a JSON document, describing the camera and its port."""
- 
-        detectCmd = [
-            "gphoto2",
-            "--auto-detect"
-        ]
-        cmdOutput = utils.invokeCommandSync(detectCmd, 
-                                            CameraError,
-                                            "An error occurred while attempting to detect cameras.")
-        allCamerasInfo = cmdOutput.split("\n")[2:] # TODO: Check cross-platform compatibility here.
-
-        # TODO: Is there a saner algorithm here?
-        cameras = []
-        for cameraInfo in allCamerasInfo:
-            # Skip any camera that has a port ending in ":", since these aren't real devices.
-            if cameraInfo.strip().endswith(":") is True:
-                continue
-            
-            # TODO: Can we improve this algorithm?
-            # Tokenize the line on spaces, grab the last token, and assume it's the port
-            # Then stitch the rest of the tokens back and assume that they're the model name.
-            tokens = cameraInfo.split()
-            if len(tokens) < 1:
-                continue
-            port = tokens.pop()
-            camera = {
-                "port": port,
-                "model": " ".join(tokens),
-                "capture": True, # TODO: Remove this property
-                "download": True # TODO: Remove this property
-            }
-            cameras.append(camera)
-        
+    def refreshConnectedCameras(self):        
+        # Detect cameras and update our model.
+        self.connectedCameras = detectCameras()
+        self.refreshCalibrationModel()
         return cameras
     
+    def refreshCalibrationModel(self):
+        # Set the calibration model to a default if appropriate.
+        if (len(self.calibrationModel) > 0):
+            return self.calibrationModel
+        
+        if self.connectedCameras is None or len(self.connectedCameras) < 2:
+            self.calibrationModel = []
+        else:
+            ascendingCameras = sorted(self.connectedCameras, key=lambda camera: camera["port"])
+            self.calibrationModel = {
+                "left": {
+                    "id": ascendingCameras[0]["id"],
+                    "rotation": 0
+                },
+                "right": {
+                    "id": ascendingCameras[1]["id"],
+                    "rotation": 0
+                }
+            }
+            
     def mapSupportedCamerasToModelList(self):
         supportedCameras = self.cameraSupportConfig["supportedCameras"]
         supportedModels = []
@@ -171,16 +163,16 @@ class Cameras(object):
         cameraStatus = {
             "supportedCameras": self.cameraSupportConfig["supportedCameras"]
         }
-        connectedCameras = self.cameraInfo()
+        self.refreshConnectedCameras()
         
         # No cameras
-        if len(connectedCameras) is 0:
+        if len(self.connectedCameras) is 0:
             cameraStatus["status"] = "noCameras"
             return cameraStatus
         
         # One camera
-        if len(connectedCameras) is 1:
-            if self.isCameraSupported(connectedCameras[0]) is True:
+        if len(self.connectedCameras) is 1:
+            if self.isCameraSupported(self.connectedCameras[0]) is True:
                 cameraStatus["status"] = "oneCameraCompatible"
             else:
                 cameraStatus["status"] = "oneCameraIncompatible"
@@ -192,9 +184,9 @@ class Cameras(object):
             return cameraStatus
         
         # Two unmatching cameras
-        if self.doCamerasMatch(connectedCameras) is False:
-            leftSupported = self.isCameraSupported(connectedCameras[0])
-            rightSupported = self.isCameraSupported(connectedCameras[1])
+        if self.doCamerasMatch(self.connectedCameras) is False:
+            leftSupported = self.isCameraSupported(self.connectedCameras[0])
+            rightSupported = self.isCameraSupported(self.connectedCameras[1])
             
             if leftSupported and rightSupported:
                 cameraStatus["status"] = "notMatchingCompatible"
@@ -205,7 +197,7 @@ class Cameras(object):
             return cameraStatus
         
         # Two matching cameras
-        if self.isCameraSupported(connectedCameras[0]):
+        if self.isCameraSupported(self.connectedCameras[0]):
             cameraStatus["status"] = "success"
         else:
             cameraStatus["status"] = "incompatible"
@@ -217,7 +209,6 @@ class Cameras(object):
     
     def capture(self, port, imageFilePath):        
         # Capture the image using gPhoto
-        # TODO: Move this out of code and into configuration
         captureCmd = [
             "gphoto2",
             "--capture-image-and-download",
@@ -230,43 +221,49 @@ class Cameras(object):
                                 % port)
         return imageFilePath
     
-    def capturePage(self, port):
-        imageFileName = self.generateImageName()
-        imagePath = CAPTURE_DIR + imageFileName
+    def portForCameraID(self, id):
+        # Check if the camera is still connected to the port we last saw it on
+        for camera in self.connectedCameras:
+            if camera["id"] == id:
+                return camera["port"]
+        return None
+    
+    def captureImageWithCamera(self, cameraName, imagePath):
+        calibration = None
+        try:
+            calibration = self.calibrationModel[cameraName]
+        except KeyError:
+            raise CameraError, ("The specified camera (%s) does not exist or is not connected." % cameraName)
+        
+        port = self.portForCameraID(calibration["id"])
         self.capture(port, self.resources.filePath(imagePath))
         return imagePath
     
+    def capturePage(self, cameraName):
+        imageFileName = self.generateImageName()
+        imagePath = CAPTURE_DIR + imageFileName
+        capturedPath = self.captureImageWithCamera(cameraName, imagePath)
+        
+        # Rotate based on the user's calibration model.
+        absRotatedPath = self.resources.filePath(capturedPath)
+        imageprocessing.rotate(absRotatedPath, self.calibrationModel[cameraName]["rotation"])
+        return capturedPath
+    
     def capturePageSpread(self):
-        connectedCameras = self.cameraInfo()
-        if len(connectedCameras) < 2:
+        # TODO: Do we need to refresh this frequently?
+        self.refreshConnectedCameras()
+        if len(self.connectedCameras) < 2:
             raise CaptureError, "Two connected cameras were not detected."
-        firstImage = self.capturePage(connectedCameras[0]["port"])
-        secondImage = self.capturePage(connectedCameras[1]["port"])
-        return firstImage, secondImage
 
+        firstImage = self.capturePage("left")
+        secondImage = self.capturePage("right")
+        return firstImage, secondImage
+    
     def captureCalibrationImage(self, cameraName):
-        serialNumber = self.calibrationModel()[cameraName]["id"]
-        port = self.serialNumberPortMap[serialNumber]
-        
-        # Check if the camera is still connected to the port we last saw it on
-        cameraInfo = self.cameraInfo()
-        foundCamera = None
-        for camera in cameraInfo:
-            if camera["port"] == port:
-                foundCamera = camera
-                break
-        
-        if foundCamera is None:
-            # Recheck the serial numbers and update the cache
-            # TODO: Fix this nonsense
-            self.serialNumbers()
-            port = self.serialNumberPortMap[serialNumber]
-        
-        # TODO: Throw a specific error here if we can't find the camera anymore.
-        
+        # TODO: Do we need to refresh this frequently?
+        self.refreshConnectedCameras()
         imagePath = CALIBRATION_DIR + cameraName + "Calibration.jpg"
-        self.capture(port, self.resources.filePath(imagePath))
-        return imagePath
+        return self.captureImageWithCamera(cameraName, imagePath)
     
     def captureLeftCalibrationImage(self):
         return captureCalibrationImage("left")
@@ -279,34 +276,31 @@ class MockCameras(Cameras):
     
     connectedCameras = None
     
-    def __init__(self, resourceSource, cameraConfig, connectedCameras = None):
-        Cameras.__init__(self, resourceSource, cameraConfig)
-        self.connectedCameras = connectedCameras
-        
-    def serialNumbers(self):
-        cameraInfo = self.cameraInfo()
-        first = ("abc", cameraInfo[0])
-        second = ("xyz", cameraInfo[1])
-        self.serialNumberPortMap = dict([first, second])
-        return first[0], second[0]
-    
-    def cameraInfo(self):
-        if self.connectedCameras != None:
-            return self.connectedCameras
-        
-        return [{
+    def __init__(self, resourceSource, cameraConfig, connectedCameras = None):        
+        # Set up the mock connected cameras.
+        self.connectedCameras = connectedCameras if connectedCameras is not None else [{
             "model": "Canon PowerShot G10",
-            "port": "usb:003,004", 
+            "port": "usb:003,004",
+            "id": "abc",
             "capture": True, 
             "download": True
         },{
            "model": "Canon PowerShot G10", 
-           "port": "usb:002,012", 
+           "port": "usb:002,012",
+           "id": "xyz",
            "capture": True, 
            "download": True
         }]
+        
+        Cameras.__init__(self, resourceSource, cameraConfig)
+
     
-    def capture(self, camera, imageFileName):
+    def refreshConnectedCameras(self):
+        # Stubbed out to do nothing.
+        self.refreshCalibrationModel()
+        return self.connectedCameras
+    
+    def capture(self, port, imageFileName):
         """Copies an image from the mock images folder to the specified image file path."""        
 
         files = glob.glob(self.resources.filePath("${mockImages}/*"))

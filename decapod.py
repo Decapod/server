@@ -177,10 +177,9 @@ class CalibrationController(object):
         if method == "GET":
             cherrypy.response.headers["Content-type"] = "application/json"
             cherrypy.response.headers["Content-Disposition"] = "attachment; filename=Calibration.json"
-            calibrationModel = self.cameraSource.calibrationModel()
-            return json.dumps(calibrationModel)
+            return json.dumps(self.cameraSource.calibrationModel)
         elif method == "POST":
-            self.cameraSource.calibrationModel(json.loads(calibrationModel))
+            self.cameraSource.calibrationModel = json.loads(calibrationModel)
             return calibrationModel
         else:
             cherrypy.response.headers["Allow"] = "GET, POST"
@@ -188,8 +187,10 @@ class CalibrationController(object):
     
     def captureCalibrationImage(self, cameraName):
         # TODO: Image processing pipeline code shouldn't be in controller code!
-        calibrationImagePath = self.cameraSource.captureCalibrationImage(cameraName)
-        imageprocessing.resize(calibrationImagePath, 640)
+        calibrationImagePath = self.cameraSource.captureCalibrationImage(cameraName) 
+        # TODO: this should be absolute already
+        absCalibrationImagePath = self.resources.filePath(calibrationImagePath)
+        imageprocessing.resize(absCalibrationImagePath, 640)
         return calibrationImagePath
         
     def calibrationImageHandler(self, cameraName):

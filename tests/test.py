@@ -1,5 +1,6 @@
 import os.path
 import sys
+import shutil
 from cherrypy.test import test as cptest
 import testutils
 
@@ -16,6 +17,8 @@ def run():
     
     cptest.TestHarness(test_list).run()
     testutils.deleteTestCapturedImagesDir()
+    testutils.cleanUpDir("../book/capturedImages/")
+    shutil.rmtree("../book/pdf/")
     
 if __name__ == '__main__':
     run()

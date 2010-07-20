@@ -51,3 +51,8 @@ def stitch(firstImagePath, secondImagePath):
     utils.invokeCommandSync(stitchCmd, ImageProcessingError, "An error occurred while trying to stitch images.")
     return stitchFilePath
     
+def rotate(imagePath, rotationDegrees):
+    im = Image.open(imagePath)
+    rotated = im.rotate(rotationDegrees)
+    rotated.save(imagePath)
+    return imagePath

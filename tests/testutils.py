@@ -7,10 +7,13 @@ import resourcesource
 
 capturedImagesTestDir = "data/book/capturedImages/"
 
+def cleanUpDir(dir):
+    filePaths = glob.glob(dir + "/*")
+    for filePath in filePaths:
+        os.remove(filePath)  
+        
 def cleanUpCapturedImages():
-    imagePaths = glob.glob(capturedImagesTestDir + "*")
-    for imagePath in imagePaths:
-        os.remove(imagePath)
+    cleanUpDir(capturedImagesTestDir)
 
 def deleteTestCapturedImagesDir():
     shutil.rmtree(capturedImagesTestDir)

@@ -41,3 +41,19 @@ class ImageProcessingTest(unittest.TestCase):
         expectedHeight = 600 # px
         stitched = Image.open(stitchPath)
         self.assertEquals(expectedHeight, stitched.size[1])
+        
+    def test_rotate(self):
+        # Sanity check the image before rotating it
+        sourceImage = self.testDataDir + "/images/tmp/cactus.jpg"
+        expectedSize = (480, 320)
+        unrotated = Image.open(sourceImage)
+        self.assertEquals(expectedSize, unrotated.size)
+        
+        # Rotate 90 degrees
+        rotatedPath = imageprocessing.rotate(sourceImage, 90)
+        self.assertEquals(rotatedPath, self.testDataDir + "/images/tmp/cactus.jpg")
+        self.assertTrue(os.path.exists(rotatedPath))
+        expectedSize = (320, 480)
+        rotated = Image.open(rotatedPath)
+        self.assertEquals(expectedSize, rotated.size)
+        
