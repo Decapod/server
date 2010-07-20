@@ -4,12 +4,6 @@
         "Canon": [{
             "name": "Canon PowerShot G10",
             "label": "PowerShot G10"
-        }, {
-            "name": "Canon PowerShot G11",
-            "label": "PowerShot G11"
-        }, {
-            "name": "Canon 550D",
-            "label": "EOS 550D"
         }]
     }
 }
