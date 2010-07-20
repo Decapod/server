@@ -114,7 +114,7 @@ class Cameras(object):
         # Detect cameras and update our model.
         self.connectedCameras = detectCameras()
         self.refreshCalibrationModel()
-        return cameras
+        return self.connectedCameras
     
     def refreshCalibrationModel(self):
         # Set the calibration model to a default if appropriate.
