@@ -1,7 +1,7 @@
 {
-	"infusion": {
-		"target": "/infusion",
-		"source": "../decapod-ui/infusion"
+	"lib": {
+		"target": "/lib",
+		"source": "../decapod-ui/lib"
 	},
 	
 	"components": {
