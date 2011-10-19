@@ -12,6 +12,7 @@ import resourcesource
 import imageprocessing
 import cameras
 import pdf
+import imageImport
 
 # Setup configuration for static resources within the server.
 DECAPOD_CONFIG = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
@@ -254,6 +255,18 @@ class ExportController(object):
             cherrypy.response.headers["Allow"] = "GET, POST"
             raise cherrypy.HTTPError(405)
         
+class ImportController(object):
+    
+    image, resource = None, None
+    
+    def __init__(self, resourceSource):
+        self.resource = resourceSource
+        self.image = imageImport.ImageImport(self.resource)
+    
+    @cherrypy.expose()
+    def index(self, file):
+        # import the file
+        return self.image.save(file)
 
 class DecapodServer(object):
 
@@ -295,6 +308,7 @@ def mountApp(camerasClassName):
     # Set up the server application and its controllers
     root = DecapodServer(resources, cameraSource)
     root.images = ImageController(resources, cameraSource, root.book)
+    root.imageImport = ImportController(resources)
     root.pdf = ExportController(resources, root.book)
     root.cameras = CamerasController(resources, cameraSource)
     root.cameras.calibration = CalibrationController(resources, cameraSource)

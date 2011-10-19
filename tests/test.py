@@ -11,7 +11,8 @@ def run():
         "test_decapod_utilities",
         "test_resourcesource", 
         "test_imageprocessing", 
-        "test_cameras", 
+        "test_cameras",
+        "test_imageImport",
         "test_server"
     ]
     

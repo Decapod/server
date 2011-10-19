@@ -2,6 +2,7 @@ import os
 import glob
 import sys
 import shutil
+import mimetypes
 sys.path.append(os.path.abspath('..'))
 import resourcesource
 
@@ -20,3 +21,11 @@ def deleteTestCapturedImagesDir():
     
 def createTestResourceSource():
     return resourcesource.ResourceSource("data/resource-source-test-data.json")
+
+class mockFileStream(object):
+    file = None
+    type = None
+    def __init__(self, filePath):
+        name, extension = os.path.splitext(filePath)
+        self.file = open(filePath, 'rb')
+        self.type = mimetypes.guess_type(filePath)[0]
