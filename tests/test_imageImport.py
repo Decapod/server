@@ -18,6 +18,9 @@ class ImportImageTest(unittest.TestCase):
         
     def tearDown(self):
         testutils.cleanUpCapturedImages()
+    
+    def extractUUID(self, name):
+        return name.split("-")[1]
         
     def test_generateImageName(self):
         '''
@@ -28,18 +31,41 @@ class ImportImageTest(unittest.TestCase):
         4) Tests the output when both the prefix and suffix are specified
         '''
         iImport = imageImport.ImageImport(self.resources)
-        prefix = "decaTest-"
-        suffix = "png"
+        dPrefix = "decapod-"
+        dSuffix = "jpeg"
+        cPrefix = "decaTest-"
+        cSuffix = "png"
         
         defaultName = iImport.generateImageName()
-        customPrefix = iImport.generateImageName(prefix)
-        customSuffix = iImport.generateImageName(suffix=suffix)
-        customArgs = iImport.generateImageName(prefix, suffix)
+        dnName, dnExt = os.path.splitext(defaultName)
         
-        self.assertEquals("decapod-1.jpg", defaultName)
-        self.assertEquals("decaTest-2.jpg", customPrefix)
-        self.assertEquals("decapod-3.png", customSuffix)
-        self.assertEquals("decaTest-4.png", customArgs)
+        customPrefix = iImport.generateImageName(cPrefix)
+        cpName, cpExt = os.path.splitext(customPrefix)
+        
+        customSuffix = iImport.generateImageName(suffix=cSuffix)
+        csName, csExt = os.path.splitext(customSuffix)
+        
+        customArgs = iImport.generateImageName(cPrefix, cSuffix)
+        caName, caExt = os.path.splitext(customArgs)
+        
+        #Assert that the prefixes are set correctly for each generated name
+        self.assertTrue(dnName.startswith(dPrefix), "Tests if '{}' starts with {}".format(dnName, dPrefix))
+        self.assertTrue(cpName.startswith(cPrefix), "Tests if '{}' starts with {}".format(cpName, cPrefix))
+        self.assertTrue(csName.startswith(dPrefix), "Tests if '{}' starts with {}".format(csName, dPrefix))
+        self.assertTrue(caName.startswith(cPrefix), "Tests if '{}' starts with {}".format(caName, cPrefix))
+        
+        #Assert that the suffixes are set correctly for each generated name
+        self.assertTrue(dnExt.endswith(dSuffix), "Tests if '{}' ends with {}".format(dnExt, dSuffix))
+        self.assertTrue(cpExt.endswith(dSuffix), "Tests if '{}' ends with {}".format(cpExt, dSuffix))
+        self.assertTrue(csExt.endswith(cSuffix), "Tests if '{}' ends with {}".format(csExt, cSuffix))
+        self.assertTrue(caExt.endswith(cSuffix), "Tests if '{}' ends with {}".format(caExt, cSuffix))
+        
+        #Assert that the uuid's are different
+        uuidList = map(self.extractUUID, [dnName, cpName, csName, caName])
+        
+        # Uses the set method to remove duplicate values. If there are duplicate
+        # UUIDs, the lengths will be different and the assertion will fail
+        self.assertEquals(len(uuidList), len(set(uuidList)), "Test if there are duplicate UUIDs")
         
     def test_mimeToSuffix(self):
         '''
@@ -92,14 +118,13 @@ class ImportImageTest(unittest.TestCase):
         
         iImport = imageImport.ImageImport(self.resources)
         name = "testName.jpeg"
-        basePath = iImport.importDir + "{}"
         origFilePath = self.testDataDir + "/images/cactus.jpg"
         testFile = testutils.mockFileStream(origFilePath)
         
-        iImport.save(testFile)
-        self.writeTest(origFilePath, basePath.format("decapod-1.jpeg"))
+        savedfile = iImport.save(testFile)
+        self.writeTest(origFilePath, savedfile)
         
-        iImport.save(testFile, name)
-        self.writeTest(origFilePath, basePath.format(name))
+        savedNamedFile = iImport.save(testFile, name)
+        self.writeTest(origFilePath, savedNamedFile)
 
         

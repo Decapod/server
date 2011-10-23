@@ -1,4 +1,5 @@
 import decapod_utilities as utils
+import uuid
 
 IMPORT_DIR = "${book}/capturedImages/"
 imagePrefix = "decapod-"
@@ -6,7 +7,6 @@ imagePrefix = "decapod-"
 class ImageImport(object):
     
     resources = None
-    imageIndex = 0;
     importDir = None
 
     def __init__(self, resourceSource):
@@ -16,9 +16,9 @@ class ImageImport(object):
         # Setup the import location.
         utils.mkdirIfNecessary(self.importDir)
     
-    def generateImageName(self, prefix=imagePrefix, suffix="jpg"):
-        self.imageIndex += 1
-        return "{}{}.{}".format(prefix, self.imageIndex, suffix)
+    def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
+        id = uuid.uuid4()
+        return "{}{}.{}".format(prefix, id.hex, suffix)
     
     def mimeToSuffix(self, mimeType):
         splitStr = mimeType.split('/')
