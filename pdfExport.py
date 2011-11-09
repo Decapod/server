@@ -3,6 +3,8 @@ import shutil
 import glob
 import decapod_utilities as utils
 import simplejson as json
+import imghdr
+from PIL import Image
 
 #TODO: Consider adopting an asynchronous framework
 # for asynchronous python 
@@ -20,6 +22,7 @@ EXPORT_NONE = "none"
 multiPageTIFFName = "Decapod-multipage.tiff"
 pdfName = "Decapod.pdf"
 statusFileName = "exportStatus.json"
+tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
 class PDFGenerationError(Exception): pass
@@ -27,6 +30,36 @@ class PDFGenerationError(Exception): pass
 def createDir(path):
     if not os.path.exists(path):
         os.mkdir(path)
+        
+def writeToFile(contents, writePath, writeMode="w"):
+    f = open(writePath, writeMode)
+    f.write(contents)
+    f.close()
+    
+def isImage(filePath):
+    return os.path.isfile(filePath) and imghdr.what(filePath) != None
+
+def bookPagesToArray(pagesDir):
+    allPages = []
+    for fileName in os.listdir(pagesDir):
+        filePath = os.path.join(pagesDir, fileName)
+        
+        if isImage(filePath): 
+            allPages.append(filePath)
+    return allPages
+
+def convertPagesToTIFF(bookDir, tiffDir):
+    tiff = ".tiff"
+    for fileName in os.listdir(bookDir):
+        name, ext = os.path.splitext(fileName)
+        readPath = os.path.join(bookDir, fileName)
+        writePath = os.path.join(tiffDir, name + tiff)
+        
+        if isImage(readPath):
+            try:
+                Image.open(readPath).save(writePath, "tiff")
+            except IOError:
+                raise PDFGenerationError
 
 class PDFGenerator(object):
     
@@ -37,6 +70,7 @@ class PDFGenerator(object):
         self.bookDirPath = self.resources.filePath(BOOK_DIR)
         self.pdfDirPath = self.resources.filePath(PDF_DIR)
         self.tempDirPath = os.path.join(self.pdfDirPath, tempDir)
+        self.tiffDirPath = os.path.join(self.pdfDirPath, tiffDir)
         self.statusFilePath = os.path.join(self.pdfDirPath, statusFileName)
         self.pdfPath = os.path.join(self.pdfDirPath, pdfName)
         
@@ -51,28 +85,27 @@ class PDFGenerator(object):
             statusFile = open(self.statusFilePath)
             self.status = json.load(statusFile)
             
-    def writeToFile(self, contents, writePath, writeMode="w"):
-        f = open(writePath, writeMode)
-        f.write(contents)
-        f.close()
+    def clearExportDir(self):
+        if os.path.exists(self.pdfDirPath):
+            shutil.rmtree(self.pdfDirPath) 
         
     def writeToStatusFile(self):
-        self.writeToFile(self.getStatus(), self.statusFilePath)
+        writeToFile(self.getStatus(), self.statusFilePath)
+        
+    def setStatus(self, status):
+        st = self.status
+        url = "url"
+        st["status"] = status
+        
+        if status == EXPORT_COMPLETE:
+            st[url] = self.pdfPath
+        elif url in self.status:
+            del self.status[url]
+            
+        self.writeToStatusFile()
     
     def getStatus(self):
         return json.dumps(self.status)
-        
-    def clearExportDir(self):
-        if os.path.exists(self.pdfDirPath):
-            shutil.rmtree(self.pdfDirPath)   
-            
-    def bookPagesToArray(self):
-        allPages = []
-        for fileName in os.listdir(self.bookDirPath):
-            filePath = os.path.join(self.bookDirPath, fileName)
-            if os.path.isfile(filePath):
-                allPages.append(filePath)
-        return allPages
     
     def generatePDFFromPages(self, type="1"):
         genPDFCmd = [
@@ -86,22 +119,10 @@ class PDFGenerator(object):
             "-t",
             type
         ]
-        genPDFCmd.extend(self.bookPagesToArray())
+        genPDFCmd.extend(bookPagesToArray(self.tiffDirPath))
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")
-        
-    def setStatus(self, status):
-        st = self.status
-        url = "url"
-        st["status"] = status
-        
-        if status == EXPORT_COMPLETE:
-            st[url] = self.pdfPath
-        elif url in self.status:
-            del self.status[url]
-        
-        self.writeToStatusFile()
     
     #TODO: Take in a the pages model and use it for determinig which pages are in a book
     #TODO: Raise specific Exception if pdf generation in progress
@@ -111,8 +132,8 @@ class PDFGenerator(object):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
-            
-            #TODO: This is just to test if the generation works, need to make this asynchronous
+            createDir(self.tiffDirPath)
+            convertPagesToTIFF(self.bookDirPath, self.tiffDirPath)
             self.generatePDFFromPages(type)
             self.setStatus(EXPORT_COMPLETE)
             return self.getStatus()
