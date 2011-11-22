@@ -39,6 +39,10 @@ def writeToFile(contents, writePath, writeMode="w"):
 def isImage(filePath):
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
+def lastModified(filePath):
+    stats = os.stat(filePath)
+    return stats[8]
+
 def bookPagesToArray(pagesDir):
     allPages = []
     for fileName in os.listdir(pagesDir):
@@ -46,20 +50,26 @@ def bookPagesToArray(pagesDir):
         
         if isImage(filePath): 
             allPages.append(filePath)
-    return allPages
+    # sorting needed to keep pages in order
+    return sorted(allPages, key = lastModified)
 
-def convertPagesToTIFF(bookDir, tiffDir):
-    tiff = ".tiff"
-    for fileName in os.listdir(bookDir):
-        name, ext = os.path.splitext(fileName)
-        readPath = os.path.join(bookDir, fileName)
-        writePath = os.path.join(tiffDir, name + tiff)
+def convertPagesToTIFF(pages, tiffDir):
+    convertedPages = []
+    ext = ".tiff"
+    
+    for filePath in pages:
+        fileName = os.path.split(filePath)[1]
+        name = os.path.splitext(fileName)[0]
         
         if isImage(readPath):
+            writePath = os.path.join(tiffDir, name + ext)
             try:
                 Image.open(readPath).save(writePath, "tiff")
+                convertedPages.append(writePath)
             except IOError:
                 raise PDFGenerationError
+    
+    return convertedPages
 
 class PDFGenerator(object):
     
@@ -73,6 +83,8 @@ class PDFGenerator(object):
         self.tiffDirPath = os.path.join(self.pdfDirPath, tiffDir)
         self.statusFilePath = os.path.join(self.pdfDirPath, statusFileName)
         self.pdfPath = os.path.join(self.pdfDirPath, pdfName)
+        self.pages = None
+        self.tiffPages = None
         
         self.setupExportFileStructure()
         
@@ -119,7 +131,7 @@ class PDFGenerator(object):
             "-t",
             type
         ]
-        genPDFCmd.extend(bookPagesToArray(self.tiffDirPath))
+        genPDFCmd.extend(self.tiffPages)
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")
@@ -133,7 +145,8 @@ class PDFGenerator(object):
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
             createDir(self.tiffDirPath)
-            convertPagesToTIFF(self.bookDirPath, self.tiffDirPath)
+            self.pages = bookPagesToArray(self.bookDirPath);
+            self.tiffPages = convertPagesToTIFF(self.pages, self.tiffDirPath)
             self.generatePDFFromPages(type)
             self.setStatus(EXPORT_COMPLETE)
             return self.getStatus()
