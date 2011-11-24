@@ -106,7 +106,7 @@ class PDFGenerator(object):
         
     def setStatus(self, status):
         st = self.status
-        url = "url"
+        url = "downloadSRC"
         st["status"] = status
         
         if status == EXPORT_COMPLETE:
