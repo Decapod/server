@@ -407,7 +407,9 @@ class DecapodServer(object):
         
     @cherrypy.expose
     def index(self):
-        raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
+        # the old Decapod 0.4 start page
+        #raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
+        raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/import/html/Import-05a.html"))
 
 
 # Package-level utility functions for starting the server.
