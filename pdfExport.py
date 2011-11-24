@@ -61,10 +61,10 @@ def convertPagesToTIFF(pages, tiffDir):
         fileName = os.path.split(filePath)[1]
         name = os.path.splitext(fileName)[0]
         
-        if isImage(readPath):
+        if isImage(filePath):
             writePath = os.path.join(tiffDir, name + ext)
             try:
-                Image.open(readPath).save(writePath, "tiff")
+                Image.open(filePath).save(writePath, "tiff")
                 convertedPages.append(writePath)
             except IOError:
                 raise PDFGenerationError
