@@ -287,7 +287,7 @@ def invoke(obj, method, excption="405 Method Not Allowed", *args, **kwargs):
     
 def setJSONResponseHeaders(fileName="model.json"):
     cherrypy.response.headers["Content-Type"] = "application/json"
-    cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{}'".format(fileName)
+    cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
 
 #TODO: Support GET requests to return the book's model
 #TODO: Support PUT requests to update the books's model

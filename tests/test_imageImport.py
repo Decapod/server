@@ -49,16 +49,16 @@ class ImportImageTest(unittest.TestCase):
         caName, caExt = os.path.splitext(customArgs)
         
         #Assert that the prefixes are set correctly for each generated name
-        self.assertTrue(dnName.startswith(dPrefix), "Tests if '{}' starts with {}".format(dnName, dPrefix))
-        self.assertTrue(cpName.startswith(cPrefix), "Tests if '{}' starts with {}".format(cpName, cPrefix))
-        self.assertTrue(csName.startswith(dPrefix), "Tests if '{}' starts with {}".format(csName, dPrefix))
-        self.assertTrue(caName.startswith(cPrefix), "Tests if '{}' starts with {}".format(caName, cPrefix))
+        self.assertTrue(dnName.startswith(dPrefix), "Tests if '{0}' starts with {1}".format(dnName, dPrefix))
+        self.assertTrue(cpName.startswith(cPrefix), "Tests if '{0}' starts with {1}".format(cpName, cPrefix))
+        self.assertTrue(csName.startswith(dPrefix), "Tests if '{0}' starts with {1}".format(csName, dPrefix))
+        self.assertTrue(caName.startswith(cPrefix), "Tests if '{0}' starts with {1}".format(caName, cPrefix))
         
         #Assert that the suffixes are set correctly for each generated name
-        self.assertTrue(dnExt.endswith(dSuffix), "Tests if '{}' ends with {}".format(dnExt, dSuffix))
-        self.assertTrue(cpExt.endswith(dSuffix), "Tests if '{}' ends with {}".format(cpExt, dSuffix))
-        self.assertTrue(csExt.endswith(cSuffix), "Tests if '{}' ends with {}".format(csExt, cSuffix))
-        self.assertTrue(caExt.endswith(cSuffix), "Tests if '{}' ends with {}".format(caExt, cSuffix))
+        self.assertTrue(dnExt.endswith(dSuffix), "Tests if '{0}' ends with {1}".format(dnExt, dSuffix))
+        self.assertTrue(cpExt.endswith(dSuffix), "Tests if '{0}' ends with {1}".format(cpExt, dSuffix))
+        self.assertTrue(csExt.endswith(cSuffix), "Tests if '{0}' ends with {1}".format(csExt, cSuffix))
+        self.assertTrue(caExt.endswith(cSuffix), "Tests if '{0}' ends with {1}".format(caExt, cSuffix))
         
         #Assert that the uuid's are different
         uuidList = map(self.extractUUID, [dnName, cpName, csName, caName])
@@ -90,8 +90,8 @@ class ImportImageTest(unittest.TestCase):
         original files are the same.
         '''
         
-        self.assertTrue(os.path.exists(writePath), "Tests the existence of the file: {}".format(writePath))
-        self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {}\nnew: {}".format(origFilePath, writePath))
+        self.assertTrue(os.path.exists(writePath), "Tests the existence of the file: {0}".format(writePath))
+        self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, writePath))
         
     def test_writeFile(self):
         '''

@@ -18,7 +18,7 @@ class ImageImport(object):
     
     def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
         id = uuid.uuid4()
-        return "{}{}.{}".format(prefix, id.hex, suffix)
+        return "{0}{1}.{2}".format(prefix, id.hex, suffix)
     
     def mimeToSuffix(self, mimeType):
         splitStr = mimeType.split('/')
