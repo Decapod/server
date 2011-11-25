@@ -108,7 +108,8 @@ class PDFGenerator(object):
         st["status"] = status
         
         if status == EXPORT_COMPLETE:
-            st[url] = self.pdfPath
+            virtualPath = PDF_DIR + os.path.split(self.pdfPath)[1]
+            st[url] = self.resources.webURL(virtualPath)
         elif url in self.status:
             del self.status[url]
             
