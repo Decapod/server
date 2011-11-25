@@ -63,11 +63,9 @@ def convertPagesToTIFF(pages, tiffDir):
         
         if isImage(filePath):
             writePath = os.path.join(tiffDir, name + ext)
-            try:
-                Image.open(filePath).save(writePath, "tiff")
-                convertedPages.append(writePath)
-            except IOError:
-                raise PDFGenerationError
+            Image.open(filePath).save(writePath, "tiff")
+            utils.invokeCommandSync(["convert", filePath, writePath], PDFGenerationError, "Error converting {0} to TIFF".format(filePath))
+            convertedPages.append(writePath)
     
     return convertedPages
 
