@@ -100,7 +100,8 @@ class ResourceSource(object):
         
         # Create CherryPy static resource mount config entries for each resource.
         for resource in self.resources.values():
-            config[resource["target"]] = {
+            target = resource["target"].encode('utf-8') # cherrypy 3.2.2 will crash if these are already unicode values.
+            config[target] = {
                 "tools.staticdir.on": True,
                 "tools.staticdir.dir": resource["source"]
             }
