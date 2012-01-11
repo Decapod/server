@@ -1,6 +1,7 @@
 
 import os
 import json
+import cherrypy
 
 serverBasePath = os.path.dirname(os.path.abspath(__file__))
 
@@ -108,7 +109,8 @@ class ResourceSource(object):
         
         # Define the server's base path    
         config["/"] = {
-            "tools.staticdir.root": serverBasePath
+            "tools.staticdir.root": serverBasePath,
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher()
         }
         
         return config;
