@@ -424,14 +424,13 @@ def determineCamerasClass():
     else:
         return "cameras.Cameras"
     
-def mountApp(camerasClassName):
+def mountApp(camerasClassName, resources):
     # Parse command line options, configuring the correct cameras object    
     moduleName, className = parseClassNamePath(camerasClassName)
     camerasModule = globals()[moduleName]
     cameraClass = getattr(camerasModule, className)
     
     # Set up shared resources
-    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
     cameraSource = cameraClass(resources, "${config}/decapod-supported-cameras.json")
     
     # Set up the server application and its controllers
@@ -445,14 +444,18 @@ def mountApp(camerasClassName):
     #setup for Decapod 0.5a
     root.books = BooksController(resources)
     
-    # Mount the application
-    cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
     return root
         
 def startServer():
-    cherrypy.engine.start()
+    #set up shared resources
+    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
+    
+    #mount app
+    root = mountApp(determineCamerasClass(), resources)
+    
+    #start application
+    cherrypy.quickstart(root, "/", resources.cherryPyConfig())
     
 if __name__ == "__main__":
-    mountApp(determineCamerasClass())
     startServer()
     
