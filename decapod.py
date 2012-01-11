@@ -396,7 +396,8 @@ class BooksController(object):
         
 
 class DecapodServer(object):
-
+    exposed = True
+    
     resources = None
     cameraSource = None
     book = []
@@ -405,8 +406,7 @@ class DecapodServer(object):
         self.resources = resourceSource
         self.cameraSource = cameras
         
-    @cherrypy.expose
-    def index(self):
+    def GET(self):
         # the old Decapod 0.4 start page
         #raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
         raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/import/html/Import-05a.html"))
