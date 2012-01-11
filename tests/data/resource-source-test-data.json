@@ -1,0 +1,26 @@
+{
+	"js": {
+		"target": "/js",
+		"source": "../decapod-ui/components/capture/js"
+	},
+	"testData": {
+		"target": "/testData",
+		"source": "tests/data"
+	},
+	"config": {
+		"target": "/config",
+		"source": "tests/data/config"
+	},
+	"mockImages": {
+		"target": "/mockImages",
+		"source": "tests/data/images"
+	},
+	"calibrationImages": {
+		"target": "/calibrationImages",
+		"source": "tests/data/calibrationImages"
+	},
+	"book": {
+		"target": "/book",
+		"source": "tests/data/book"
+	}
+}

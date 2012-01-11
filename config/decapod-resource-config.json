@@ -1,0 +1,36 @@
+{
+	"lib": {
+		"target": "/lib",
+		"source": "../decapod-ui/lib"
+	},
+	
+	"components": {
+		"target": "/components",
+		"source": "../decapod-ui/components"
+	},
+	
+    "shared": {
+		"target": "/shared",
+		"source": "../decapod-ui/shared"
+	},
+	
+	"book": {
+		"target": "/book",
+		"source": "book"
+	},
+	
+	"calibrationImages": {
+		"target": "/calibrationImages",
+		"source": "calibrationImages"
+	},
+	
+	"mockImages": {
+		"target": "/mockImages",
+		"source": "mock-images"
+	},
+	
+	"config": {
+		"target": "/config",
+		"source": "config"
+	}
+}
