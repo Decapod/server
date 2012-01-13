@@ -14,8 +14,8 @@ def run():
     ]
     
     cptest.TestHarness(test_list).run()
-    testutils.deleteTestCapturedImagesDir()
-    testutils.cleanUpDir("../book/capturedImages/")
+    testutils.deleteTestImagesDir()
+    testutils.cleanUpDir("../book/images/")
     shutil.rmtree("../book/pdf/")
     
 if __name__ == '__main__':

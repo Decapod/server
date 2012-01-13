@@ -6,18 +6,18 @@ import mimetypes
 sys.path.append(os.path.abspath('..'))
 import resourcesource
 
-capturedImagesTestDir = "data/book/capturedImages/"
+imagesTestDir = "data/book/images/"
 
 def cleanUpDir(dir):
     filePaths = glob.glob(dir + "/*")
     for filePath in filePaths:
         os.remove(filePath)  
         
-def cleanUpCapturedImages():
-    cleanUpDir(capturedImagesTestDir)
+def cleanUpImages():
+    cleanUpDir(imagesTestDir)
 
-def deleteTestCapturedImagesDir():
-    shutil.rmtree(capturedImagesTestDir)
+def deleteTestImagesDir():
+    shutil.rmtree(imagesTestDir)
     
 def createTestResourceSource():
     return resourcesource.ResourceSource("data/resource-source-test-data.json")
