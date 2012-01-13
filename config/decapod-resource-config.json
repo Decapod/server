@@ -19,11 +19,6 @@
 		"source": "book"
 	},
 	
-	"calibrationImages": {
-		"target": "/calibrationImages",
-		"source": "calibrationImages"
-	},
-	
 	"mockImages": {
 		"target": "/mockImages",
 		"source": "mock-images"
