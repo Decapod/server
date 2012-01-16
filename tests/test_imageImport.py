@@ -17,7 +17,7 @@ class ImportImageTest(unittest.TestCase):
         self.testDataDir = self.resources.filePath("${testData}")
         
     def tearDown(self):
-        testutils.cleanUpCapturedImages()
+        testutils.cleanUpImages()
     
     def extractUUID(self, name):
         return name.split("-")[1]

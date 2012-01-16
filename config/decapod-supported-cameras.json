@@ -1,9 +1,0 @@
-{
-	"allowUnsupportedCameras": false,
-    "supportedCameras": {
-        "Canon": [{
-            "name": "Canon PowerShot G10",
-            "label": "PowerShot G10"
-        }]
-    }
-}

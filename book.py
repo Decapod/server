@@ -2,7 +2,7 @@ import os
 import shutil
 import decapod_utilities as utils
 
-BOOK_DIR = "${book}/capturedImages/"
+BOOK_DIR = "${book}/images/"
 
 class Book(object):
     
