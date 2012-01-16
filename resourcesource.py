@@ -107,7 +107,7 @@ class ResourceSource(object):
                 "tools.staticdir.dir": resource["source"]
             }
         
-        # Define the server's base path    
+        # Define the server's base path and dispatcher 
         config["/"] = {
             "tools.staticdir.root": serverBasePath,
             'request.dispatch': cherrypy.dispatch.MethodDispatcher()
