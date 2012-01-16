@@ -73,10 +73,19 @@ class BookController(object):
         
     def DELETE(self, *args, **kwargs):
         self.book.delete()
+    
+    # Continues cherrypy object taversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        print "BookController _cp_dispatch - vpath: {0}".format(vpath)
+        pathSegment = vpath[0]
+        
+        if (pathSegment == "pages"):
+            return PagesController(self.resource, self.name)
 
 #TODO: Support GET requests to return the book's pages model
 #TODO: Support PUT requests to update the book's pages model
-#TODO: On post do more than just save the images, model data should also be added
+#TODO: Update POST to save pages to the specified book, instead of to a global location
+#TODO: On POST do more than just save the images, model data should also be added
 class PagesController(object):
     '''
     Handler for the /books/"bookName"/pages resource
@@ -85,14 +94,24 @@ class PagesController(object):
     This is useful for importing pages.
     '''
     
+    exposed = True
+    
     page = None
     
     def __init__(self, resourceSource, bookName):
         self.resource = resourceSource
         self.bookName = bookName
         self.page = imageImport.ImageImport(self.resource)
+        
+    def GET(self):
+        return "The Pages model for {0}\n".format(self.bookName)
     
-    def post(self, *args, **kwargs):
+    def PUT(self):
+        return "Update the Pages model for {0}\n".format(self.bookName)
+    
+    def POST(self, *args, **kwargs):
+        print "Keyword args: {0}".format(kwargs)
+        print "Arguments: {0}".format(args)
         # import the file
         return self.page.save(kwargs["file"])
 
@@ -181,8 +200,9 @@ class BooksController(object):
     def POST(self):
         return "Create the Book and return the new Books model\n"
     
+    # Continues cherrypy object taversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
-        print "_cp_dispatch - vpath: {0}".format(vpath)
+        print "BooksController _cp_dispatch - vpath: {0}".format(vpath)
         return BookController(self.resource, vpath[0])
 
 class DecapodServer(object):
