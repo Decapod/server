@@ -1,7 +1,7 @@
 import decapod_utilities as utils
 import uuid
 
-IMPORT_DIR = "${book}/capturedImages/"
+IMPORT_DIR = "${book}/images/"
 imagePrefix = "decapod-"
 
 class ImageImport(object):

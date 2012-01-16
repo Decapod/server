@@ -10,7 +10,7 @@ from PIL import Image
 # for asynchronous python 
 from multiprocessing import Pool
 
-BOOK_DIR = "${book}/capturedImages/"
+BOOK_DIR = "${book}/images/"
 PDF_DIR = BOOK_DIR + "pdf/"
 
 #constants for statuses
