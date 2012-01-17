@@ -24,6 +24,10 @@ class ImageImport(object):
         splitStr = mimeType.split('/')
         return splitStr[-1]
     
+    def getFileType(self, file):
+        mimeType = file.content_type.value
+        return self.mimeToSuffix(mimeType)
+    
     def writeFile(self, file, writePath):
         #Writes the file stream to disk at the path specified by writePath
         file.file.seek(0,0)
@@ -40,7 +44,7 @@ class ImageImport(object):
     def save(self, file, name=None):
         # saves the file with the given name. 
         # if no name is provided it will call genearteImageName to create one
-        fileType = self.mimeToSuffix(file.type)
+        fileType = self.getFileType(file)
         name = name if name else self.generateImageName(suffix=fileType)
         imagePath = self.importDir + name
         

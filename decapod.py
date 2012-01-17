@@ -114,8 +114,6 @@ class PagesController(object):
         return "Update the Pages model for {0}\n".format(self.bookName)
     
     def POST(self, *args, **kwargs):
-        print "Keyword args: {0}".format(kwargs)
-        print "Arguments: {0}".format(args)
         # import the file
         return self.page.save(kwargs["file"])
 
@@ -140,7 +138,7 @@ class ImportExportController(object):
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
-        bgtask.put(self.export.generate, self.types[args[0]])
+        bgtask.put(self.export.generate, self.types[args[1]])
         return self.export.getStatus()
     
     def DELETE(self, *args, **kwargs):
