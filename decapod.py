@@ -81,6 +81,9 @@ class BookController(object):
         
         if (pathSegment == "pages"):
             return PagesController(self.resource, self.name)
+        
+        if (pathSegment == "export"):
+            return ImportExportController(self.resource, self.name)
 
 #TODO: Support GET requests to return the book's pages model
 #TODO: Support PUT requests to update the book's pages model
@@ -120,25 +123,29 @@ class ImportExportController(object):
     '''
     Handler for the /books/"bookName"/export resource
     '''
+    
+    exposed = True
+    
     types = dict(type1 = "1", type2 = "2", type3 = "3")
     def __init__(self, resourceSource, bookName):
         self.resource = resourceSource
         self.bookName = bookName
         self.export = pdfExport.PDFGenerator(self.resource)
         
-    def get(self, *args, **kwargs):
+    def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
         setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
         
-    def put(self, *args, **kwargs):
+    def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
         bgtask.put(self.export.generate, self.types[args[0]])
         return self.export.getStatus()
     
-    def delete(self, *args, **kwargs):
+    def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
         self.export.deletePDF()
+        setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
 
 # Books controller
