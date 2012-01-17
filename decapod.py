@@ -147,45 +147,6 @@ class ImportExportController(object):
         setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
 
-# Books controller
-#class BooksController(object):
-#    '''
-#    Parses the positional arguments starting after the /books/
-#    and calls the appropriate handlers for the various resources 
-#    '''
-#    
-#    def __init__(self, resourceSource=None):
-#        self.resource = resourceSource
-#    
-#    @cherrypy.expose()
-#    def default(self, *args, **kwargs):
-#        method = cherrypy.request.method.lower()
-#        
-#        if not args:
-#            raise cherrypy.HTTPError("404 Not Found")
-#        
-#        if len(args) == 1:
-#            book = BookController(self.resource, args[0])
-#            return invoke(book, method, *args[1:], **kwargs)
-#        
-#        elif len(args) > 1:
-#              
-#            if args[1] == "pages":
-#                #trigger pages resource handler
-#                pages = PagesController(self.resource, args[0])
-#                return invoke(pages, method, *args[2:], **kwargs)
-#                
-#            elif args[1] == "export":
-#            #trigger export resource handler
-#                export = ImportExportController(self.resource, args[0])
-#                return invoke(export, method, *args[2:], **kwargs)
-#            
-#            else:
-#                raise cherrypy.HTTPError("404 Not Found")
-#        
-#        else:
-#            raise cherrypy.HTTPError("404 Not Found")
-
 # Books Controller
 # TODO: Direct dynamic URLs to the correct controller
 # TODO: rename to Library
