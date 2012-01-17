@@ -64,6 +64,10 @@ class BookController(object):
         self.resource = resourceSource
         self.name = name
         self.book = book.Book(self.resource)
+        self.paths = {
+            "pages": PagesController(self.resource, self.name),
+            "export": ImportExportController(self.resource, self.name)
+        }
         
     def GET(self):
         return "The BOOK model\n"
@@ -74,16 +78,13 @@ class BookController(object):
     def DELETE(self, *args, **kwargs):
         self.book.delete()
     
-    # Continues cherrypy object taversal. Useful for handling dynamic URLs
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
         print "BookController _cp_dispatch - vpath: {0}".format(vpath)
         pathSegment = vpath[0]
         
-        if (pathSegment == "pages"):
-            return PagesController(self.resource, self.name)
-        
-        if (pathSegment == "export"):
-            return ImportExportController(self.resource, self.name)
+        if pathSegment in self.paths:
+            return self.paths[pathSegment]
 
 #TODO: Support GET requests to return the book's pages model
 #TODO: Support PUT requests to update the book's pages model
@@ -207,7 +208,7 @@ class BooksController(object):
     def POST(self):
         return "Create the Book and return the new Books model\n"
     
-    # Continues cherrypy object taversal. Useful for handling dynamic URLs
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
         print "BooksController _cp_dispatch - vpath: {0}".format(vpath)
         return BookController(self.resource, vpath[0])
