@@ -50,7 +50,6 @@ class BookController(object):
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
-        print "BookController _cp_dispatch - vpath: {0}".format(vpath)
         pathSegment = vpath[0]
         
         if pathSegment in self.paths:
@@ -128,7 +127,6 @@ class BooksController(object):
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
-        print "BooksController _cp_dispatch - vpath: {0}".format(vpath)
         return BookController(self.resource, vpath[0])
 
 class DecapodServer(object):
