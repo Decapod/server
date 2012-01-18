@@ -8,7 +8,6 @@ import simplejson as json
 import sys
 
 import resourcesource
-import pdf
 import imageImport
 import book
 import pdfExport
