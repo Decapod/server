@@ -69,12 +69,6 @@ class BookController(object):
             "export": ImportExportController(self.resource, self.name)
         }
         
-    def GET(self):
-        return "The BOOK model\n"
-    
-    def PUT(self):
-        return "Create/Update and return the new Book model\n"
-        
     def DELETE(self, *args, **kwargs):
         self.book.delete()
     
@@ -106,12 +100,6 @@ class PagesController(object):
         self.resource = resourceSource
         self.bookName = bookName
         self.page = imageImport.ImageImport(self.resource)
-        
-    def GET(self):
-        return "The Pages model for {0}\n".format(self.bookName)
-    
-    def PUT(self):
-        return "Update the Pages model for {0}\n".format(self.bookName)
     
     def POST(self, *args, **kwargs):
         # import the file
@@ -148,8 +136,9 @@ class ImportExportController(object):
         return self.export.getStatus()
 
 # Books Controller
-# TODO: Direct dynamic URLs to the correct controller
 # TODO: rename to Library
+# TODO: Support GET requests to return the Books model
+# TODO: Support POST requests to create a Book and return the new Books model
 class BooksController(object):
     '''
     Parses the positional arguments starting after the /books/
@@ -160,12 +149,6 @@ class BooksController(object):
     
     def __init__(self, resourceSource=None):
         self.resource = resourceSource
-    
-    def GET(self):
-        return "The Books model\n"
-    
-    def POST(self):
-        return "Create the Book and return the new Books model\n"
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
