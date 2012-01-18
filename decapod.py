@@ -10,7 +10,7 @@ import sys
 import resourcesource
 import imageImport
 import book
-import pdfExport
+import pdf
 import backgroundTaskQueue
 
 # Setup configuration for static resources within the server.
@@ -93,7 +93,7 @@ class ImportExportController(object):
     def __init__(self, resourceSource, bookName):
         self.resource = resourceSource
         self.bookName = bookName
-        self.export = pdfExport.PDFGenerator(self.resource)
+        self.export = pdf.PDFGenerator(self.resource)
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
