@@ -25,11 +25,11 @@ def setJSONResponseHeaders(fileName="model.json"):
     cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
 
 #TODO: Support GET requests to return the book's model
-#TODO: Support PUT requests to update the books's model
+#TODO: Support PUT requests to update the library's model
 #TODO: Update DELETE to remove the entire book directory, by name, and not just all the stored pages
 class BookController(object):
     '''
-    Handler for the /books/"bookName"/ resource
+    Handler for the /library/"bookName"/ resource
     
     Currently only handles DELETE requests, which result in all the pages being removed.
     '''
@@ -61,7 +61,7 @@ class BookController(object):
 #TODO: On POST do more than just save the images, model data should also be added
 class PagesController(object):
     '''
-    Handler for the /books/"bookName"/pages resource
+    Handler for the /library/"bookName"/pages resource
     
     Currently only handles POST requests, which results in new pages being added.
     This is useful for importing pages.
@@ -83,7 +83,7 @@ class PagesController(object):
 #TODO: Rename to ExportController when old one is no longer needed (will require refactoring or removing capture)
 class ImportExportController(object):
     '''
-    Handler for the /books/"bookName"/export resource
+    Handler for the /library/"bookName"/export resource
     '''
     
     exposed = True
@@ -110,13 +110,13 @@ class ImportExportController(object):
         setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
 
-# Books Controller
+# Library Controller
 # TODO: rename to Library
-# TODO: Support GET requests to return the Books model
-# TODO: Support POST requests to create a Book and return the new Books model
-class BooksController(object):
+# TODO: Support GET requests to return the Library model
+# TODO: Support POST requests to create a Book and return the new Library model
+class LibraryController(object):
     '''
-    Parses the positional arguments starting after the /books/
+    Parses the positional arguments starting after /library/
     and calls the appropriate handlers for the various resources 
     '''
     
@@ -146,7 +146,7 @@ class DecapodServer(object):
 def mountApp(resources):
     # Set up the server application and its controllers
     root = DecapodServer(resources)
-    root.books = BooksController(resources)
+    root.library = LibraryController(resources)
     
     return root
         
