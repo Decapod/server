@@ -20,19 +20,6 @@ DECAPOD_CONFIG = os.path.join(resourcesource.serverBasePath, "config/decapod-res
 #subscribe to BackgroundTaskQueue plugin
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
-
-class ImportController(object):
-    
-    image, resource = None, None
-    
-    def __init__(self, resourceSource):
-        self.resource = resourceSource
-        self.image = imageImport.ImageImport(self.resource)
-    
-    @cherrypy.expose()
-    def index(self, file):
-        # import the file
-        return self.image.save(file)
     
 def setJSONResponseHeaders(fileName="model.json"):
     cherrypy.response.headers["Content-Type"] = "application/json"
@@ -162,9 +149,6 @@ class DecapodServer(object):
 def mountApp(resources):
     # Set up the server application and its controllers
     root = DecapodServer(resources)
-    root.imageImport = ImportController(resources)
-    
-    #setup for Decapod 0.5a
     root.books = BooksController(resources)
     
     return root
