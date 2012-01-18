@@ -33,16 +33,6 @@ class ImportController(object):
     def index(self, file):
         # import the file
         return self.image.save(file)
-
-# TODO: move this to an appropriate location
-# used to invoke a function by name
-def invoke(obj, method, excption="405 Method Not Allowed", *args, **kwargs):
-    try:
-        func = getattr(obj, method)
-    except AttributeError:
-        raise cherrypy.HTTPError(exception)
-    else:
-        return func(*args, **kwargs)
     
 def setJSONResponseHeaders(fileName="model.json"):
     cherrypy.response.headers["Content-Type"] = "application/json"
