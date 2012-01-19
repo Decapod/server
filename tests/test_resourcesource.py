@@ -4,6 +4,7 @@ import unittest
 import testutils
 sys.path.append(os.path.abspath('..'))
 import resourcesource
+import cherrypy
 
 JS_PATH_ROOT = resourcesource.serverBasePath + "/" + "components/mock/js"
 
@@ -92,10 +93,11 @@ class ResourceSourceTest(unittest.TestCase):
     def test_cherryPyConfig(self):
         config = self.resourceSource.cherryPyConfig()
         self.assertEquals(6, len(config))
+        
         root = config["/"]
-        self.assertEqual(root, {
-            "tools.staticdir.root": resourcesource.serverBasePath                        
-        })
+        self.assertEqual(root["tools.staticdir.root"], resourcesource.serverBasePath)
+        self.assertTrue(isinstance(root["request.dispatch"], cherrypy.dispatch.MethodDispatcher))
+        
         js = config["/js"]
         self.assertEqual(js, {
             "tools.staticdir.on": True,
