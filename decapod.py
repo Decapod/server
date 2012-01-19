@@ -143,22 +143,35 @@ class DecapodServer(object):
         #raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
         raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/import/html/Import-05a.html"))
     
-def mountApp(resources):
+def mountApp():
+    #set up shared resources
+    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
+    
     # Set up the server application and its controllers
     root = DecapodServer(resources)
     root.library = LibraryController(resources)
     
-    return root
+    # mount the app
+    cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
+    return root, resources
         
 def startServer():
-    #set up shared resources
-    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
+    # mount app
+    root, resources = mountApp()
+
+    # subscribe to a signal handler.
+    # used for quitting the app via command line
+    if hasattr(cherrypy.engine, 'signal_handler'):
+        cherrypy.engine.signal_handler.subscribe()
+        
+    # subscribe to a console control handler.
+    # used for quitting the app via command line on windows   
+    if hasattr(cherrypy.engine, "console_control_handler"): 
+        cherrypy.engine.console_control_handler.subscribe() 
     
-    #mount app
-    root = mountApp(resources)
-    
-    #start application
-    cherrypy.quickstart(root, "/", resources.cherryPyConfig())
+    # start the server
+    cherrypy.engine.start()
+    cherrypy.engine.block()
     
 if __name__ == "__main__":
     startServer()
