@@ -16,6 +16,9 @@ import backgroundTaskQueue
 # Setup configuration for static resources within the server.
 DECAPOD_CONFIG = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
 
+# Determine if the server is running under an SCGI-WSGI interface
+IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
+
 #subscribe to BackgroundTaskQueue plugin
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
@@ -171,7 +174,10 @@ def startServer():
     
     # start the server
     cherrypy.engine.start()
-    cherrypy.engine.block()
+    
+    # Block if running standalone, nut under an SCGI-SWGI interface
+    if (not IS_SCGIWSGI) :
+        cherrypy.engine.block()
     
 if __name__ == "__main__":
     startServer()
