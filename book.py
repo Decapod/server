@@ -13,4 +13,3 @@ class Book(object):
     def delete(self):
         if os.path.exists(self.bookDir):
             shutil.rmtree(self.bookDir)
-            os.mkdir(self.bookDir)

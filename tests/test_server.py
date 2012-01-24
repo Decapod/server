@@ -58,6 +58,6 @@ class TestREST(helper.CPWebCase):
     def test_04_book(self):
         bookURL = "/library/bookName/"
         self.getPage(bookURL, method="DELETE")
-        self.unsupportedHTTPMethodsTest(bookURL, ["GET", "PUT", "POST"])
         self.assertFalse(os.path.exists(BOOK_DIR), "The test directory (at path: {0}) should have been removed".format(BOOK_DIR))
+        self.unsupportedHTTPMethodsTest(bookURL, ["GET", "PUT", "POST"])
         
