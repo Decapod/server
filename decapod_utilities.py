@@ -4,7 +4,7 @@ import subprocess
 
 def mkdirIfNecessary(path):
     if os.path.exists(path) is False:
-        os.mkdir(path)
+        os.makedirs(path)
 
 def remakeDir(path):
     if os.path.exists(path):

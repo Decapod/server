@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath('..'))
 import resourcesource
 
 CONFIG_PATH = "data/resource-source-test-data.json"
-IMAGES_TEST_DIR = "data/book/images/"
+IMAGES_TEST_DIR = "data/library/book/images/"
 
 def cleanUpDir(dir):
     filePaths = glob.glob(dir + "/*")

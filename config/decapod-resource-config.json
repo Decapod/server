@@ -14,9 +14,9 @@
 		"source": "../decapod-ui/shared"
 	},
 	
-	"book": {
-		"target": "/book",
-		"source": "book"
+	"library": {
+		"target": "/library",
+		"source": "library"
 	},
 	
 	"mockImages": {

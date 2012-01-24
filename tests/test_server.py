@@ -13,7 +13,7 @@ import decapod
     #    /library/'bookName'/pages: POST
     #    /library/'bookName'/export: GET, PUT, DELETE
 
-BOOK_DIR = os.path.normpath(os.path.join(os.getcwd(), "../book"))
+BOOK_DIR = os.path.normpath(os.path.join(os.getcwd(), "../library/book"))
 
 class TestREST(helper.CPWebCase):
     
