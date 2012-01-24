@@ -2,12 +2,9 @@ import os
 import shutil
 import decapod_utilities as utils
 
-BOOK_DIR = "${book}/images/"
+BOOK_DIR = "${library}/book/"
 
 class Book(object):
-    
-    resources = None
-    bookDir = None
 
     def __init__(self, resourceSource):
         self.resources = resourceSource
