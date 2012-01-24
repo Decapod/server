@@ -57,7 +57,9 @@ class TestREST(helper.CPWebCase):
     # TODO: Tests that something existed before the deletion
     def test_04_book(self):
         bookURL = "/library/bookName/"
+        self.assertTrue(BOOK_DIR, "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
         self.getPage(bookURL, method="DELETE")
-        self.assertFalse(os.path.exists(BOOK_DIR), "The test directory (at path: {0}) should have been removed".format(BOOK_DIR))
+        self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
         self.unsupportedHTTPMethodsTest(bookURL, ["GET", "PUT", "POST"])
+        
         
