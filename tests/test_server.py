@@ -23,6 +23,12 @@ def teardown_server():
     if os.path.exists(BOOK_DIR):
         shutil.rmtree(BOOK_DIR)
 
+# TODO: Similar code exists in pdf.py, refactor.     
+def writeStatus(path, status, mode="w"):
+    f = open(path, mode)
+    f.write(status)
+    f.close()
+
 class serverTests(helper.CPWebCase):
     '''
     A subclass of helper.CPWebCase
@@ -94,9 +100,11 @@ class TestPages(serverTests):
 class TestExistingExport(serverTests):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
+    deleteStatus = '{"status": "none"}'
     pdfDir = os.path.join(BOOK_DIR, "images/pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     pdf = os.path.join(pdfDir, "Decapod.pdf")
+    
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
     
@@ -106,9 +114,7 @@ class TestExistingExport(serverTests):
             os.makedirs(self.pdfDir)
         if not os.path.exists(self.pdf):
             shutil.copy(pdfSRC, self.pdf)
-        f = open(self.statusFile, "w")
-        f.write(self.exportStatus)
-        f.close()
+        writeStatus(self.statusFile, self.exportStatus)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -120,7 +126,41 @@ class TestExistingExport(serverTests):
     def test_02_delete(self):
         self.assertTrue(os.path.exists(self.pdf), "The Decapod.pdf file should exist at path ({0})".format(self.pdf))
         self.getPage(self.exportURL, method="DELETE")
+#        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.deleteStatus)
         self.assertFalse(os.path.exists(self.pdf), "The Decapod.pdf file should no longer exist at path ({0})".format(self.pdf))
     
     def test_03_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+# TODO: Test put method, the trouble is that it is asynchronous       
+class TestInProgressExport(serverTests):
+    exportURL = "/library/bookName/export"
+    exportStatus = '{"status": "in progress"}'
+    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    statusFile = os.path.join(pdfDir, "exportStatus.json")
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        if not os.path.exists(self.pdfDir):
+            os.makedirs(self.pdfDir)
+        writeStatus(self.statusFile, self.exportStatus)
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    # TODO: Test response status 
+    def test_02_delete(self):
+        self.getPage(self.exportURL, method="DELETE")
+    
+    # TODO: Test response status
+    def test_03_put(self):
+        self.getPage(self.exportURL, method="PUT")
+    
+    def test_04_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
