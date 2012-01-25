@@ -3,6 +3,7 @@ from cherrypy.test import helper
 import shutil
 import os
 import sys
+import testutils
 sys.path.append(os.path.abspath('..'))
 import decapod
 
@@ -69,7 +70,8 @@ class TestBook(serverTests):
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
     bookURL = "/library/bookName/"
-        
+    
+    # TODO: Test response status  
     def test_01_delete(self):
         self.assertTrue(BOOK_DIR, "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
         self.getPage(self.bookURL, method="DELETE")
@@ -77,5 +79,13 @@ class TestBook(serverTests):
     
     def test_02_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.bookURL, ["GET", "PUT", "POST"])
-        
-        
+
+# TODO: Test Post (including: file saved, response code, returned url)
+class TestPages(serverTests):
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    pageURL = "/library/bookName/pages"
+    
+    def test_02_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
