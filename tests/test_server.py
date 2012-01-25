@@ -89,3 +89,38 @@ class TestPages(serverTests):
     
     def test_02_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
+        
+# TODO: Test put method, the trouble is that it is asynchronous       
+class TestExistingExport(serverTests):
+    exportURL = "/library/bookName/export"
+    exportStatus = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
+    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    statusFile = os.path.join(pdfDir, "exportStatus.json")
+    pdf = os.path.join(pdfDir, "Decapod.pdf")
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        pdfSRC = os.path.abspath("data/pdf/Decapod.pdf")
+        if not os.path.exists(self.pdfDir):
+            os.makedirs(self.pdfDir)
+        if not os.path.exists(self.pdf):
+            shutil.copy(pdfSRC, self.pdf)
+        f = open(self.statusFile, "w")
+        f.write(self.exportStatus)
+        f.close()
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    # TODO: Test response status 
+    def test_02_delete(self):
+        self.assertTrue(os.path.exists(self.pdf), "The Decapod.pdf file should exist at path ({0})".format(self.pdf))
+        self.getPage(self.exportURL, method="DELETE")
+        self.assertFalse(os.path.exists(self.pdf), "The Decapod.pdf file should no longer exist at path ({0})".format(self.pdf))
+    
+    def test_03_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
