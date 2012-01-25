@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath('..'))
 import decapod
 
 
-BOOK_DIR = os.path.normpath(os.path.join(os.getcwd(), "../library/book"))
+BOOK_DIR = os.path.normpath(os.path.abspath("../library/book"))
 
 def setup_server():
     decapod.mountApp()
@@ -23,7 +23,7 @@ def writeStatus(path, status, mode="w"):
     f.write(status)
     f.close()
 
-class serverTests(helper.CPWebCase):
+class ServerTestCase(helper.CPWebCase):
     '''
     A subclass of helper.CPWebCase
     The purpose of this class is to add new common test functions that can be easily shared
@@ -37,7 +37,7 @@ class serverTests(helper.CPWebCase):
             self.getPage(url, method=method)
             self.assertStatus(405, "Should return a 405 'Method not Allowed' status for '{0}'".format(method))
 
-class TestRoot(serverTests):
+class TestRoot(ServerTestCase):
     rootURL = "/"
     expectedRedirectURL = "/components/import/html/Import-05a.html"
     
@@ -56,7 +56,7 @@ class TestRoot(serverTests):
         self.getPage(self.expectedRedirectURL)
         self.assertStatus(200, "Should return a 200 'OK' status")
 
-class TestLibrary(serverTests):
+class TestLibrary(ServerTestCase):
     libraryURL = "/library/"
     
     setup_server = staticmethod(setup_server)
@@ -65,15 +65,23 @@ class TestLibrary(serverTests):
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.libraryURL, ["GET", "PUT", "POST", "DELETE"])
 
-class TestBook(serverTests):
+class TestBook(ServerTestCase):
     bookURL = "/library/bookName/"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
     
+    def setUp(self):
+        if not os.path.exists(BOOK_DIR):
+            os.makedirs(BOOK_DIR)
+    
+    def tearDown(self):
+        if os.path.exists(BOOK_DIR):
+            shutil.rmtree(BOOK_DIR)
+    
     # TODO: Test response status  
     def test_01_delete(self):
-        self.assertTrue(BOOK_DIR, "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
+        self.assertTrue(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
         self.getPage(self.bookURL, method="DELETE")
         self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
     
@@ -81,7 +89,7 @@ class TestBook(serverTests):
         self.assertUnsupportedHTTPMethods(self.bookURL, ["GET", "PUT", "POST"])
 
 # TODO: Test Post (including: file saved, response code, returned url)
-class TestPages(serverTests):
+class TestPages(ServerTestCase):
     pageURL = "/library/bookName/pages"
     
     setup_server = staticmethod(setup_server)
@@ -91,7 +99,7 @@ class TestPages(serverTests):
         self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
-class TestExistingExport(serverTests):
+class TestExistingExport(ServerTestCase):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
     deleteStatus = '{"status": "none"}'
@@ -127,7 +135,7 @@ class TestExistingExport(serverTests):
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
             
-class TestInProgressExport(serverTests):
+class TestInProgressExport(ServerTestCase):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "in progress"}'
     pdfDir = os.path.join(BOOK_DIR, "images/pdf")
@@ -159,7 +167,7 @@ class TestInProgressExport(serverTests):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
-class TestNewExport(serverTests):
+class TestNewExport(ServerTestCase):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "none"}'
     pdfDir = os.path.join(BOOK_DIR, "images/pdf")
