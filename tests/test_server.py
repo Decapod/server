@@ -21,7 +21,6 @@ def setup_server():
 def teardown_server():
     if os.path.exists(BOOK_DIR):
         shutil.rmtree(BOOK_DIR)
-        os.mkdir(BOOK_DIR)
 
 class serverTests(helper.CPWebCase):
     '''
@@ -40,7 +39,7 @@ class serverTests(helper.CPWebCase):
 class TestRoot(serverTests):
     
     setup_server = staticmethod(setup_server)
-    teardown_server = staticmethod(teardown_server)
+    tearDown = staticmethod(teardown_server)
     rootURL = "/"
     expectedRedirectURL = "/components/import/html/Import-05a.html"
     
@@ -59,7 +58,7 @@ class TestRoot(serverTests):
 class TestLibrary(serverTests):
     
     setup_server = staticmethod(setup_server)
-    teardown_server = staticmethod(teardown_server)
+    tearDown = staticmethod(teardown_server)
         
     def test_01_unsupportedMethods(self):
         libraryURL = "/library/"
@@ -68,7 +67,7 @@ class TestLibrary(serverTests):
 class TestBook(serverTests):
     
     setup_server = staticmethod(setup_server)
-    teardown_server = staticmethod(teardown_server)
+    tearDown = staticmethod(teardown_server)
         
     # TODO: Tests that something existed before the deletion
     def test_01_book(self):
