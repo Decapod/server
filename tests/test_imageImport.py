@@ -19,112 +19,94 @@ class ImportImageTest(unittest.TestCase):
     def tearDown(self):
         testutils.cleanUpImages()
     
-    def extractUUID(self, name):
-        return name.split("-")[1]
+    # Custom assertions
+    def assertNameFormat(self, name, prefix="decapod-", suffix="jpeg"):
+        self.assertTrue(name.startswith(prefix), "Tests if '{0}' starts with {1}".format(name, prefix))
+        self.assertTrue(name.endswith(suffix), "Tests if '{0}' ends with {1}".format(name, suffix))
         
-    def test_generateImageName(self):
-        '''
-        Tests the generateImageName function. There are 4 tests run.
-        1) Tests the default output
-        2) Tests the output when a prefix is passed in
-        3) Tests the output when a suffix is passed in
-        4) Tests the output when both the prefix and suffix are specified
-        '''
-        iImport = imageImport.ImageImport(self.resources)
-        dPrefix = "decapod-"
-        dSuffix = "jpeg"
-        cPrefix = "decaTest-"
-        cSuffix = "png"
-        
-        defaultName = iImport.generateImageName()
-        dnName, dnExt = os.path.splitext(defaultName)
-        
-        customPrefix = iImport.generateImageName(cPrefix)
-        cpName, cpExt = os.path.splitext(customPrefix)
-        
-        customSuffix = iImport.generateImageName(suffix=cSuffix)
-        csName, csExt = os.path.splitext(customSuffix)
-        
-        customArgs = iImport.generateImageName(cPrefix, cSuffix)
-        caName, caExt = os.path.splitext(customArgs)
-        
-        #Assert that the prefixes are set correctly for each generated name
-        self.assertTrue(dnName.startswith(dPrefix), "Tests if '{0}' starts with {1}".format(dnName, dPrefix))
-        self.assertTrue(cpName.startswith(cPrefix), "Tests if '{0}' starts with {1}".format(cpName, cPrefix))
-        self.assertTrue(csName.startswith(dPrefix), "Tests if '{0}' starts with {1}".format(csName, dPrefix))
-        self.assertTrue(caName.startswith(cPrefix), "Tests if '{0}' starts with {1}".format(caName, cPrefix))
-        
-        #Assert that the suffixes are set correctly for each generated name
-        self.assertTrue(dnExt.endswith(dSuffix), "Tests if '{0}' ends with {1}".format(dnExt, dSuffix))
-        self.assertTrue(cpExt.endswith(dSuffix), "Tests if '{0}' ends with {1}".format(cpExt, dSuffix))
-        self.assertTrue(csExt.endswith(cSuffix), "Tests if '{0}' ends with {1}".format(csExt, cSuffix))
-        self.assertTrue(caExt.endswith(cSuffix), "Tests if '{0}' ends with {1}".format(caExt, cSuffix))
-        
-        #Assert that the uuid's are different
-        uuidList = map(self.extractUUID, [dnName, cpName, csName, caName])
-        
-        # Uses the set method to remove duplicate values. If there are duplicate
-        # UUIDs, the lengths will be different and the assertion will fail
-        self.assertEquals(len(uuidList), len(set(uuidList)), "Test if there are duplicate UUIDs")
-        
-    def test_mimeToSuffix(self):
-        '''
-        Tests the mimeToSuffix function.
-        Ensures that the extension is returned when a mime type is passed in.
-        Also tests that if an extension is passed in, it is just returned as is.
-        '''
-        
-        iImport = imageImport.ImageImport(self.resources)
-        expectedType = "png"
-        
-        mime = iImport.mimeToSuffix("image/png")
-        type = iImport.mimeToSuffix("png")
-        
-        self.assertEquals(expectedType, mime)
-        self.assertEquals(expectedType, type)
-        
-    def writeTest(self, origFilePath, writePath):
-        '''
-        Convenience function to test that a file is read in and written to disk.
-        This is done by testing that the new file exists and that the new and 
-        original files are the same.
-        '''
-        
+    def assertFileWritten(self, origFilePath, writePath):
         self.assertTrue(os.path.exists(writePath), "Tests the existence of the file: {0}".format(writePath))
         self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, writePath))
-        
-    def test_writeFile(self):
-        '''
-        Test the writeFile function.
-        Ensures that a file is saved to the file system
-        '''
-        
+    
+    # Convenience test functions   
+    def mimeToSuffixTest(self, mimetype, expectedSuffix):
         iImport = imageImport.ImageImport(self.resources)
-        writePath = iImport.importDir + "cactus.jpg"
-        origFilePath = self.testDataDir + "/images/cactus.jpg"
+        
+        suffix = iImport.mimeToSuffix(mimetype)
+        self.assertEquals(expectedSuffix, suffix)
+        
+    def saveTest(self, name=None):
+        iImport = imageImport.ImageImport(self.resources)
+        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
+        testFile = testutils.mockFileStream(origFilePath)
+        
+        savedfile = iImport.save(testFile, name)
+        self.assertFileWritten(origFilePath, savedfile)
+    
+    # Tests
+    def test_01_generateImageName_default(self):
+        iImport = imageImport.ImageImport(self.resources)
+        name = iImport.generateImageName()
+        self.assertNameFormat(name)
+        
+    def test_02_generateImageName_prefix(self):
+        iImport = imageImport.ImageImport(self.resources)
+        prefix = "decaTest-"
+        name = iImport.generateImageName(prefix)
+        self.assertNameFormat(name, prefix)
+        
+    def test_03_generateImageName_suffix(self):
+        iImport = imageImport.ImageImport(self.resources)
+        suffix = "png"
+        name = iImport.generateImageName(suffix=suffix)
+        self.assertNameFormat(name, suffix=suffix)
+        
+    def test_04_generateImageName_custom(self):
+        iImport = imageImport.ImageImport(self.resources)
+        prefix = "decaTest-"
+        suffix = "png"
+        name = iImport.generateImageName(prefix, suffix)
+        self.assertNameFormat(name, prefix, suffix)
+        
+    def test_05_generateImageName_UUID(self):
+        iImport = imageImport.ImageImport(self.resources)
+        numNames = 10
+        names = []
+        uuidList = None
+        
+        for i in range(numNames):
+            names.append(iImport.generateImageName())
+        uuidList = map(None, names)
+        
+        self.assertEquals(len(names), numNames, "The names list should be populated with {0} different names".format(numNames))
+        self.assertEquals(len(uuidList),  numNames, "All the generated names should be unique")
+    
+    def test_06_mimeToSuffix_mimetype(self):
+        self.mimeToSuffixTest("image/png", "png")
+    
+    def test_07_mimeToSuffix_type(self):
+        self.mimeToSuffixTest("png", "png")
+        
+    def test_08_getFileType(self):
+        iImport = imageImport.ImageImport(self.resources)
+        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
+        testFile = testutils.mockFileStream(origFilePath)
+        expectedType = "jpeg"
+        
+        type = iImport.getFileType(testFile)
+        self.assertEquals(expectedType, type)
+        
+    def test_09_writeFile(self):
+        iImport = imageImport.ImageImport(self.resources)
+        writePath = os.path.join(iImport.importDir, "cactus.jpg")
+        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         
         iImport.writeFile(testFile, writePath)
-        self.writeTest(origFilePath, writePath)
+        self.assertFileWritten(origFilePath, writePath)
         
-    def test_save(self):
-        '''
-        Test the save function
-        Ensures that a files is saved to the file system.
-        There are two tests
-        1) Tests the default name given to the saved file
-        2) Tests when a name for the file is passed in
-        '''
+    def test_10_save_default(self):
+        self.saveTest()
         
-        iImport = imageImport.ImageImport(self.resources)
-        name = "testName.jpeg"
-        origFilePath = self.testDataDir + "/images/cactus.jpg"
-        testFile = testutils.mockFileStream(origFilePath)
-        
-        savedfile = iImport.save(testFile)
-        self.writeTest(origFilePath, savedfile)
-        
-        savedNamedFile = iImport.save(testFile, name)
-        self.writeTest(origFilePath, savedNamedFile)
-
-        
+    def test_11_save_name(self):
+        self.saveTest("testName.jpeg")
