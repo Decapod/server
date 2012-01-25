@@ -38,11 +38,11 @@ class serverTests(helper.CPWebCase):
             self.assertStatus(405, "Should return a 405 'Method not Allowed' status for '{0}'".format(method))
 
 class TestRoot(serverTests):
+    rootURL = "/"
+    expectedRedirectURL = "/components/import/html/Import-05a.html"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
-    rootURL = "/"
-    expectedRedirectURL = "/components/import/html/Import-05a.html"
     
     def test_01_get(self):
         self.getPage(self.rootURL)
@@ -57,19 +57,19 @@ class TestRoot(serverTests):
         self.assertStatus(200, "Should return a 200 'OK' status")
 
 class TestLibrary(serverTests):
+    libraryURL = "/library/"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
         
     def test_01_unsupportedMethods(self):
-        libraryURL = "/library/"
-        self.assertUnsupportedHTTPMethods(libraryURL, ["GET", "PUT", "POST", "DELETE"])
+        self.assertUnsupportedHTTPMethods(self.libraryURL, ["GET", "PUT", "POST", "DELETE"])
 
 class TestBook(serverTests):
+    bookURL = "/library/bookName/"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
-    bookURL = "/library/bookName/"
     
     # TODO: Test response status  
     def test_01_delete(self):
@@ -82,10 +82,10 @@ class TestBook(serverTests):
 
 # TODO: Test Post (including: file saved, response code, returned url)
 class TestPages(serverTests):
+    pageURL = "/library/bookName/pages"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
-    pageURL = "/library/bookName/pages"
     
     def test_02_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
