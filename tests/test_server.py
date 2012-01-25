@@ -16,8 +16,6 @@ import decapod
 BOOK_DIR = os.path.normpath(os.path.join(os.getcwd(), "../library/book"))
 
 def setup_server():
-    if not os.path.exists(BOOK_DIR):
-        os.mkdir(BOOK_DIR)
     decapod.mountApp()
     
 def teardown_server():
