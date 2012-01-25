@@ -7,12 +7,6 @@ import testutils
 sys.path.append(os.path.abspath('..'))
 import decapod
 
-    # Decapod 0.5 REST URL Spec 
-    #    /: GET
-    #    /library/: NONE
-    #    /library/'bookName': DELETE
-    #    /library/'bookName'/pages: POST
-    #    /library/'bookName'/export: GET, PUT, DELETE
 
 BOOK_DIR = os.path.normpath(os.path.join(os.getcwd(), "../library/book"))
 
@@ -132,8 +126,7 @@ class TestExistingExport(serverTests):
     
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
-        
-# TODO: Test put method, the trouble is that it is asynchronous       
+            
 class TestInProgressExport(serverTests):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "in progress"}'
@@ -163,4 +156,34 @@ class TestInProgressExport(serverTests):
         self.getPage(self.exportURL, method="PUT")
     
     def test_04_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+# TODO: Test put method, the trouble is that it is asynchronous       
+class TestNewExport(serverTests):
+    exportURL = "/library/bookName/export"
+    exportStatus = '{"status": "none"}'
+    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    statusFile = os.path.join(pdfDir, "exportStatus.json")
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        if not os.path.exists(self.pdfDir):
+            os.makedirs(self.pdfDir)
+        writeStatus(self.statusFile, self.exportStatus)
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    # TODO: Test response status 
+    def test_02_delete(self):
+        self.getPage(self.exportURL, method="DELETE")
+#        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
