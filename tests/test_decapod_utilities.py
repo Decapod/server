@@ -46,14 +46,6 @@ class DirectoryCreationTests(unittest.TestCase):
     def test_02_mkdirIfNecessary_existing(self):
         utils.mkdirIfNecessary(self.existingTestDir)
         self.assertDirExists(self.existingTestDir)
-            
-    def test_03_remakeDir_create(self):
-        utils.remakeDir(self.newTestDir)
-        self.assertDirExists(self.newTestDir)
-
-    def test_04_remakeDir_existing(self):
-        utils.remakeDir(self.existingTestDir)
-        self.assertDirExists(self.existingTestDir)
         
 if __name__ == '__main__':
     unittest.main()
