@@ -5,11 +5,6 @@ import subprocess
 def mkdirIfNecessary(path):
     if os.path.exists(path) is False:
         os.makedirs(path)
-
-def remakeDir(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    os.mkdir(path)
     
 def invokeCommandSync(cmdArgs, error, message):
     proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
