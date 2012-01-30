@@ -1,7 +1,5 @@
 import os
-import glob
 import sys
-import shutil
 import mimetypes
 sys.path.append(os.path.abspath('..'))
 import resourcesource

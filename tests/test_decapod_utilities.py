@@ -2,7 +2,6 @@ import sys
 import os
 import unittest
 import shutil
-import glob
 sys.path.append(os.path.abspath('..'))
 import decapod_utilities as utils
 

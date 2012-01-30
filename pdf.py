@@ -1,15 +1,9 @@
 import os
-import shutil
-import glob
 import decapod_utilities as utils
 import simplejson as json
 import imghdr
 from PIL import Image
 import resourcesource
-
-#TODO: Consider adopting an asynchronous framework
-# for asynchronous python 
-from multiprocessing import Pool
 
 BOOK_DIR = "${library}/book/images/"
 PDF_DIR = BOOK_DIR + "pdf/"

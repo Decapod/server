@@ -4,7 +4,6 @@
 
 import cherrypy
 import os
-import simplejson as json
 import sys
 
 import resourcesource as rs

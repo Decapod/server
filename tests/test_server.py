@@ -1,6 +1,5 @@
 import cherrypy
 from cherrypy.test import helper
-import shutil
 import os
 import sys
 sys.path.append(os.path.abspath('..'))
