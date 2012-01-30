@@ -7,6 +7,7 @@ import shutil
 import testutils
 sys.path.append(os.path.abspath('..'))
 import imageImport
+import decapod_utilities as utils
 
 DATA_DIR = os.path.abspath("data")
 IMAGES_DIR = os.path.join(DATA_DIR, "images")
@@ -24,8 +25,7 @@ class ImportImageTest(unittest.TestCase):
         self.iImport = imageImport.ImageImport(self.mockRS)
         
     def tearDown(self):
-        if os.path.exists(BOOK_DIR):
-            shutil.rmtree(BOOK_DIR)
+        utils.rmTree(BOOK_DIR)
     
     # Custom assertions
     def assertNameFormat(self, name, prefix="decapod-", suffix="jpeg"):

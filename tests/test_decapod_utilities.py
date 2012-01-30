@@ -33,6 +33,7 @@ class DirectoryManipulationTests(unittest.TestCase):
             os.mkdir(self.existingTestDir)
     
     def tearDown(self):
+        # Not using the decapod utilites function "rmTree" because it will be tested here
         if os.path.exists(self.newTestDir):
             shutil.rmtree(self.newTestDir)
             

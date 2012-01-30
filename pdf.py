@@ -96,8 +96,7 @@ class PDFGenerator(object):
             self.status = json.load(statusFile)
             
     def clearExportDir(self):
-        if os.path.exists(self.pdfDirPath):
-            shutil.rmtree(self.pdfDirPath) 
+        utils.rmTree(self.pdfDirPath) 
         
     def writeToStatusFile(self):
         writeToFile(self.getStatus(), self.statusFilePath)

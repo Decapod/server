@@ -41,8 +41,7 @@ def setup_server():
     decapod.mountApp(CONFIG)
     
 def teardown_server():
-    if os.path.exists(BOOK_DIR):
-        shutil.rmtree(BOOK_DIR)
+    utils.rmTree(BOOK_DIR)
 
 # TODO: Similar code exists in pdf.py, refactor.     
 def writeStatus(path, status, mode="w"):
@@ -102,8 +101,7 @@ class TestBook(ServerTestCase):
         utils.makeDirs(BOOK_DIR)
     
     def tearDown(self):
-        if os.path.exists(BOOK_DIR):
-            shutil.rmtree(BOOK_DIR)
+        utils.rmTree(BOOK_DIR)
     
     # TODO: Test response status  
     def test_01_delete(self):

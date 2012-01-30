@@ -26,10 +26,8 @@ class TestPDFModuleFunctions(unittest.TestCase):
         utils.makeDirs(TEST_DIR)
             
     def tearDown(self):
-        if os.path.exists(TEST_DIR):
-            shutil.rmtree(TEST_DIR)
-        if os.path.exists(BOOK_DIR):
-            shutil.rmtree(BOOK_DIR)
+        utils.rmTree(TEST_DIR)
+        utils.rmTree(BOOK_DIR)
     
     def test_01_createDir(self):
         newDir = os.path.join(TEST_DIR, "new_dir")
@@ -139,8 +137,7 @@ class TestPDFGenerator(unittest.TestCase):
         utils.makeDirs(IMG_DIR)
         
     def tearDown(self):
-        if os.path.exists(BOOK_DIR):
-            shutil.rmtree(BOOK_DIR)
+        utils.rmTree(BOOK_DIR)
     
     def assertStatusFile(self, status, statusFile = STATUS_FILE):
         file = open(statusFile)
