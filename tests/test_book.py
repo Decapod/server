@@ -1,7 +1,6 @@
 import sys
 import os
 import unittest
-import shutil
 
 import testutils
 sys.path.append(os.path.abspath('..'))
