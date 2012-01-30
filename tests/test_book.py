@@ -32,8 +32,7 @@ class TestBookNone(unittest.TestCase):
     
     def setUp(self):
         self.book = book.Book(self.mockRS)
-        if os.path.exists(BOOK_DIR):
-            shutil.rmtree(BOOK_DIR)
+        utils.rmTree(BOOK_DIR)
             
     def test_01_delete(self):
         self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
