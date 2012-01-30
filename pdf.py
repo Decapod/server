@@ -27,9 +27,6 @@ tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
 class PDFGenerationError(Exception): pass
-
-def createDir(path):
-    utils.makeDirs(path)
         
 def writeToFile(contents, writePath, writeMode="w"):
     f = open(writePath, writeMode)
@@ -87,16 +84,13 @@ class PDFGenerator(object):
         self.setupExportFileStructure()
         
     def setupExportFileStructure(self):
-        createDir(self.pdfDirPath)
+        utils.makeDirs(self.pdfDirPath)
             
         if not os.path.exists(self.statusFilePath):
             self.setStatus(EXPORT_NONE)
         else:
             statusFile = open(self.statusFilePath)
             self.status = json.load(statusFile)
-            
-    def clearExportDir(self):
-        utils.rmTree(self.pdfDirPath) 
         
     def writeToStatusFile(self):
         writeToFile(self.getStatus(), self.statusFilePath)
@@ -142,7 +136,7 @@ class PDFGenerator(object):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
-            createDir(self.tiffDirPath)
+            utils.makeDirs(self.tiffDirPath)
             self.pages = bookPagesToArray(self.bookDirPath);
             self.tiffPages = convertPagesToTIFF(self.pages, self.tiffDirPath)
             self.generatePDFFromPages(type)
@@ -154,6 +148,6 @@ class PDFGenerator(object):
         if self.status["status"] == EXPORT_IN_PROGRESS:
             raise PDFGenerationError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
-            self.clearExportDir()
+            utils.rmTree(self.pdfDirPath)
             self.setupExportFileStructure()
 
