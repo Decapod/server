@@ -27,11 +27,6 @@ tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
 class PDFGenerationError(Exception): pass
-        
-def writeToFile(contents, writePath, writeMode="w"):
-    f = open(writePath, writeMode)
-    f.write(contents)
-    f.close()
     
 def isImage(filePath):
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
@@ -93,7 +88,7 @@ class PDFGenerator(object):
             self.status = json.load(statusFile)
         
     def writeToStatusFile(self):
-        writeToFile(self.getStatus(), self.statusFilePath)
+        utils.writeToFile(self.getStatus(), self.statusFilePath)
         
     def setStatus(self, status):
         st = self.status
