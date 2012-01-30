@@ -3,8 +3,6 @@ from cherrypy.test import helper
 import shutil
 import os
 import sys
-import testutils
-import nose
 sys.path.append(os.path.abspath('..'))
 import decapod
 
@@ -225,4 +223,5 @@ class TestNewExport(ServerTestCase):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
 if __name__ == '__main__':
+    import nose
     nose.runmodule()
