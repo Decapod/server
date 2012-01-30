@@ -22,7 +22,7 @@ class CommandInvokationTests(unittest.TestCase):
         cmd = ["this_command_doesnt_exist", "--foo"]
         self.assertRaises(Exception, utils.invokeCommandSync, cmd, Exception, "inovkeCommand correctly throws an exception")
 
-class DirectoryCreationTests(unittest.TestCase):
+class DirectoryManipulationTests(unittest.TestCase):
     
     newTestDir = os.path.abspath("new_dir")
     existingTestDir = os.path.abspath("existing_dir")
@@ -39,6 +39,9 @@ class DirectoryCreationTests(unittest.TestCase):
     def assertDirExists(self, path):           
         self.assertTrue(os.path.exists(path), "The test directory should be there.")
         self.assertTrue(os.path.isdir(path), "The path created should actually be a directory.")
+        
+    def assertNoDir(self, path):
+        self.assertFalse(os.path.exists(path), "The test directory should not exist.")
             
     def test_01_makeDirs_create(self):
         utils.makeDirs(self.newTestDir)
@@ -47,6 +50,14 @@ class DirectoryCreationTests(unittest.TestCase):
     def test_02_makeDirs_existing(self):
         utils.makeDirs(self.existingTestDir)
         self.assertDirExists(self.existingTestDir)
+        
+    def test_03_rmTree_none(self):
+        utils.rmTree(self.newTestDir)
+        self.assertNoDir(self.newTestDir)
+    
+    def test_04_rmTree_existing(self):
+        utils.rmTree(self.existingTestDir)
+        self.assertNoDir(self.existingTestDir)
         
 if __name__ == '__main__':
     unittest.main()
