@@ -29,8 +29,7 @@ tempDir = "genPDFTemp"
 class PDFGenerationError(Exception): pass
 
 def createDir(path):
-    if not os.path.exists(path):
-        os.mkdir(path)
+    utils.makeDirs(path)
         
 def writeToFile(contents, writePath, writeMode="w"):
     f = open(writePath, writeMode)

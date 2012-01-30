@@ -5,6 +5,7 @@ import os
 import sys
 sys.path.append(os.path.abspath('..'))
 import decapod
+import decapod_utilities as utils
 
 LIBRARY_DIR = os.path.abspath("data/library")
 BOOK_DIR = os.path.join(LIBRARY_DIR, "book")
@@ -98,8 +99,7 @@ class TestBook(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        if not os.path.exists(BOOK_DIR):
-            os.makedirs(BOOK_DIR)
+        utils.makeDirs(BOOK_DIR)
     
     def tearDown(self):
         if os.path.exists(BOOK_DIR):
@@ -138,10 +138,8 @@ class TestExistingExport(ServerTestCase):
     
     def setUp(self):
         pdfSRC = os.path.abspath("data/pdf/Decapod.pdf")
-        if not os.path.exists(self.pdfDir):
-            os.makedirs(self.pdfDir)
-        if not os.path.exists(self.pdf):
-            shutil.copy(pdfSRC, self.pdf)
+        utils.makeDirs(self.pdfDir)
+        utils.makeDirs(self.pdf)
         writeStatus(self.statusFile, self.exportStatus)
             
     def test_01_get(self):
@@ -171,8 +169,7 @@ class TestInProgressExport(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        if not os.path.exists(self.pdfDir):
-            os.makedirs(self.pdfDir)
+        utils.makeDirs(self.pdfDir)
         writeStatus(self.statusFile, self.exportStatus)
             
     def test_01_get(self):
@@ -203,8 +200,7 @@ class TestNewExport(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        if not os.path.exists(self.pdfDir):
-            os.makedirs(self.pdfDir)
+        utils.makeDirs(self.pdfDir)
         writeStatus(self.statusFile, self.exportStatus)
             
     def test_01_get(self):
