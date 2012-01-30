@@ -9,6 +9,7 @@ import simplejson as json
 import testutils
 sys.path.append(os.path.abspath('..'))
 import pdf
+import decapod_utilities as utils
 
 MOCK_IMG_DIR = os.path.normpath(os.path.abspath("../mock-images/"))
 DATA_DIR = os.path.abspath("data/")
@@ -22,8 +23,7 @@ TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
 class TestPDFModuleFunctions(unittest.TestCase):
     
     def setUp(self):
-        if not os.path.exists(TEST_DIR):
-            os.makedirs(TEST_DIR)
+        utils.makeDirs(TEST_DIR)
             
     def tearDown(self):
         if os.path.exists(TEST_DIR):
@@ -136,8 +136,7 @@ class TestPDFGenerator(unittest.TestCase):
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
     
     def setUp(self):
-        if not os.path.exists(IMG_DIR):
-            os.makedirs(IMG_DIR)
+        utils.makeDirs(IMG_DIR)
         
     def tearDown(self):
         if os.path.exists(BOOK_DIR):
@@ -168,8 +167,7 @@ class TestPDFGenerator(unittest.TestCase):
             
     def test_02_init_statusFile(self):
         status = '{"status": "in progress"}'
-        if not os.path.exists(PDF_DIR):
-            os.makedirs(PDF_DIR)
+        utils.makeDirs(PDF_DIR)
         # write status file
         file = open(STATUS_FILE, "w")
         file.write(status)
@@ -224,8 +222,7 @@ class TestPDFGenerator(unittest.TestCase):
     def test_09_generatePDFFromPages(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         tiffTempDir = os.path.join(PDF_DIR, "tiffTemp")
-        if not os.path.exists(tiffTempDir):
-            os.makedirs(tiffTempDir)
+        utils.makeDirs(tiffTempDir)
         shutil.copy(os.path.join(MOCK_IMG_DIR, "Image_0015.JPEG"), IMG_DIR)
         pdfGen.tiffPages = pdf.convertPagesToTIFF([os.path.join(IMG_DIR, "Image_0015.JPEG")], tiffTempDir)
         pdf.PDFGenerationError, pdfGen.generatePDFFromPages()
@@ -239,8 +236,7 @@ class TestPDFGenerator(unittest.TestCase):
     def test_11_generate(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         status = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
-        if not os.path.exists(IMG_DIR):
-            os.makedirs(IMG_DIR)
+        utils.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(MOCK_IMG_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = pdfGen.generate()
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
@@ -254,8 +250,7 @@ class TestPDFGenerator(unittest.TestCase):
         
     def test_13_deletePDF(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        if not os.path.exists(PDF_DIR):
-            os.makedirs(PDF_DIR)
+        utils.makeDirs(PDF_DIR)
         shutil.copy(os.path.join(DATA_DIR, "pdf/Decapod.pdf"), PDF_DIR)
         pdfGen.setStatus("complete")
         pdfGen.deletePDF()

@@ -28,6 +28,7 @@ class DirectoryCreationTests(unittest.TestCase):
     existingTestDir = os.path.abspath("existing_dir")
     
     def setUp(self):
+        # Not using the decapod utilites function "makeDirs" because it will be tested here
         if not os.path.exists(self.existingTestDir):
             os.mkdir(self.existingTestDir)
     
