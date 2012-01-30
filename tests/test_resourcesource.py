@@ -1,133 +1,49 @@
 import sys
 import os
 import unittest
-import testutils
 sys.path.append(os.path.abspath('..'))
-import resourcesource
-import cherrypy
+import resourcesource as rs
 
-JS_PATH_ROOT = resourcesource.serverBasePath + "/" + "components/mock/js"
 
-class ResourceSourceTest(unittest.TestCase):
-    resourceSource = None
+CONFIG_FILE = os.path.abspath("data/config/decapod-test.conf")
+LIBRARY_PATH = "data/library"
+MOCK_CONFIG = {"/library": {"tools.staticdir.dir": LIBRARY_PATH}}
     
-    def setUp(self):
-        self.resourceSource = testutils.createTestResourceSource()
+class TestResourceSource(unittest.TestCase):
     
-    def test_01_parsePathHead(self):
-        head = resourcesource.parsePathHead("${js}/foo/bar.jpg")
-        self.assertEquals("${js}/foo/", head)
+    def test_01_parseVirtualPath_validNoPath(self):
+        token, path = rs.parseVirtualPath("${library}")
+        self.assertEquals("/library", token)
+        self.assertEquals("", path)
         
-    def test_02_parseFileName(self):
-        name = resourcesource.parseFileName("${js}/foo/bar.jpg")
-        self.assertEquals(2, len(name))
-        self.assertEquals("bar", name[0])
-        self.assertEquals("jpg", name[1])
+    def test_02_parseVirtualPath_validWithPath(self):
+        token, path = rs.parseVirtualPath("${library}/path")
+        self.assertEquals("/library", token)
+        self.assertEquals("path", path)
         
-    def test_03_appendSuffix(self):
-        expectedPath = "${js}/foo/bar-test.jpg"
-        actualPath = resourcesource.appendSuffix("${js}/foo/bar.jpg", "-test")
-        self.assertEquals(expectedPath, actualPath)
+    def test_03_parseVirtualPath_invalid(self):
+        self.assertRaises(Exception, rs.parseVirtualPath, "library")
+        self.assertRaises(Exception, rs.parseVirtualPath, "$library")
+        self.assertRaises(Exception, rs.parseVirtualPath, "$library}")
+        self.assertRaises(Exception, rs.parseVirtualPath, "${library")
+        self.assertRaises(Exception, rs.parseVirtualPath, "{library")
+        self.assertRaises(Exception, rs.parseVirtualPath, "{library}")
+        self.assertRaises(Exception, rs.parseVirtualPath, "library}")
         
-    def test_04_loadConfig(self):
-        self.assertEquals(5, len(self.resourceSource.resources))
-    
-    def test_05_filePathForResource_valid(self):
-        jsPath = self.resourceSource.filePathForResource("js")
-        self.assertEquals(jsPath, JS_PATH_ROOT)
+    def tests_04_url(self):
+        url = rs.url("${library}/path")
+        self.assertEquals("http://127.0.0.1:8080/library/path", url)
         
-    def test_06_filePathForResources_invalid(self):
-        # Test an invalid resource name
-        invalidPath = self.resourceSource.filePathForResource("invalid")
-        self.assertEquals(invalidPath, None)
+    def tests_05_url_invalidVirtualPath(self):
+        self.assertRaises(Exception, rs.url, "library/path")
         
-    def test_07_filePath_noToken(self):
-        invalidURL = self.resourceSource.filePath("invalid")
-        self.assertEquals(invalidURL, None)
+    def tests_06_path_absolute(self):
+        path = rs.path("${library}/path", config=MOCK_CONFIG)
+        self.assertEqual(os.path.abspath(os.path.join(LIBRARY_PATH, "path")), path)
         
-    def test_08_filePath_invalidToken(self):
-        invalidURL = self.resourceSource.filePath("invalid")
-        self.assertEquals(invalidURL, None)
+    def tests_07_path_relative(self):
+        path = rs.path("${library}/path", False,MOCK_CONFIG)
+        self.assertEqual(os.path.join(LIBRARY_PATH, "path"), path)
         
-    def test_09_filePath_validToken(self):
-        path = self.resourceSource.filePath("${js}")
-        self.assertEquals(path, JS_PATH_ROOT)
-        
-    def test_10_filePath_segments(self):
-        path = self.resourceSource.filePath("${js}/cat/dog")
-        self.assertEquals(path, JS_PATH_ROOT + "/cat/dog")
-        
-    def test_11_filePath_file(self):
-        path = self.resourceSource.filePath("${js}/cat/dog/hamster.js")
-        self.assertEquals(path, JS_PATH_ROOT + "/cat/dog/hamster.js")
-    
-    def test_12_virtualPath_valid(self):
-        absolutePath = JS_PATH_ROOT + "/cat/dog"
-        result = self.resourceSource.virtualPath(absolutePath)
-        self.assertEquals(result, "${js}/cat/dog")
-                          
-    def test_13_virtualPath_invalid(self):
-        absolutePath = "/invalid/path/cat/dog"
-        result = self.resourceSource.virtualPath(absolutePath)
-        self.assertEquals(result, absolutePath)
-    
-    def test_14_parseVirtualPath_none(self):
-        absolutePath = None
-        resourceName, pathSegs = self.resourceSource.parseVirtualPath(absolutePath)
-        self.assertEquals(None, resourceName)
-        self.assertEquals(None, pathSegs)
-        
-    def test_15_parseVirtualPath_invalid(self):
-        absolutePath = "invalid/cat/dog"
-        resourceName, pathSegs = self.resourceSource.parseVirtualPath(absolutePath)
-        self.assertEquals(None, resourceName)
-        self.assertEquals(None, pathSegs)
-        
-    def test_16_parseVirtualPath_valid(self):
-        absolutePath = "${js}/cat/dog"
-        resourceName, pathSegs = self.resourceSource.parseVirtualPath(absolutePath)
-        self.assertEquals("js", resourceName)
-        self.assertEquals(["cat", "dog"], pathSegs)
-        
-    def test_17_webURLForResource_valid(self):
-        jsURL = self.resourceSource.webURLForResource("js")
-        self.assertEquals(jsURL, "/js")
-        
-    def test_18_webURLForResource_invalid(self):
-        invalidURL = self.resourceSource.webURLForResource("invalid")
-        self.assertEquals(invalidURL, None)
-    
-    def test_19_weburl_noToken(self):
-        invalidURL = self.resourceSource.webURL("invalid")
-        self.assertEquals(invalidURL, None)
-        
-    def test_20_weburl_invalidToken(self):
-        invalidURL = self.resourceSource.webURL("${invalid}/cat/dog")
-        self.assertEquals(invalidURL, None)
-    
-    def test_21_weburl_token(self):
-        url = self.resourceSource.webURL("${js}")
-        self.assertEquals(url, "/js")
-        
-    def test_22_weburl_segments(self):
-        url = self.resourceSource.webURL("${js}/cat/dog")
-        self.assertEquals(url, "/js/cat/dog")
-
-    def test_23_cherryPyConfig(self):
-        config = self.resourceSource.cherryPyConfig()
-        self.assertEquals(6, len(config))
-        
-        root = config["/"]
-        self.assertEqual(root["tools.staticdir.root"], resourcesource.serverBasePath)
-        self.assertTrue(isinstance(root["request.dispatch"], cherrypy.dispatch.MethodDispatcher))
-        
-        js = config["/js"]
-        self.assertEqual(js, {
-            "tools.staticdir.on": True,
-            "tools.staticdir.dir": "components/mock/js"
-        })
-        
-        
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
-    

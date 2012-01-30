@@ -1,116 +1,48 @@
-
 import os
-import json
 import cherrypy
 
-serverBasePath = os.path.dirname(os.path.abspath(__file__))
-
-##########################
-# Free utility functions #
-##########################
-
-def parseFileName (filePath):
-    """Returns a tuple containing (file name, extension)."""
-    lastSeg = filePath.rpartition("/")[2]
-    splitName = lastSeg.partition(".")
-    return (splitName[0], splitName[2])
-
-def parsePathHead(filePath):
-    return filePath.rpartition("/")[0] + "/"
-
-def appendSuffix(filePath, suffix):
-    fileName, extension = parseFileName(filePath)
-    return parsePathHead(filePath) + fileName + suffix + "." + extension
-
-
-##################
-# ResourceSource #
-##################
-
-class ResourceSource(object):
-    resources = {}
+def parseVirtualPath(virtualPath):
+    '''
+    Parses a tokenized path into a tuple containing the script name and path.
+    Will throw an exception if there is no leading token provided.
     
-    def __init__(self, configPath):
-        configFile = open(configPath)
-        self.resources = json.load(configFile)
-    
-    def parseVirtualPath(self, virtualPath):
-        if virtualPath == None:
-            return None, None
-        
-        tokens = virtualPath.split("/")
-        resourceToken = tokens[0]
-        if resourceToken.startswith("${") == False or resourceToken.endswith("}") == False:
-            return None, None
-        
-        return resourceToken[2:-1], tokens[1:]
+    Example virtual path "${token}/path/"
+    '''
+    tokens = virtualPath.split("/", 1)
+    resourceToken = tokens[0]
+    path = tokens[1] if len(tokens) > 1 else ""
+    if resourceToken.startswith("${") and resourceToken.endswith("}"):
+        parsed = resourceToken[2:-1]
+        return os.path.join("/", parsed), path
+    else:
+        raise Exception
 
-    def virtualPath(self, absolutePath):
-        if absolutePath is None:
-            return None
-        
-        for resourceName in self.resources:
-            resourcePath = self.filePathForResource(resourceName)
-            if absolutePath.find(resourcePath) is 0:
-                return absolutePath.replace(resourcePath, ("${%s}" % resourceName))
-            
-        return absolutePath
-    
-    def filePath(self, virtualPath):
-        resourceName, pathSegs = self.parseVirtualPath(virtualPath)
-        resourcePath = self.filePathForResource(resourceName)
-        
-        if resourceName == None or resourcePath == None:
-            return None
+def cpurl(path='', qs='', script_name=None, base=None, relative=None):
+    '''
+    Passes straight through to cherrypy.url
+    This is just a convenience to offer the full range of cherrypy.url options 
+    that are captured by in the url fucntion.
+    '''
+    return cherrypy.url(path, qs, script_name, base, relative)
 
-        osPathSuffix = os.sep.join(pathSegs)    
-        if osPathSuffix == "":
-            return resourcePath
-        else:
-            return os.path.join(resourcePath, osPathSuffix)
-        
-    def webURL(self, virtualPath):
-        tokenStart = virtualPath.find("${")
-        tokenEnd = virtualPath.find("}")
-        if tokenStart == -1 or tokenEnd == -1:
-            return None
-        
-        resourceName = virtualPath[tokenStart + 2:tokenEnd]
-        rest = virtualPath[tokenEnd + 1:]
-        resourcePrefix = self.webURLForResource(resourceName)
-        
-        if resourcePrefix == None:
-            return None
-        else:
-            return resourcePrefix + rest
+def url(virtualPath):
+    '''
+    Converts a virtual path into an appropriate web url
+    '''
+    script_name, path = parseVirtualPath(virtualPath)
+    if not cherrypy.request.app and path != "":
+        path = os.path.join("/", path)
+    return cherrypy.url(path, script_name=script_name)
+
+def path(virtualPath, absolute=True, config=None):
+    '''
+    Converts a virtual path into a filesystem path.
     
-    def filePathForResource(self, resourceName):
-        if resourceName in self.resources:
-            return os.path.join(serverBasePath, self.resources[resourceName]["source"])
-        else:
-            return None
-    
-    def webURLForResource(self, resourceName):
-        if resourceName in self.resources:
-            return self.resources[resourceName]["target"]
-        else:
-            return None
-        
-    def cherryPyConfig(self):
-        config = {}
-        
-        # Create CherryPy static resource mount config entries for each resource.
-        for resource in self.resources.values():
-            target = resource["target"].encode('utf-8') # cherrypy 3.2.2 will crash if these are already unicode values.
-            config[target] = {
-                "tools.staticdir.on": True,
-                "tools.staticdir.dir": resource["source"]
-            }
-        
-        # Define the server's base path and dispatcher 
-        config["/"] = {
-            "tools.staticdir.root": serverBasePath,
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-        }
-        
-        return config;
+    Note 1: that the paths will use cherrypy's config, or a supplied config for conversions.
+    '''
+    script_name, path = parseVirtualPath(virtualPath)
+    static_dir = "tools.staticdir.dir"
+    config_dict = config if config else cherrypy.request.app.config
+    section = config_dict[script_name][static_dir]
+    fspath = os.path.join(section, path)
+    return os.path.join(os.getcwd(), fspath) if absolute else fspath

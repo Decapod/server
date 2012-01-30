@@ -7,14 +7,15 @@ import os
 import simplejson as json
 import sys
 
-import resourcesource
+import resourcesource as rs
 import imageImport
 import book
 import pdf
 import backgroundTaskQueue
 
-# Setup configuration for static resources within the server.
-DECAPOD_CONFIG = os.path.join(resourcesource.serverBasePath, "config/decapod-resource-config.json")
+# Setup for Decapod's cherrypy configuration file.
+CURRENT_DIR = os.getcwd()
+DECAPOD_CONFIG_FILE = os.path.abspath("config/decapod.conf")
 
 # Determine if the server is running under an SCGI-WSGI interface
 IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
@@ -39,13 +40,12 @@ class BookController(object):
 
     exposed = True
 
-    def __init__(self, resourceSource, name):
-        self.resource = resourceSource
+    def __init__(self, name):
         self.name = name
-        self.book = book.Book(self.resource)
+        self.book = book.Book()
         self.paths = {
-            "pages": PagesController(self.resource, self.name),
-            "export": ImportExportController(self.resource, self.name)
+            "pages": PagesController(self.name),
+            "export": ImportExportController(self.name)
         }
         
     def DELETE(self, *args, **kwargs):
@@ -74,10 +74,9 @@ class PagesController(object):
     
     page = None
     
-    def __init__(self, resourceSource, bookName):
-        self.resource = resourceSource
+    def __init__(self, bookName):
         self.bookName = bookName
-        self.page = imageImport.ImageImport(self.resource)
+        self.page = imageImport.ImageImport()
     
     def POST(self, *args, **kwargs):
         # import the file
@@ -92,10 +91,9 @@ class ImportExportController(object):
     exposed = True
     
     types = dict(type1 = "1", type2 = "2", type3 = "3")
-    def __init__(self, resourceSource, bookName):
-        self.resource = resourceSource
+    def __init__(self, bookName):
         self.bookName = bookName
-        self.export = pdf.PDFGenerator(self.resource)
+        self.export = pdf.PDFGenerator()
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
@@ -125,42 +123,31 @@ class LibraryController(object):
     
     exposed = True
     
-    def __init__(self, resourceSource=None):
-        self.resource = resourceSource
-    
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
-        return BookController(self.resource, vpath[0])
+        return BookController(vpath[0])
 
 class DecapodServer(object):
     exposed = True
-    
-    resources = None
     book = []
-    
-    def __init__(self, resourceSource):
-        self.resources = resourceSource
         
     def GET(self):
         # the old Decapod 0.4 start page
         #raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
-        raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/import/html/Import-05a.html"))
+        raise cherrypy.HTTPRedirect(rs.url("${components}/import/html/Import-05a.html"))
     
-def mountApp():
-    #set up shared resources
-    resources = resourcesource.ResourceSource(DECAPOD_CONFIG)
-    
+def mountApp(config=DECAPOD_CONFIG_FILE):
     # Set up the server application and its controllers
-    root = DecapodServer(resources)
-    root.library = LibraryController(resources)
+    root = DecapodServer()
+    root.library = LibraryController()
     
     # mount the app
-    cherrypy.tree.mount(root, "/", resources.cherryPyConfig())
-    return root, resources
+    cherrypy.tree.mount(root, "/", config)
+    return root
         
 def startServer():
     # mount app
-    root, resources = mountApp()
+    root = mountApp()
 
     # subscribe to a signal handler.
     # used for quitting the app via command line

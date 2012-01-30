@@ -54,3 +54,6 @@ class DirectoryCreationTests(unittest.TestCase):
     def test_04_remakeDir_existing(self):
         utils.remakeDir(self.existingTestDir)
         self.assertDirExists(self.existingTestDir)
+        
+if __name__ == '__main__':
+    unittest.main()

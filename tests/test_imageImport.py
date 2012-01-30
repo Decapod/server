@@ -8,13 +8,13 @@ sys.path.append(os.path.abspath('..'))
 import imageImport
 
 class ImportImageTest(unittest.TestCase):
-
-    resources = None
-    testDataDir = None
+    testDataDir = os.path.abspath("data")
+    libraryPath = os.path.join(testDataDir, "library/")
+    mockRS = testutils.mockResourceSource({"/library": {"path": libraryPath}})
+    iImport = None
     
     def setUp(self):
-        self.resources = testutils.createTestResourceSource()
-        self.testDataDir = self.resources.filePath("${testData}")
+        self.iImport = imageImport.ImageImport(self.mockRS)
         
     def tearDown(self):
         testutils.cleanUpImages()
@@ -29,14 +29,11 @@ class ImportImageTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, writePath))
     
     # Convenience test functions   
-    def mimeToSuffixTest(self, mimetype, expectedSuffix):
-        iImport = imageImport.ImageImport(self.resources)
-        
+    def mimeToSuffixTest(self, iImport, mimetype, expectedSuffix):
         suffix = iImport.mimeToSuffix(mimetype)
         self.assertEquals(expectedSuffix, suffix)
         
-    def saveTest(self, name=None):
-        iImport = imageImport.ImageImport(self.resources)
+    def saveTest(self, iImport, name=None):
         origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         
@@ -45,68 +42,64 @@ class ImportImageTest(unittest.TestCase):
     
     # Tests
     def test_01_generateImageName_default(self):
-        iImport = imageImport.ImageImport(self.resources)
-        name = iImport.generateImageName()
+        name = self.iImport.generateImageName()
         self.assertNameFormat(name)
         
     def test_02_generateImageName_prefix(self):
-        iImport = imageImport.ImageImport(self.resources)
         prefix = "decaTest-"
-        name = iImport.generateImageName(prefix)
+        name = self.iImport.generateImageName(prefix)
         self.assertNameFormat(name, prefix)
         
     def test_03_generateImageName_suffix(self):
-        iImport = imageImport.ImageImport(self.resources)
         suffix = "png"
-        name = iImport.generateImageName(suffix=suffix)
+        name = self.iImport.generateImageName(suffix=suffix)
         self.assertNameFormat(name, suffix=suffix)
         
     def test_04_generateImageName_custom(self):
-        iImport = imageImport.ImageImport(self.resources)
         prefix = "decaTest-"
         suffix = "png"
-        name = iImport.generateImageName(prefix, suffix)
+        name = self.iImport.generateImageName(prefix, suffix)
         self.assertNameFormat(name, prefix, suffix)
         
     def test_05_generateImageName_UUID(self):
-        iImport = imageImport.ImageImport(self.resources)
         numNames = 10
         names = []
         uuidList = None
         
         for i in range(numNames):
-            names.append(iImport.generateImageName())
+            names.append(self.iImport.generateImageName())
         uuidList = map(None, names)
         
         self.assertEquals(len(names), numNames, "The names list should be populated with {0} different names".format(numNames))
         self.assertEquals(len(uuidList),  numNames, "All the generated names should be unique")
     
     def test_06_mimeToSuffix_mimetype(self):
-        self.mimeToSuffixTest("image/png", "png")
+        self.mimeToSuffixTest(self.iImport, "image/png", "png")
     
     def test_07_mimeToSuffix_type(self):
-        self.mimeToSuffixTest("png", "png")
+        self.mimeToSuffixTest(self.iImport, "png", "png")
         
     def test_08_getFileType(self):
-        iImport = imageImport.ImageImport(self.resources)
         origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         expectedType = "jpeg"
         
-        type = iImport.getFileType(testFile)
+        type = self.iImport.getFileType(testFile)
         self.assertEquals(expectedType, type)
         
     def test_09_writeFile(self):
-        iImport = imageImport.ImageImport(self.resources)
-        writePath = os.path.join(iImport.importDir, "cactus.jpg")
+        writePath = os.path.join(self.iImport.importDir, "cactus.jpg")
         origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         
-        iImport.writeFile(testFile, writePath)
+        self.iImport.writeFile(testFile, writePath)
         self.assertFileWritten(origFilePath, writePath)
         
     def test_10_save_default(self):
-        self.saveTest()
+        self.saveTest(self.iImport)
         
     def test_11_save_name(self):
-        self.saveTest("testName.jpeg")
+        self.saveTest(self.iImport, "testName.jpeg")
+
+if __name__ == '__main__':
+    unittest.main()
