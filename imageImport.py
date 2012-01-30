@@ -1,17 +1,16 @@
 import decapod_utilities as utils
 import uuid
+import os
+import resourcesource
 
 IMPORT_DIR = "${library}/book/images/"
 imagePrefix = "decapod-"
 
 class ImageImport(object):
-    
-    resources = None
-    importDir = None
 
-    def __init__(self, resourceSource):
-        self.resources = resourceSource
-        self.importDir = self.resources.filePath(IMPORT_DIR)
+    def __init__(self, resourcesource=resourcesource):
+        self.rs = resourcesource
+        self.importDir = self.rs.path(IMPORT_DIR)
                 
         # Setup the import location.
         utils.mkdirIfNecessary(self.importDir)
@@ -46,6 +45,6 @@ class ImageImport(object):
         # if no name is provided it will call genearteImageName to create one
         fileType = self.getFileType(file)
         name = name if name else self.generateImageName(suffix=fileType)
-        imagePath = self.importDir + name
+        imagePath = os.path.join(self.importDir, name)
         
         return self.writeFile(file, imagePath)

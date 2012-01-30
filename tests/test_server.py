@@ -4,14 +4,42 @@ import shutil
 import os
 import sys
 import testutils
+import nose
 sys.path.append(os.path.abspath('..'))
 import decapod
 
+LIBRARY_DIR = os.path.abspath("data/library")
+BOOK_DIR = os.path.join(LIBRARY_DIR, "book")
 
-BOOK_DIR = os.path.normpath(os.path.abspath("../library/book"))
+CONFIG = {
+    "/": {
+        "tools.staticdir.root": os.getcwd(),
+        "request.dispatch": cherrypy.dispatch.MethodDispatcher()
+    },
+    "/lib": {
+        "tools.staticdir.on": True,
+        "tools.staticdir.dir": "../../decapod-ui/lib"
+    },
+    "/components": {
+        "tools.staticdir.on": True,
+        "tools.staticdir.dir": "../../decapod-ui/components"
+    },
+    "/shared": {
+        "tools.staticdir.on": True,
+        "tools.staticdir.dir": "../../decapod-ui/shared"
+    },
+    "/library": {
+        "tools.staticdir.on": True,
+        "tools.staticdir.dir": LIBRARY_DIR
+    },
+    "/mockImages": {
+        "tools.staticdir.on": True,
+        "tools.staticdir.dir": "../mock-images"
+    }
+}
 
 def setup_server():
-    decapod.mountApp()
+    decapod.mountApp(CONFIG)
     
 def teardown_server():
     if os.path.exists(BOOK_DIR):
@@ -195,3 +223,6 @@ class TestNewExport(ServerTestCase):
     
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+if __name__ == '__main__':
+    nose.runmodule()

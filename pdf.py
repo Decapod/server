@@ -5,6 +5,7 @@ import decapod_utilities as utils
 import simplejson as json
 import imghdr
 from PIL import Image
+import resourcesource
 
 #TODO: Consider adopting an asynchronous framework
 # for asynchronous python 
@@ -73,10 +74,10 @@ class PDFGenerator(object):
     
     status = {"status": EXPORT_NONE}
     
-    def __init__(self, resourceSource):
-        self.resources = resourceSource
-        self.bookDirPath = self.resources.filePath(BOOK_DIR)
-        self.pdfDirPath = self.resources.filePath(PDF_DIR)
+    def __init__(self, resourcesource=resourcesource):
+        self.rs = resourcesource
+        self.bookDirPath = self.rs.path(BOOK_DIR)
+        self.pdfDirPath = self.rs.path(PDF_DIR)
         self.tempDirPath = os.path.join(self.pdfDirPath, tempDir)
         self.tiffDirPath = os.path.join(self.pdfDirPath, tiffDir)
         self.statusFilePath = os.path.join(self.pdfDirPath, statusFileName)
@@ -109,7 +110,7 @@ class PDFGenerator(object):
         
         if status == EXPORT_COMPLETE:
             virtualPath = PDF_DIR + os.path.split(self.pdfPath)[1]
-            st[url] = self.resources.webURL(virtualPath)
+            st[url] = self.rs.url(virtualPath)
         elif url in self.status:
             del self.status[url]
             

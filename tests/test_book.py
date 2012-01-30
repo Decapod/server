@@ -7,16 +7,16 @@ import testutils
 sys.path.append(os.path.abspath('..'))
 import book
 
-BOOK_DIR = os.path.abspath("data/library/book/")
+LIBRARY_PATH = os.path.abspath("data/library/")
+BOOK_DIR = os.path.join(LIBRARY_PATH, "book")
 
 class TestBookExisting(unittest.TestCase):
     
-    resources = None
     book = None
+    mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH}})
     
     def setUp(self):
-        self.resources = testutils.createTestResourceSource()
-        self.book = book.Book(self.resources)
+        self.book = book.Book(self.mockRS)
         if not os.path.exists(BOOK_DIR):
             os.makedirs(BOOK_DIR)
     
@@ -27,12 +27,11 @@ class TestBookExisting(unittest.TestCase):
 
 class TestBookNone(unittest.TestCase):
     
-    resources = None
     book = None
+    mockRS = testutils.mockResourceSource({"/library": {"path": BOOK_DIR}})
     
     def setUp(self):
-        self.resources = testutils.createTestResourceSource()
-        self.book = book.Book(self.resources)
+        self.book = book.Book(self.mockRS)
         if os.path.exists(BOOK_DIR):
             shutil.rmtree(BOOK_DIR)
             
@@ -40,4 +39,6 @@ class TestBookNone(unittest.TestCase):
         self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
         self.book.delete()
         self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
-   
+
+if __name__ == '__main__':
+    unittest.main()
