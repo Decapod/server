@@ -9,6 +9,11 @@ def makeDirs(path, mode=0777):
 def rmTree(path, ignore_errors=False, onerror=None):
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors, onerror)
+        
+def writeToFile(contents, writePath, writeMode="w"):
+    f = open(writePath, writeMode)
+    f.write(contents)
+    f.close()
     
 def invokeCommandSync(cmdArgs, error, message):
     proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)

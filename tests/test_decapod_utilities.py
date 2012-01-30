@@ -60,5 +60,28 @@ class DirectoryManipulationTests(unittest.TestCase):
         utils.rmTree(self.existingTestDir)
         self.assertNoDir(self.existingTestDir)
         
+class WriteTests(unittest.TestCase):
+    
+    testDir = os.path.abspath("testDir")
+    
+    def setUp(self):
+        utils.makeDirs(self.testDir)
+        
+    def tearDown(self):
+        utils.rmTree(self.testDir)
+    
+    def test_01_writeToFile(self):
+        filePath = os.path.join(self.testDir, "testFile.txt")
+        content = "Test File"
+        self.assertFalse(os.path.exists(filePath), "The file at path ({0}) should not yet exist".format(filePath))
+        #tested function
+        utils.writeToFile(content, filePath)
+        self.assertTrue(os.path.exists(filePath), "The file at path ({0}) should have been created".format(filePath))
+        # read in file
+        file = open(filePath, "r")
+        read = file.read()
+        file.close()
+        self.assertEquals(content, read)
+        
 if __name__ == '__main__':
     unittest.main()

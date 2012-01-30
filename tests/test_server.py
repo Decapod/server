@@ -43,12 +43,6 @@ def setup_server():
 def teardown_server():
     utils.rmTree(BOOK_DIR)
 
-# TODO: Similar code exists in pdf.py, refactor.     
-def writeStatus(path, status, mode="w"):
-    f = open(path, mode)
-    f.write(status)
-    f.close()
-
 class ServerTestCase(helper.CPWebCase):
     '''
     A subclass of helper.CPWebCase
@@ -138,7 +132,7 @@ class TestExistingExport(ServerTestCase):
         pdfSRC = os.path.abspath("data/pdf/Decapod.pdf")
         utils.makeDirs(self.pdfDir)
         utils.makeDirs(self.pdf)
-        writeStatus(self.statusFile, self.exportStatus)
+        utils.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -168,7 +162,7 @@ class TestInProgressExport(ServerTestCase):
     
     def setUp(self):
         utils.makeDirs(self.pdfDir)
-        writeStatus(self.statusFile, self.exportStatus)
+        utils.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -199,7 +193,7 @@ class TestNewExport(ServerTestCase):
     
     def setUp(self):
         utils.makeDirs(self.pdfDir)
-        writeStatus(self.statusFile, self.exportStatus)
+        utils.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
