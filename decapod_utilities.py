@@ -2,8 +2,8 @@ import os
 import shutil
 import subprocess
 
-def mkdirIfNecessary(path):
-    if os.path.exists(path) is False:
+def makeDirs(path):
+    if not os.path.exists(path):
         os.makedirs(path)
     
 def invokeCommandSync(cmdArgs, error, message):

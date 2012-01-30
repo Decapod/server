@@ -39,12 +39,12 @@ class DirectoryCreationTests(unittest.TestCase):
         self.assertTrue(os.path.exists(path), "The test directory should be there.")
         self.assertTrue(os.path.isdir(path), "The path created should actually be a directory.")
             
-    def test_01_mkdirIfNecessary_create(self):
-        utils.mkdirIfNecessary(self.newTestDir)
+    def test_01_makeDirs_create(self):
+        utils.makeDirs(self.newTestDir)
         self.assertDirExists(self.newTestDir)
         
-    def test_02_mkdirIfNecessary_existing(self):
-        utils.mkdirIfNecessary(self.existingTestDir)
+    def test_02_makeDirs_existing(self):
+        utils.makeDirs(self.existingTestDir)
         self.assertDirExists(self.existingTestDir)
         
 if __name__ == '__main__':
