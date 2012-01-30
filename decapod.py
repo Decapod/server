@@ -43,7 +43,7 @@ class BookController(object):
         self.book = book.Book()
         self.paths = {
             "pages": PagesController(self.name),
-            "export": ImportExportController(self.name)
+            "export": ExportController(self.name)
         }
         
     def DELETE(self, *args, **kwargs):
@@ -79,7 +79,7 @@ class PagesController(object):
         return self.page.save(kwargs["file"])
 
 #TODO: Rename to ExportController when old one is no longer needed (will require refactoring or removing capture)
-class ImportExportController(object):
+class ExportController(object):
     '''
     Handler for the /library/"bookName"/export resource
     '''
