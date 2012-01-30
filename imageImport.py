@@ -13,7 +13,7 @@ class ImageImport(object):
         self.importDir = self.rs.path(IMPORT_DIR)
                 
         # Setup the import location.
-        utils.mkdirIfNecessary(self.importDir)
+        utils.makeDirs(self.importDir)
     
     def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
         id = uuid.uuid4()
