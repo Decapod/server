@@ -36,7 +36,6 @@ class BookController(object):
     
     Currently only handles DELETE requests, which result in all the pages being removed.
     '''
-
     exposed = True
 
     def __init__(self, name):
@@ -68,9 +67,7 @@ class PagesController(object):
     Currently only handles POST requests, which results in new pages being added.
     This is useful for importing pages.
     '''
-    
     exposed = True
-    
     page = None
     
     def __init__(self, bookName):
@@ -86,10 +83,9 @@ class ImportExportController(object):
     '''
     Handler for the /library/"bookName"/export resource
     '''
-    
     exposed = True
-    
     types = dict(type1 = "1", type2 = "2", type3 = "3")
+    
     def __init__(self, bookName):
         self.bookName = bookName
         self.export = pdf.PDFGenerator()
@@ -119,7 +115,6 @@ class LibraryController(object):
     Parses the positional arguments starting after /library/
     and calls the appropriate handlers for the various resources 
     '''
-    
     exposed = True
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
