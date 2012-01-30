@@ -2,22 +2,30 @@ import sys
 import os
 import unittest
 import filecmp
+import shutil
 
 import testutils
 sys.path.append(os.path.abspath('..'))
 import imageImport
 
+DATA_DIR = os.path.abspath("data")
+IMAGES_DIR = os.path.join(DATA_DIR, "images")
+LIBRARY_DIR = os.path.join(DATA_DIR, "library")
+BOOK_DIR = os.path.join(LIBRARY_DIR, "book")
+
+
+# "data/library/book/images/"
+
 class ImportImageTest(unittest.TestCase):
-    testDataDir = os.path.abspath("data")
-    libraryPath = os.path.join(testDataDir, "library/")
-    mockRS = testutils.mockResourceSource({"/library": {"path": libraryPath}})
+    mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_DIR}})
     iImport = None
     
     def setUp(self):
         self.iImport = imageImport.ImageImport(self.mockRS)
         
     def tearDown(self):
-        testutils.cleanUpImages()
+        if os.path.exists(BOOK_DIR):
+            shutil.rmtree(BOOK_DIR)
     
     # Custom assertions
     def assertNameFormat(self, name, prefix="decapod-", suffix="jpeg"):
@@ -34,7 +42,7 @@ class ImportImageTest(unittest.TestCase):
         self.assertEquals(expectedSuffix, suffix)
         
     def saveTest(self, iImport, name=None):
-        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
+        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         
         savedfile = iImport.save(testFile, name)
@@ -80,7 +88,7 @@ class ImportImageTest(unittest.TestCase):
         self.mimeToSuffixTest(self.iImport, "png", "png")
         
     def test_08_getFileType(self):
-        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
+        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         expectedType = "jpeg"
         
@@ -89,7 +97,7 @@ class ImportImageTest(unittest.TestCase):
         
     def test_09_writeFile(self):
         writePath = os.path.join(self.iImport.importDir, "cactus.jpg")
-        origFilePath = os.path.join(self.testDataDir, "images/cactus.jpg")
+        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
         
         self.iImport.writeFile(testFile, writePath)

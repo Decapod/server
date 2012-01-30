@@ -5,19 +5,6 @@ import shutil
 import mimetypes
 sys.path.append(os.path.abspath('..'))
 import resourcesource
-
-IMAGES_TEST_DIR = "data/library/book/images/"
-
-def cleanUpDir(dir):
-    filePaths = glob.glob(dir + "/*")
-    for filePath in filePaths:
-        os.remove(filePath)  
-        
-def cleanUpImages():
-    cleanUpDir(IMAGES_TEST_DIR)
-
-def deleteTestImagesDir():
-    shutil.rmtree(IMAGES_TEST_DIR)
     
 class mockResourceSource(object):
     
