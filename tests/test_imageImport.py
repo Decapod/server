@@ -94,19 +94,34 @@ class ImportImageTest(unittest.TestCase):
         type = self.iImport.getFileType(testFile)
         self.assertEquals(expectedType, type)
         
-    def test_09_writeFile(self):
+    def test_09_isValidType_valid(self):
+        testFile = os.path.join(IMAGES_DIR, "cactus.jpg")
+        valid = self.iImport.isValidType(testFile)
+        self.assertTrue(valid, "The file at path ({0}) should have been a valid file type".format(testFile))
+        
+    def test_10_isValidType_invalid(self):
+        testFile = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
+        valid = self.iImport.isValidType(testFile)
+        self.assertFalse(valid, "The file at path ({0}) should not have been a valid file type".format(testFile))
+        
+    def test_11_writeFile(self):
         writePath = os.path.join(self.iImport.importDir, "cactus.jpg")
         origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
         testFile = testutils.mockFileStream(origFilePath)
-        
+
         self.iImport.writeFile(testFile, writePath)
         self.assertFileWritten(origFilePath, writePath)
         
-    def test_10_save_default(self):
+    def test_12_save_default(self):
         self.saveTest(self.iImport)
         
-    def test_11_save_name(self):
+    def test_13_save_name(self):
         self.saveTest(self.iImport, "testName.jpeg")
+        
+    def test_14_save_invalid(self):
+        testPath = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
+        testFile = testutils.mockFileStream(testPath)
+        self.assertRaises(imageImport.ImportTypeError, self.iImport.save, testFile)
 
 if __name__ == '__main__':
     unittest.main()

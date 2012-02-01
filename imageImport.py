@@ -1,10 +1,17 @@
 import decapod_utilities as utils
 import uuid
 import os
+import imghdr
 import resourcesource
 
 IMPORT_DIR = "${library}/book/images/"
 imagePrefix = "decapod-"
+
+class ImportTypeError(Exception):
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
 
 class ImageImport(object):
 
@@ -27,6 +34,10 @@ class ImageImport(object):
         mimeType = file.content_type.value
         return self.mimeToSuffix(mimeType)
     
+    def isValidType(self, file, validTypes=["jpeg", "png", "tiff"]):
+        realType = imghdr.what(file)
+        return realType in validTypes
+    
     def writeFile(self, file, writePath):
         #Writes the file stream to disk at the path specified by writePath
         file.file.seek(0,0)
@@ -41,10 +52,19 @@ class ImageImport(object):
         return writePath
     
     def save(self, file, name=None):
-        # saves the file with the given name. 
-        # if no name is provided it will call genearteImageName to create one
+        ''' 
+        Saves the file with the given name. 
+        If no name is provided it will call genearteImageName to create one
+        
+        Will raise an ImportTypeError Exception if the file is not of a valid type ["jpeg", "png", "tiff"]
+        '''
         fileType = self.getFileType(file)
         name = name if name else self.generateImageName(suffix=fileType)
         imagePath = os.path.join(self.importDir, name)
+        self.writeFile(file, imagePath)
+        if not self.isValidType(imagePath):
+            if os.path.exists(imagePath):
+                os.remove(imagePath)
+            raise ImportTypeError("The file ({0}) must be a valid 'jpeg', 'png', or 'tiff'".format(name))
         
-        return self.writeFile(file, imagePath)
+        return imagePath

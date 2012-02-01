@@ -6,7 +6,8 @@ sys.path.append(os.path.abspath('..'))
 import decapod
 import decapod_utilities as utils
 
-LIBRARY_DIR = os.path.abspath("data/library")
+DATA_DIR = os.path.abspath("data")
+LIBRARY_DIR = os.path.join(DATA_DIR, "library")
 BOOK_DIR = os.path.join(LIBRARY_DIR, "book")
 
 CONFIG = {
