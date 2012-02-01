@@ -75,14 +75,14 @@ class PagesController(object):
         self.page = imageImport.ImageImport()
     
     # TODO: Should return the weburl not the filesystem path
+    # TODO: Should return a 201 status, if the file is successfully saved
     def POST(self, *args, **kwargs):
         # import the file
         try:
             path = self.page.save(kwargs["file"])
         except imageImport.ImportTypeError as e:
             raise cherrypy.HTTPError(415, e.message)
-        cherrypy.response.headers['Content-Type'] = 'text/plain'
-        return path
+        cherrypy.response.headers["Location"] = path
 
 #TODO: Rename to ExportController when old one is no longer needed (will require refactoring or removing capture)
 class ExportController(object):

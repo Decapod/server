@@ -1,5 +1,7 @@
 import cherrypy
 from cherrypy.test import helper
+import uuid
+import mimetypes
 import os
 import sys
 sys.path.append(os.path.abspath('..'))
@@ -56,6 +58,37 @@ class ServerTestCase(helper.CPWebCase):
         for method in methods:
             self.getPage(url, method=method)
             self.assertStatus(405, "Should return a 405 'Method not Allowed' status for '{0}'".format(method))
+            
+    def fileUploadPostParams(self, path):
+        '''
+        Generates the headers and body needed to POST a file upload, for the file at 'path'
+        '''
+        CRLF = "\r\n"
+        fileName = os.path.split(path)[1]
+        fileType = mimetypes.guess_type(path)[0]
+        id = uuid.uuid4()
+        boundary = "---------------------------" + id.hex
+        
+        f = open(path)
+        read = f.read()
+        f.close()
+        
+        body = '--{0}{1}Content-Disposition: form-data; name="file"; filename="{2}"{1}Content-Type: {3}{1}{1}{4}{1}--{0}--{1}'.format(boundary, CRLF, fileName, fileType, read)
+        headers = [
+            ("Content-Length", len(body)),
+            ("Content-Type", "multipart/form-data; boundary=" + boundary),
+            ("Pragma", "no-cache"),
+            ("Cache-Control", "no-cache")
+        ]
+        
+        return headers, body
+    
+    def uploadFile(self, url, path):
+        '''
+        Posts the file at 'path' to the resource at 'url'
+        '''
+        headers, body = self.fileUploadPostParams(path)
+        self.getPage(url, headers, "POST", body)
 
 class TestRoot(ServerTestCase):
     rootURL = "/"
@@ -106,14 +139,22 @@ class TestBook(ServerTestCase):
     def test_02_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.bookURL, ["GET", "PUT", "POST"])
 
-# TODO: Test Post (including: file saved, response code, returned url)
 class TestPages(ServerTestCase):
     pageURL = "/library/bookName/pages"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
     
-    def test_02_unsupportedMethods(self):
+    def test_01_post_valid(self):
+        self.uploadFile(self.pageURL, os.path.abspath("../mock-images/Image_0015.JPEG"))
+        self.assertStatus(200)
+        self.assertHeader("Location")
+        
+    def test_02_post_invalid(self):
+        self.uploadFile(self.pageURL, os.path.join(DATA_DIR, "pdf/Decapod.pdf"))
+        self.assertStatus(415)
+    
+    def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
