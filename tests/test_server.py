@@ -147,7 +147,7 @@ class TestPages(ServerTestCase):
     
     def test_01_post_valid(self):
         self.uploadFile(self.pageURL, os.path.abspath("../mock-images/Image_0015.JPEG"))
-        self.assertStatus(200)
+        self.assertStatus(201)
         self.assertHeader("Location")
         
     def test_02_post_invalid(self):
