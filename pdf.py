@@ -51,6 +51,21 @@ def convertPagesToTIFF(pages, tiffDir):
     
     return convertedPages
 
+def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
+    genPDFCmd = [
+        "decapod-genpdf.py",
+        "-d",
+        tempDirPath,
+        "-p",
+        pdfPath,
+        "-v",
+        "1",
+        "-t",
+        str(type)
+    ]
+    genPDFCmd.extend(pages)
+    return genPDFCmd
+
 class PDFGenerator(object):
     
     status = {"status": EXPORT_NONE}
@@ -97,18 +112,7 @@ class PDFGenerator(object):
         return json.dumps(self.status)
     
     def generatePDFFromPages(self, type="1"):
-        genPDFCmd = [
-            "decapod-genpdf.py",
-            "-d",
-            self.tempDirPath,
-            "-p",
-            self.pdfPath,
-            "-v",
-            "1",
-            "-t",
-            type
-        ]
-        genPDFCmd.extend(self.tiffPages)
+        genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, type)
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")

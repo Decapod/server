@@ -85,12 +85,27 @@ class TestPDFModuleFunctions(unittest.TestCase):
         pdf.convertPagesToTIFF(pages, tiffDir)
         self.assertEquals(0, len(os.listdir(tiffDir)))
         
-    def test_8_convertPagesToTIFF_other(self):
+    def test_08_convertPagesToTIFF_other(self):
         tiffDir = os.path.join(TEST_DIR, "tiffDir")
         pages = [os.path.join(TEST_DIR, "pdf/Decapod.pdf")]
         os.makedirs(tiffDir)
         pdf.convertPagesToTIFF(pages, tiffDir)
         self.assertEquals(0, len(os.listdir(tiffDir)))
+        
+    def test_09_assembleGenPDFCommand(self):
+        tempDirPath = "../temp"
+        pdfPath = "../Decapod.pdf"
+        pages = ["../images/pageOne.jpg", "../images/pageTwo.jpg"]
+        expectedCMD = "decapod-genpdf.py -d {0} -p {1} -v 1 -t 1 {2} {3}".format(tempDirPath, pdfPath, pages[0], pages[1])
+        self.assertEquals(expectedCMD.split(), pdf.assembleGenPDFCommand(tempDirPath, pdfPath, pages))
+        
+    def test_10_assembleGenPDFCommand_type(self):
+        tempDirPath = "../temp"
+        pdfPath = "../Decapod.pdf"
+        type = 2
+        pages = ["../images/pageOne.jpg", "../images/pageTwo.jpg"]
+        expectedCMD = "decapod-genpdf.py -d {0} -p {1} -v 1 -t {2} {3} {4}".format(tempDirPath, pdfPath, type, pages[0], pages[1])
+        self.assertEquals(expectedCMD.split(), pdf.assembleGenPDFCommand(tempDirPath, pdfPath, pages, type))
 
 class TestPDFGenerator(unittest.TestCase):
     book = None
