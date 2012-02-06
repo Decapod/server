@@ -134,7 +134,7 @@ class DecapodServer(object):
     def GET(self):
         # the old Decapod 0.4 start page
         #raise cherrypy.HTTPRedirect(self.resources.webURL("${components}/bookManagement/html/bookManagement.html"))
-        raise cherrypy.HTTPRedirect(rs.url("${components}/import/html/Import-05a.html"))
+        raise cherrypy.HTTPRedirect(rs.url("${components}/import/html/Import-05a.html"), 301)
     
 def mountApp(config=DECAPOD_CONFIG_FILE):
     # Set up the server application and its controllers

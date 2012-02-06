@@ -99,7 +99,7 @@ class TestRoot(ServerTestCase):
     
     def test_01_get(self):
         self.getPage(self.rootURL)
-        self.assertStatus(303, "Should return a 303 'See Other' status for the redirect")
+        self.assertStatus(301)
         self.assertHeader("Location", cherrypy.url(self.expectedRedirectURL), "Assert that the Location is set to the redirect URL")
         
     def test_02_unsupportedMethods(self):
@@ -107,7 +107,7 @@ class TestRoot(ServerTestCase):
         
     def test_03_redirectURL(self):
         self.getPage(self.expectedRedirectURL)
-        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertStatus(200)
 
 class TestLibrary(ServerTestCase):
     libraryURL = "/library/"
@@ -177,7 +177,7 @@ class TestExistingExport(ServerTestCase):
             
     def test_01_get(self):
         self.getPage(self.exportURL)
-        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
@@ -207,7 +207,7 @@ class TestInProgressExport(ServerTestCase):
             
     def test_01_get(self):
         self.getPage(self.exportURL)
-        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
@@ -238,7 +238,7 @@ class TestNewExport(ServerTestCase):
             
     def test_01_get(self):
         self.getPage(self.exportURL)
-        self.assertStatus(200, "Should return a 200 'OK' status")
+        self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
