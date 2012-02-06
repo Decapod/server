@@ -85,7 +85,6 @@ class PagesController(object):
         cherrypy.response.headers["Location"] = path
         cherrypy.response.status = 201
 
-#TODO: Rename to ExportController when old one is no longer needed (will require refactoring or removing capture)
 class ExportController(object):
     '''
     Handler for the /library/"bookName"/export resource
