@@ -114,7 +114,6 @@ class ExportController(object):
         cherrypy.response.status = 204
 
 # Library Controller
-# TODO: rename to Library
 # TODO: Support GET requests to return the Library model
 # TODO: Support POST requests to create a Book and return the new Library model
 class LibraryController(object):
