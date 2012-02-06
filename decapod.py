@@ -105,13 +105,14 @@ class ExportController(object):
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
         bgtask.put(self.export.generate, self.types[args[1]])
+        cherrypy.response.status = 202
+        setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
     
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
         self.export.deletePDF()
-        setJSONResponseHeaders("exportStatus.json")
-        return self.export.getStatus()
+        cherrypy.response.status = 204
 
 # Library Controller
 # TODO: rename to Library
