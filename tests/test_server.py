@@ -181,12 +181,10 @@ class TestExistingExport(ServerTestCase):
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
-    # TODO: Test response status 
     def test_02_delete(self):
         self.assertTrue(os.path.exists(self.pdf), "The Decapod.pdf file should exist at path ({0})".format(self.pdf))
         self.getPage(self.exportURL, method="DELETE")
-#        self.assertHeader("Content-Type", "application/json", "Should return json content")
-        self.assertBody(self.deleteStatus)
+        self.assertStatus(204)
         self.assertFalse(os.path.exists(self.pdf), "The Decapod.pdf file should no longer exist at path ({0})".format(self.pdf))
     
     def test_03_unsupportedMethods(self):
@@ -241,12 +239,10 @@ class TestNewExport(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
-    
-    # TODO: Test response status 
+     
     def test_02_delete(self):
         self.getPage(self.exportURL, method="DELETE")
-#        self.assertHeader("Content-Type", "application/json", "Should return json content")
-        self.assertBody(self.exportStatus)
+        self.assertStatus(204)
     
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
