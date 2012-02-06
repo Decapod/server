@@ -25,10 +25,6 @@ class PDFGenerationError(Exception): pass
 def isImage(filePath):
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
-def lastModified(filePath):
-    stats = os.stat(filePath)
-    return stats[8]
-
 def bookPagesToArray(pagesDir):
     allPages = []
     for fileName in os.listdir(pagesDir):
@@ -37,7 +33,7 @@ def bookPagesToArray(pagesDir):
         if isImage(filePath): 
             allPages.append(filePath)
     # sorting needed to keep pages in order
-    return sorted(allPages, key = lastModified)
+    return sorted(allPages, key = os.path.getmtime)
 
 def convertPagesToTIFF(pages, tiffDir):
     convertedPages = []
