@@ -36,55 +36,40 @@ class TestPDFModuleFunctions(unittest.TestCase):
     def test_02_isImage_other(self):
         file = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
         self.assertFalse(pdf.isImage(file), "The file at path ({0}) should not be an image".format(file))
-        
-    def test_03_lastModified_newFile(self):
-        newDir = os.path.join(TEST_DIR, "new_dir")
-        os.makedirs(newDir)
-        curretnAppoxTime = int(time.time())
-        modified = pdf.lastModified(newDir)
-        self.assertAlmostEquals(curretnAppoxTime, modified)
-    
-    def test_04_lastModified_modified(self):
-        filePath = os.path.join(TEST_DIR, "testFile.txt")
-        firstContent = "New File"
-        secondContent = "Modified File"
-        utils.writeToFile(firstContent, filePath)
-        firstModTime = pdf.lastModified(filePath)
-        time.sleep(1) # wait 1 second. Needed because the lastModified time isn't precise enough 
-        utils.writeToFile(secondContent, filePath)
-        secondModTime = pdf.lastModified(filePath)
-        self.assertNotEquals(firstModTime, secondModTime)
-        self.assertTrue(firstModTime < secondModTime, "The first modification time stamp should be smaller than the second")
 
-    def test_05_bookPagesToArray_images(self):
+    def test_03_bookPagesToArray_images(self):
         imgOne = os.path.join(DATA_DIR, "images/cactus.jpg")
         imgTwo = os.path.join(DATA_DIR, "images/cat.jpg")
         shutil.copy(imgOne, TEST_DIR)
-        time.sleep(1) # wait 1 second. Needed because the lastModified time isn't precise enough 
+        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
         shutil.copy(imgTwo, TEST_DIR)
         pages = pdf.bookPagesToArray(TEST_DIR)
         self.assertEquals(2, len(pages))
-        self.assertTrue(pdf.lastModified(pages[0]) < pdf.lastModified(pages[1]), "The first page in the array should have been modified prior to the second")
+        timeImgOne = os.path.getmtime(pages[0])
+        timeImgTwo = os.path.getmtime(pages[1])
+        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
         
-    def test_06_bookPagesToArray_other(self):
+    def test_04_bookPagesToArray_other(self):
         pdfDir = os.path.join(DATA_DIR, "pdf")
         pages = pdf.bookPagesToArray(pdfDir)
         self.assertEquals(0, len(pages))
         
-    def test_07_bookPagesToArray_mixed(self):
+    def test_05_bookPagesToArray_mixed(self):
         imgOne = os.path.join(DATA_DIR, "images/cactus.jpg")
         imgTwo = os.path.join(DATA_DIR, "images/cat.jpg")
         pdfOne = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
         shutil.copy(imgOne, TEST_DIR)
-        time.sleep(1) # wait 1 second. Needed because the lastModified time isn't precise enough 
+        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
         shutil.copy(imgTwo, TEST_DIR)
-        time.sleep(1) # wait 1 second. Needed because the lastModified time isn't precise enough 
+        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
         shutil.copy(pdfOne, TEST_DIR)
         pages = pdf.bookPagesToArray(TEST_DIR)
         self.assertEquals(2, len(pages))
-        self.assertTrue(pdf.lastModified(pages[0]) < pdf.lastModified(pages[1]), "The first page in the array should have been modified prior to the second")
+        timeImgOne = os.path.getmtime(pages[0])
+        timeImgTwo = os.path.getmtime(pages[1])
+        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
         
-    def test_08_convertPagesToTIFF_image(self):
+    def test_06_convertPagesToTIFF_image(self):
         tiffDir = os.path.join(TEST_DIR, "tiffDir")
         tiffImg = os.path.join(tiffDir, "cactus.tiff")
         pages = [os.path.join(DATA_DIR, "images/cactus.jpg")]
@@ -93,14 +78,14 @@ class TestPDFModuleFunctions(unittest.TestCase):
         self.assertTrue(os.path.exists(tiffImg), "The tiff version of the file should have been created")
         self.assertEquals("image/tiff", mimetypes.guess_type(tiffImg)[0])
         
-    def test_09_convertPagesToTIFF_empty(self):
+    def test_07_convertPagesToTIFF_empty(self):
         tiffDir = os.path.join(TEST_DIR, "tiffDir")
         pages = []
         os.makedirs(tiffDir)
         pdf.convertPagesToTIFF(pages, tiffDir)
         self.assertEquals(0, len(os.listdir(tiffDir)))
         
-    def test_10_convertPagesToTIFF_other(self):
+    def test_8_convertPagesToTIFF_other(self):
         tiffDir = os.path.join(TEST_DIR, "tiffDir")
         pages = [os.path.join(TEST_DIR, "pdf/Decapod.pdf")]
         os.makedirs(tiffDir)
