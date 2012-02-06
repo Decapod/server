@@ -48,6 +48,7 @@ class BookController(object):
         
     def DELETE(self, *args, **kwargs):
         self.book.delete()
+        cherrypy.response.status = 204
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):

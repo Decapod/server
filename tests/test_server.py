@@ -129,11 +129,11 @@ class TestBook(ServerTestCase):
     
     def tearDown(self):
         utils.rmTree(BOOK_DIR)
-    
-    # TODO: Test response status  
+     
     def test_01_delete(self):
         self.assertTrue(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
         self.getPage(self.bookURL, method="DELETE")
+        self.assertStatus(204)
         self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
     
     def test_02_unsupportedMethods(self):
