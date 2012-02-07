@@ -11,8 +11,8 @@ sys.path.append(os.path.abspath('..'))
 import pdf
 import decapod_utilities as utils
 
-MOCK_IMG_DIR = os.path.normpath(os.path.abspath("../mock-images/"))
 DATA_DIR = os.path.abspath("data/")
+IMAGES_DIR = os.path.join(DATA_DIR, "images")
 LIBRARY_PATH = os.path.join(DATA_DIR, "library/")
 BOOK_DIR = os.path.join(LIBRARY_PATH, "book/")
 IMG_DIR = os.path.join(BOOK_DIR, "images/")
@@ -30,7 +30,7 @@ class TestPDFModuleFunctions(unittest.TestCase):
         utils.rmTree(BOOK_DIR)
         
     def test_01_isImage_image(self):
-        image = os.path.join(DATA_DIR, "images/cactus.jpg")
+        image = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         self.assertTrue(pdf.isImage(image), "The file at path ({0}) should be an image".format(image))
         
     def test_02_isImage_other(self):
@@ -38,8 +38,8 @@ class TestPDFModuleFunctions(unittest.TestCase):
         self.assertFalse(pdf.isImage(file), "The file at path ({0}) should not be an image".format(file))
 
     def test_03_bookPagesToArray_images(self):
-        imgOne = os.path.join(DATA_DIR, "images/cactus.jpg")
-        imgTwo = os.path.join(DATA_DIR, "images/cat.jpg")
+        imgOne = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
+        imgTwo = os.path.join(IMAGES_DIR, "Image_0016.JPEG")
         shutil.copy(imgOne, TEST_DIR)
         time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
         shutil.copy(imgTwo, TEST_DIR)
@@ -55,8 +55,8 @@ class TestPDFModuleFunctions(unittest.TestCase):
         self.assertEquals(0, len(pages))
         
     def test_05_bookPagesToArray_mixed(self):
-        imgOne = os.path.join(DATA_DIR, "images/cactus.jpg")
-        imgTwo = os.path.join(DATA_DIR, "images/cat.jpg")
+        imgOne = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
+        imgTwo = os.path.join(IMAGES_DIR, "Image_0016.JPEG")
         pdfOne = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
         shutil.copy(imgOne, TEST_DIR)
         time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
@@ -71,8 +71,8 @@ class TestPDFModuleFunctions(unittest.TestCase):
         
     def test_06_convertPagesToTIFF_image(self):
         tiffDir = os.path.join(TEST_DIR, "tiffDir")
-        tiffImg = os.path.join(tiffDir, "cactus.tiff")
-        pages = [os.path.join(DATA_DIR, "images/cactus.jpg")]
+        tiffImg = os.path.join(tiffDir, "Image_0015.tiff")
+        pages = [os.path.join(IMAGES_DIR, "Image_0015.JPEG")]
         os.makedirs(tiffDir)
         pdf.convertPagesToTIFF(pages, tiffDir)
         self.assertTrue(os.path.exists(tiffImg), "The tiff version of the file should have been created")
@@ -193,8 +193,7 @@ class TestPDFGenerator(unittest.TestCase):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         tiffTempDir = os.path.join(PDF_DIR, "tiffTemp")
         utils.makeDirs(tiffTempDir)
-        shutil.copy(os.path.join(MOCK_IMG_DIR, "Image_0015.JPEG"), IMG_DIR)
-        pdfGen.tiffPages = pdf.convertPagesToTIFF([os.path.join(IMG_DIR, "Image_0015.JPEG")], tiffTempDir)
+        pdfGen.tiffPages = pdf.convertPagesToTIFF([os.path.join(IMAGES_DIR, "Image_0015.JPEG")], tiffTempDir)
         pdf.PDFGenerationError, pdfGen.generatePDFFromPages()
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
     
@@ -207,7 +206,7 @@ class TestPDFGenerator(unittest.TestCase):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         status = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
         utils.makeDirs(IMG_DIR)
-        shutil.copy(os.path.join(MOCK_IMG_DIR, "Image_0015.JPEG"), IMG_DIR)
+        shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = pdfGen.generate()
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
         self.assertStatusFile(status)

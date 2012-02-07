@@ -41,7 +41,7 @@ class ImportImageTest(unittest.TestCase):
         self.assertEquals(expectedSuffix, suffix)
         
     def saveTest(self, iImport, name=None):
-        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
+        origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         testFile = testutils.mockFileStream(origFilePath)
         
         savedfile = iImport.save(testFile, name)
@@ -87,7 +87,7 @@ class ImportImageTest(unittest.TestCase):
         self.mimeToSuffixTest(self.iImport, "png", "png")
         
     def test_08_getFileType(self):
-        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
+        origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         testFile = testutils.mockFileStream(origFilePath)
         expectedType = "jpeg"
         
@@ -95,7 +95,7 @@ class ImportImageTest(unittest.TestCase):
         self.assertEquals(expectedType, type)
         
     def test_09_isValidType_valid(self):
-        testFile = os.path.join(IMAGES_DIR, "cactus.jpg")
+        testFile = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         valid = self.iImport.isValidType(testFile)
         self.assertTrue(valid, "The file at path ({0}) should have been a valid file type".format(testFile))
         
@@ -105,8 +105,8 @@ class ImportImageTest(unittest.TestCase):
         self.assertFalse(valid, "The file at path ({0}) should not have been a valid file type".format(testFile))
         
     def test_11_writeFile(self):
-        writePath = os.path.join(self.iImport.importDir, "cactus.jpg")
-        origFilePath = os.path.join(IMAGES_DIR, "cactus.jpg")
+        writePath = os.path.join(self.iImport.importDir, "Image_0015.JPEG")
+        origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         testFile = testutils.mockFileStream(origFilePath)
 
         self.iImport.writeFile(testFile, writePath)
