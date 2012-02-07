@@ -32,10 +32,6 @@ CONFIG = {
     "/library": {
         "tools.staticdir.on": True,
         "tools.staticdir.dir": LIBRARY_DIR
-    },
-    "/mockImages": {
-        "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../mock-images"
     }
 }
 
@@ -146,7 +142,7 @@ class TestPages(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def test_01_post_valid(self):
-        self.uploadFile(self.pageURL, os.path.abspath("../mock-images/Image_0015.JPEG"))
+        self.uploadFile(self.pageURL, os.path.join(DATA_DIR, "images/Image_0015.JPEG"))
         self.assertStatus(201)
         self.assertHeader("Location")
         
