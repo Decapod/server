@@ -110,6 +110,9 @@ class TestPDFModuleFunctions(unittest.TestCase):
 class TestPDFGenerator(unittest.TestCase):
     book = None
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
+    status_complete = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
+    status_inProgress = '{"status": "in progress"}'
+    status_none = '{"status": "none"}'
     
     def setUp(self):
         utils.makeDirs(IMG_DIR)
@@ -138,24 +141,22 @@ class TestPDFGenerator(unittest.TestCase):
             
     def test_01_init(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        self.assertInit(pdfGen, '{"status": "none"}')
+        self.assertInit(pdfGen, self.status_none)
             
     def test_02_init_statusFile(self):
-        status = '{"status": "in progress"}'
         utils.makeDirs(PDF_DIR)
         # write status file
         file = open(STATUS_FILE, "w")
-        file.write(status)
+        file.write(self.status_inProgress)
         file.close()
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        self.assertInit(pdfGen, status)
+        self.assertInit(pdfGen, self.status_inProgress)
         
     def test_03_writeToStatusFile(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        status = '{"status": "test"}'
-        pdfGen.status = json.loads(status)
+        pdfGen.status = json.loads(self.status_inProgress)
         pdfGen.writeToStatusFile()
-        self.assertStatusFile(status)
+        self.assertStatusFile(self.status_inProgress)
     
     def test_04_setStatus(self):
         st = "test"
@@ -167,21 +168,19 @@ class TestPDFGenerator(unittest.TestCase):
         
     def test_05_setStatus_removeURL(self):
         st = "test"
-        oldStatus = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
         newStatus = '{"status": "test"}'
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        pdfGen.status = json.loads(oldStatus)
+        pdfGen.status = json.loads(self.status_complete)
         pdfGen.setStatus(st)
         self.assertStatusFile(newStatus)
         self.assertEquals(newStatus, json.dumps(pdfGen.status))
         
     def test_06_setStatus_complete(self):
         st = "complete"
-        status = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
         pdfGen = pdf.PDFGenerator(self.mockRS)
         pdfGen.setStatus(st)
-        self.assertStatusFile(status)
-        self.assertEquals(status, json.dumps(pdfGen.status))
+        self.assertStatusFile(self.status_complete)
+        self.assertEquals(self.status_complete, json.dumps(pdfGen.status))
         
     def test_07_getStatus(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
@@ -204,14 +203,13 @@ class TestPDFGenerator(unittest.TestCase):
         
     def test_10_generate(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        status = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
         utils.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = pdfGen.generate()
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
-        self.assertStatusFile(status)
-        self.assertEquals(status, json.dumps(pdfGen.status))
-        self.assertEquals(status, returnedStatus)
+        self.assertStatusFile(self.status_complete)
+        self.assertEquals(self.status_complete, json.dumps(pdfGen.status))
+        self.assertEquals(self.status_complete, returnedStatus)
         
     def test_11_generate_exception(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
@@ -223,7 +221,7 @@ class TestPDFGenerator(unittest.TestCase):
         shutil.copy(os.path.join(DATA_DIR, "pdf/Decapod.pdf"), PDF_DIR)
         pdfGen.setStatus("complete")
         pdfGen.deletePDF()
-        self.assertInit(pdfGen, '{"status": "none"}')
+        self.assertInit(pdfGen, self.status_none)
         self.assertFalse(os.path.exists(os.path.join(PDF_DIR, "Decapod.pdf")), "The export pdf should not exist")
         
     def test_13_deletePDF_exception(self):
