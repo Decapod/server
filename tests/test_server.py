@@ -88,7 +88,7 @@ class ServerTestCase(helper.CPWebCase):
 
 class TestRoot(ServerTestCase):
     rootURL = "/"
-    expectedRedirectURL = "/components/import/html/Import-05a.html"
+    expectedRedirectURL = "/components/exporter/html/exporter.html"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
