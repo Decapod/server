@@ -110,7 +110,7 @@ class TestPDFModuleFunctions(unittest.TestCase):
 class TestPDFGenerator(unittest.TestCase):
     book = None
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
-    status_complete = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
+    status_complete = '{"status": "complete", "url": "/library/book/images/pdf/Decapod.pdf"}'
     status_inProgress = '{"status": "in progress"}'
     status_none = '{"status": "none"}'
     
