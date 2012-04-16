@@ -1,6 +1,5 @@
 Copyright 2010, University of Toronto
 Copyright 2011 - 2012, OCAD University
-Copyright 2010 - 2012, Deutsches Forschungszentrum fuer Kuenstliche Intelligenz or its licensors, as applicable
 
 This project includes software developed by the Decapod Project team.
 http://sites.google.com/site/decapodproject/
