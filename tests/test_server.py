@@ -35,11 +35,11 @@ CONFIG = {
     }
 }
 
-def setup_server():
-    decapod.mountApp(CONFIG)
+def setup_server(config=CONFIG):
+    decapod.mountApp(config)
     
-def teardown_server():
-    utils.rmTree(BOOK_DIR)
+def teardown_server(dir=BOOK_DIR):
+    utils.rmTree(dir)
 
 class ServerTestCase(helper.CPWebCase):
     '''
@@ -85,6 +85,21 @@ class ServerTestCase(helper.CPWebCase):
         '''
         headers, body = self.fileUploadPostParams(path)
         self.getPage(url, headers, "POST", body)
+        
+class TestConfig(helper.CPWebCase):
+    # hardcoding due to the fact that setup_server can't take any arguments, not even "self"
+    def customServerSetup():
+        setup_server({
+            "global": {
+                "server.socket_host": "0.0.0.0"
+            }
+        })
+    
+    setup_server = staticmethod(customServerSetup)
+    tearDown = staticmethod(teardown_server)
+    
+    def test_01_socket_host(self):
+        self.assertEquals("0.0.0.0", cherrypy.config["server.socket_host"])
 
 class TestRoot(ServerTestCase):
     rootURL = "/"
