@@ -139,6 +139,9 @@ def mountApp(config=DECAPOD_CONFIG_FILE):
     root = DecapodServer()
     root.library = LibraryController()
     
+    # update the servers configuration (e.g. sever.socket_host)
+    cherrypy.config.update(config)
+    
     # mount the app
     cherrypy.tree.mount(root, "/", config)
     return root
