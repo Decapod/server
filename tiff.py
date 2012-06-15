@@ -1,9 +1,6 @@
 import os
 import decapod_utilities as utils
-import simplejson as json
 import imghdr
-from PIL import Image
-import resourcesource
 
 BOOK_DIR = "${library}/book/images/"
 PDF_DIR = BOOK_DIR + "pdf/"
@@ -48,20 +45,19 @@ def convertImage(imagePath, outputDir=None):
     else:
         raise TIFFImageError("{0} is not a valid image file".format(imagePath))
 
-#def convertImages(imagePaths, outputDir):
-#    convertedImagePaths = []
-#    ext = ".tiff"
-#    
-#    for imagePath in imagePaths:
-#        fileName = os.path.split(filePath)[1]
-#        name = os.path.splitext(fileName)[0]
-#        
-#        if isImage(filePath):
-#            writePath = os.path.join(tiffDir, name + ext)
-#            Image.open(filePath).save(writePath, "tiff")
-#            utils.invokeCommandSync(["convert", filePath, writePath], TIFFConversionError, "Error converting {0} to TIFF".format(filePath))
-#            convertedPages.append(writePath)
-#    
-#    return convertedPages
-
-
+def convertImages(imagePaths, outputDir=None):
+    '''
+    Converts the images in the list of imagePaths to tiff format.
+    Can optionaly specify the directory where the converted images will be saved, will default to putting them back into their original directories.
+    If the path provided is not an image, it will be ignored.
+    Returns a list of the paths to the new image files
+    
+    Exceptions:
+    TiffConversionError: an error occurs during the conversion process
+    '''
+    convertedImages = []
+    for imagePath in imagePaths:
+        if isImage(imagePath):
+            convertedImage = convertImage(imagePath, outputDir)
+            convertedImages.append(convertedImage)
+    return convertedImages
