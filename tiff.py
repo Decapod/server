@@ -26,7 +26,7 @@ class TIFFImageError(Exception): pass
 def isImage(filePath):
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
-def convertImage(imagePath, outputDir):
+def convertImage(imagePath, outputDir=None):
     '''
     Converts the image at imagePath into a tiff image.
     Can optionaly specify the directory where to save the new file, will default to the same directory as the original file.
