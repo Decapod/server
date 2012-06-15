@@ -2,12 +2,8 @@ import sys
 import os
 import unittest
 import shutil
-import time
-import mimetypes
-import simplejson as json
 import imghdr
 
-import testutils
 sys.path.append(os.path.abspath('..'))
 import tiff
 import decapod_utilities as utils
@@ -60,33 +56,37 @@ class TestTIFFModuleFunctions(unittest.TestCase):
         tiff.convertImage(img, TEST_DIR)
         self.assertEquals("tiff", imghdr.what(convertedIMG))
     
-#    def test_06_convertImages_images(self):
-#        imgList = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
+    def test_07_convertImages(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
+        expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
+        convertedImages = tiff.convertImages(images, TEST_DIR)
+        for image in convertedImages:
+            self.assertEquals("tiff", imghdr.what(image))
+        self.assertListEqual(expectedPaths, convertedImages)
+            
+    def test_08_convertedImages_defaultDir(self):
+        shutil.copy(os.path.join(IMG_DIR, JPEG1), TEST_DIR)
+        shutil.copy(os.path.join(IMG_DIR, JPEG2), TEST_DIR)
+        images = [os.path.join(TEST_DIR, JPEG1), os.path.join(TEST_DIR, JPEG2)]
+        expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
+        convertedImages = tiff.convertImages(images)
+        for image in convertedImages:
+            self.assertEquals("tiff", imghdr.what(image))
+        self.assertListEqual(expectedPaths, convertedImages)
+    
+    def test_09_convertedImages_invalidFile(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
+        expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
+        convertedImages = tiff.convertImages(images, TEST_DIR)
+        for image in convertedImages:
+            self.assertEquals("tiff", imghdr.what(image))
+        self.assertFalse(os.path.exists(os.path.join(TEST_DIR, "Decapod.pdf")))
+        self.assertFalse(os.path.exists(os.path.join(TEST_DIR, "Decapod.tiff")))
+        self.assertListEqual(expectedPaths, convertedImages)
         
-        
-        
-#    def test_06_convertPagesToTIFF_image(self):
-#        tiffDir = os.path.join(TEST_DIR, "tiffDir")
-#        tiffImg = os.path.join(tiffDir, "Image_0015.tiff")
-#        pages = [os.path.join(IMAGES_DIR, "Image_0015.JPEG")]
-#        os.makedirs(tiffDir)
-#        pdf.convertPagesToTIFF(pages, tiffDir)
-#        self.assertTrue(os.path.exists(tiffImg), "The tiff version of the file should have been created")
-#        self.assertEquals("image/tiff", mimetypes.guess_type(tiffImg)[0])
-#        
-#    def test_07_convertPagesToTIFF_empty(self):
-#        tiffDir = os.path.join(TEST_DIR, "tiffDir")
-#        pages = []
-#        os.makedirs(tiffDir)
-#        pdf.convertPagesToTIFF(pages, tiffDir)
-#        self.assertEquals(0, len(os.listdir(tiffDir)))
-#        
-#    def test_08_convertPagesToTIFF_other(self):
-#        tiffDir = os.path.join(TEST_DIR, "tiffDir")
-#        pages = [os.path.join(TEST_DIR, "pdf/Decapod.pdf")]
-#        os.makedirs(tiffDir)
-#        pdf.convertPagesToTIFF(pages, tiffDir)
-#        self.assertEquals(0, len(os.listdir(tiffDir)))
+    def test_10_convertImages_invalidOutputDir(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
+        self.assertRaises(tiff.TIFFConversionError, tiff.convertImages, images, os.path.join(TEST_DIR, "invalidDir"))
         
 if __name__ == '__main__':
     unittest.main()
