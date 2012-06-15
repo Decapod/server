@@ -4,6 +4,7 @@ import simplejson as json
 import imghdr
 from PIL import Image
 import resourcesource
+from tiff import convertImages
 
 BOOK_DIR = "${library}/book/images/"
 PDF_DIR = BOOK_DIR + "pdf/"
@@ -34,22 +35,6 @@ def bookPagesToArray(pagesDir):
             allPages.append(filePath)
     # sorting needed to keep pages in order
     return sorted(allPages, key = os.path.getmtime)
-
-def convertPagesToTIFF(pages, tiffDir):
-    convertedPages = []
-    ext = ".tiff"
-    
-    for filePath in pages:
-        fileName = os.path.split(filePath)[1]
-        name = os.path.splitext(fileName)[0]
-        
-        if isImage(filePath):
-            writePath = os.path.join(tiffDir, name + ext)
-            Image.open(filePath).save(writePath, "tiff")
-            utils.invokeCommandSync(["convert", filePath, writePath], PDFGenerationError, "Error converting {0} to TIFF".format(filePath))
-            convertedPages.append(writePath)
-    
-    return convertedPages
 
 def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
     genPDFCmd = [
@@ -127,7 +112,7 @@ class PDFGenerator(object):
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
             self.pages = bookPagesToArray(self.bookDirPath);
-            self.tiffPages = convertPagesToTIFF(self.pages, self.tiffDirPath)
+            self.tiffPages = convertImages(self.pages, self.tiffDirPath)
             self.generatePDFFromPages(type)
             self.setStatus(EXPORT_COMPLETE)
             return self.getStatus()
