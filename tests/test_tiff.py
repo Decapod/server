@@ -3,6 +3,7 @@ import os
 import unittest
 import shutil
 import imghdr
+import zipfile
 
 sys.path.append(os.path.abspath('..'))
 import tiff
@@ -11,6 +12,8 @@ import decapod_utilities as utils
 DATA_DIR = os.path.abspath("data/")
 TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
 IMG_DIR = os.path.join(DATA_DIR, "images")
+TEMP_DIR = os.path.join(TEST_DIR, "temp")
+ZIP_FILE = os.path.join(TEST_DIR, "test.zip")
 JPEG1 = "Image_0015.JPEG"
 JPEG2 = "Image_0016.JPEG"
 TIFF1 = "Image_0015.tiff"
@@ -88,5 +91,31 @@ class TestTIFFModuleFunctions(unittest.TestCase):
         images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
         self.assertRaises(tiff.TIFFConversionError, tiff.convertImages, images, os.path.join(TEST_DIR, "invalidDir"))
         
+    def test_11_cconvertAndZipImages(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
+        expectedFiles = [TIFF1, TIFF2]
+        zip = tiff.convertAndZipImages(images, ZIP_FILE, TEMP_DIR)
+        self.assertEquals(ZIP_FILE, zip)
+        self.assertTrue(zipfile.is_zipfile(zip))
+        zf = zipfile.ZipFile(zip, 'r')
+        self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zf.namelist())
+        zf.close()
+            
+    def test_12_convertAndZipImages_invalidFile(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
+        expectedFiles = [TIFF1, TIFF2]
+        zip = tiff.convertAndZipImages(images, ZIP_FILE, TEMP_DIR)
+        self.assertEquals(ZIP_FILE, zip)
+        self.assertTrue(zipfile.is_zipfile(zip))
+        zf = zipfile.ZipFile(zip, 'r')
+        self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zf.namelist())
+        zf.close()
+    
+    def test_13_convertAndZipImages_invalidOutputPath(self):
+        images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
+        self.assertRaises(tiff.TIFFOutputPathError, tiff.convertAndZipImages, images, TEST_DIR, TEMP_DIR)
+  
 if __name__ == '__main__':
     unittest.main()
