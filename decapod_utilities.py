@@ -1,4 +1,5 @@
 import os
+import imghdr
 import shutil
 import subprocess
 
@@ -23,3 +24,6 @@ def invokeCommandSync(cmdArgs, error, message):
         raise error, message
     
     return output
+
+def isImage(filePath):
+    return os.path.isfile(filePath) and imghdr.what(filePath) != None

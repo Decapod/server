@@ -5,6 +5,9 @@ import shutil
 sys.path.append(os.path.abspath('..'))
 import decapod_utilities as utils
 
+DATA_DIR = os.path.abspath("data/")
+IMG_DIR = os.path.join(DATA_DIR, "images")
+
 class CommandInvokationTests(unittest.TestCase):
                         
     def test_01_invokeCommandSync_valid(self):
@@ -81,6 +84,16 @@ class WriteTests(unittest.TestCase):
         read = file.read()
         file.close()
         self.assertEquals(content, read)
+
+class ValidationTests(unittest.TestCase):
+    
+    def test_01_isImage_image(self):
+        image = os.path.join(IMG_DIR, "Image_0015.JPEG")
+        self.assertTrue(utils.isImage(image), "The file at path ({0}) should be an image".format(image))
         
+    def test_02_isImage_other(self):
+        file = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
+        self.assertFalse(utils.isImage(file), "The file at path ({0}) should not be an image".format(file))
+
 if __name__ == '__main__':
     unittest.main()
