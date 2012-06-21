@@ -1,24 +1,19 @@
 import os
 import decapod_utilities as utils
 import imghdr
+import zipfile
 
 BOOK_DIR = "${library}/book/images/"
-PDF_DIR = BOOK_DIR + "pdf/"
-
-#constants for statuses
-EXPORT_IN_PROGRESS = "in progress"
-EXPORT_COMPLETE = "complete"
-EXPORT_NONE = "none"
+TIFF_DIR = BOOK_DIR + "tiff/"
+TEMP_DIR = TIFF_DIR + "temp/"
 
 # TODO: Move these values into configuration
-multiPageTIFFName = "Decapod-multipage.tiff"
-pdfName = "Decapod.pdf"
 statusFileName = "exportStatus.json"
 tiffDir = "tiffTemp"
-tempDir = "genPDFTemp"
 
 class TIFFConversionError(Exception): pass
 class TIFFImageError(Exception): pass
+class TIFFOutputPathError(Exception): pass
 
 def convertImage(imagePath, outputDir=None):
     '''
@@ -50,7 +45,7 @@ def convertImages(imagePaths, outputDir=None):
     Returns a list of the paths to the new image files
     
     Exceptions:
-    TiffConversionError: an error occurs during the conversion process
+    TIFFConversionError: an error occurs during the conversion process
     '''
     convertedImages = []
     for imagePath in imagePaths:
@@ -58,3 +53,41 @@ def convertImages(imagePaths, outputDir=None):
             convertedImage = convertImage(imagePath, outputDir)
             convertedImages.append(convertedImage)
     return convertedImages
+
+def convertAndZipImages(imagePaths, outputPath, tempDir=None):
+    '''
+    Converts the images in the list of imagePaths to tiff format.
+    Must specify the output path, including the file name, for the zip file to be saved.
+    If the image path provided is not an image, it will be ignored.
+    Can optionally specify a temp derictory for use during conversion, 
+    it will default to creating a temp directory in the current working directory.
+    Note that in all cases, the temp directory will be removed after completion.
+    Returns a path to the zip file containing the converted images.
+    If no valid images were provided, None is returned
+    
+    Exceptions:
+    TIFFConversionError: an error occurs during the conversion process
+    TIFFOutputPathError: the output path is malformed (e.g. path to a directory)
+    '''
+    zipPath = outputPath
+    currentDir = os.getcwd()
+    temp = tempDir if tempDir != None else os.path.join(os.getcwd(), "temp")
+    utils.makeDirs(tempDir)
+    converted = convertImages(imagePaths, temp)
+    os.chdir(tempDir) # Need to change to the tempDir where the images are so that the zip file won't contain any directory structure
+    if len(converted) > 0:
+        try:
+            zip = zipfile.ZipFile(outputPath, mode="a")
+        except IOError:
+            raise TIFFOutputPathError("{0} is not a valid path".format(outputPath))
+        for imagePath in converted:
+            imageFile = os.path.split(imagePath)[1] # extacts the filename from the path
+            zip.write(imageFile)
+        zip.close()
+    else:
+        # Return None when there are no valid image paths
+        zipPath = None
+    
+    os.chdir(currentDir)
+    utils.rmTree(tempDir)
+    return zipPath
