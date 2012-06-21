@@ -19,9 +19,6 @@ tempDir = "genPDFTemp"
 
 class TIFFConversionError(Exception): pass
 class TIFFImageError(Exception): pass
-    
-def isImage(filePath):
-    return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
 def convertImage(imagePath, outputDir=None):
     '''
@@ -33,7 +30,7 @@ def convertImage(imagePath, outputDir=None):
     TIFFImageError: if the file at imagePath isn't a supported image format
     TIFFConversionError: an error occurs during the conversion process
     '''
-    if isImage(imagePath):
+    if utils.isImage(imagePath):
         ext = ".tiff"
         origDir, fileName = os.path.split(imagePath)
         name = os.path.splitext(fileName)[0]
@@ -57,7 +54,7 @@ def convertImages(imagePaths, outputDir=None):
     '''
     convertedImages = []
     for imagePath in imagePaths:
-        if isImage(imagePath):
+        if utils.isImage(imagePath):
             convertedImage = convertImage(imagePath, outputDir)
             convertedImages.append(convertedImage)
     return convertedImages

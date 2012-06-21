@@ -22,16 +22,13 @@ tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
 class PDFGenerationError(Exception): pass
-    
-def isImage(filePath):
-    return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
 def bookPagesToArray(pagesDir):
     allPages = []
     for fileName in os.listdir(pagesDir):
         filePath = os.path.join(pagesDir, fileName)
         
-        if isImage(filePath): 
+        if utils.isImage(filePath): 
             allPages.append(filePath)
     # sorting needed to keep pages in order
     return sorted(allPages, key = os.path.getmtime)
