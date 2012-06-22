@@ -4,12 +4,8 @@ import imghdr
 import zipfile
 
 BOOK_DIR = "${library}/book/images/"
-TIFF_DIR = BOOK_DIR + "tiff/"
-TEMP_DIR = TIFF_DIR + "temp/"
-
-# TODO: Move these values into configuration
-statusFileName = "exportStatus.json"
-tiffDir = "tiffTemp"
+IMG_DIR = BOOK_DIR + "img/"
+TEMP_DIR = IMG_DIR + "temp/"
 
 class ConversionError(Exception): pass
 class ImageError(Exception): pass
