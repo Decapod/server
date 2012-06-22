@@ -67,25 +67,25 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None):
     ConversionError: an error occurs during the conversion process
     OutputPathError: the output path is malformed (e.g. path to a directory)
     '''
-    result = archivePath
     currentDir = os.getcwd()
     temp = tempDir if tempDir != None else os.path.join(os.getcwd(), "temp")
     utils.makeDirs(tempDir)
     converted = batchConvert(imagePaths, format, temp)
-    os.chdir(tempDir) # Need to change to the tempDir where the images are so that the zip file won't contain any directory structure
     if len(converted) > 0:
         try:
             zip = zipfile.ZipFile(archivePath, mode="a")
         except IOError:
+            utils.rmTree(tempDir)
             raise OutputPathError("{0} is not a valid path".format(archivePath))
+        os.chdir(tempDir) # Need to change to the tempDir where the images are so that the zip file won't contain any directory structure
         for imagePath in converted:
             imageFile = os.path.split(imagePath)[1] # extacts the filename from the path
             zip.write(imageFile)
         zip.close()
+        os.chdir(currentDir)
+        utils.rmTree(tempDir)
+        return archivePath
     else:
         # Return None when there are no valid image paths
-        result = None
-    
-    os.chdir(currentDir)
-    utils.rmTree(tempDir)
-    return result
+        utils.rmTree(tempDir)
+        return None
