@@ -108,6 +108,7 @@ class TestTIFFModuleFunctions(unittest.TestCase):
         self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zf.namelist())
         zf.close()
+        self.assertFalse(os.path.exists(TEMP_DIR))
             
     def test_12_archiveConvert_invalidFile(self):
         images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
@@ -119,10 +120,12 @@ class TestTIFFModuleFunctions(unittest.TestCase):
         self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zf.namelist())
         zf.close()
+        self.assertFalse(os.path.exists(TEMP_DIR))
     
     def test_13_archiveConvert_invalidOutputPath(self):
         images = [os.path.join(IMG_DIR, JPEG1), os.path.join(IMG_DIR, JPEG2)]
         self.assertRaises(image.OutputPathError, image.archiveConvert, images, "tiff", TEST_DIR, TEMP_DIR)
+        self.assertFalse(os.path.exists(TEMP_DIR))
   
 if __name__ == '__main__':
     unittest.main()
