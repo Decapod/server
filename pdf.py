@@ -4,7 +4,7 @@ import simplejson as json
 import imghdr
 from PIL import Image
 import resourcesource
-from tiff import convertImages
+from image import batchConvert
 
 BOOK_DIR = "${library}/book/images/"
 PDF_DIR = BOOK_DIR + "pdf/"
@@ -109,7 +109,7 @@ class PDFGenerator(object):
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
             self.pages = bookPagesToArray(self.bookDirPath);
-            self.tiffPages = convertImages(self.pages, self.tiffDirPath)
+            self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             self.generatePDFFromPages(type)
             self.setStatus(EXPORT_COMPLETE)
             return self.getStatus()
