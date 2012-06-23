@@ -16,7 +16,8 @@ IMAGES_DIR = os.path.join(DATA_DIR, "images")
 LIBRARY_PATH = os.path.join(DATA_DIR, "library/")
 BOOK_DIR = os.path.join(LIBRARY_PATH, "book/")
 IMG_DIR = os.path.join(BOOK_DIR, "images/")
-PDF_DIR = os.path.join(IMG_DIR, "pdf/")
+EXPORT_DIR = os.path.join(BOOK_DIR, "export/")
+PDF_DIR = os.path.join(EXPORT_DIR, "pdf/")
 STATUS_FILE = os.path.join(PDF_DIR, "exportStatus.json")
 TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
 
@@ -79,7 +80,7 @@ class TestPDFModuleFunctions(unittest.TestCase):
 class TestPDFGenerator(unittest.TestCase):
     book = None
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
-    status_complete = '{"status": "complete", "url": "/library/book/images/pdf/Decapod.pdf"}'
+    status_complete = '{"status": "complete", "url": "/library/book/export/pdf/Decapod.pdf"}'
     status_inProgress = '{"status": "in progress"}'
     status_none = '{"status": "none"}'
     
