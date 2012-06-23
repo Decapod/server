@@ -6,8 +6,10 @@ from PIL import Image
 import resourcesource
 from image import batchConvert
 
-BOOK_DIR = "${library}/book/images/"
-PDF_DIR = BOOK_DIR + "pdf/"
+BOOK_DIR = "${library}/book/"
+IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
+EXPORT_DIR = os.path.join(BOOK_DIR, "export/")
+PDF_DIR = os.path.join(EXPORT_DIR, "pdf/")
 
 #constants for statuses
 EXPORT_IN_PROGRESS = "in progress"
@@ -54,7 +56,7 @@ class PDFGenerator(object):
     
     def __init__(self, resourcesource=resourcesource):
         self.rs = resourcesource
-        self.bookDirPath = self.rs.path(BOOK_DIR)
+        self.bookDirPath = self.rs.path(IMAGES_DIR)
         self.pdfDirPath = self.rs.path(PDF_DIR)
         self.tempDirPath = os.path.join(self.pdfDirPath, tempDir)
         self.tiffDirPath = os.path.join(self.pdfDirPath, tiffDir)

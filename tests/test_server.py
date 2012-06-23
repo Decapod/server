@@ -171,9 +171,9 @@ class TestPages(ServerTestCase):
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestExistingExport(ServerTestCase):
     exportURL = "/library/bookName/export"
-    exportStatus = '{"status": "complete", "downloadSRC": "/library/book/images/pdf/Decapod.pdf"}'
+    exportStatus = '{"status": "complete", "downloadSRC": "/library/book/export/pdf/Decapod.pdf"}'
     deleteStatus = '{"status": "none"}'
-    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     pdf = os.path.join(pdfDir, "Decapod.pdf")
     
@@ -204,7 +204,7 @@ class TestExistingExport(ServerTestCase):
 class TestInProgressExport(ServerTestCase):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "in progress"}'
-    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     
     setup_server = staticmethod(setup_server)
@@ -235,7 +235,7 @@ class TestInProgressExport(ServerTestCase):
 class TestNewExport(ServerTestCase):
     exportURL = "/library/bookName/export"
     exportStatus = '{"status": "none"}'
-    pdfDir = os.path.join(BOOK_DIR, "images/pdf")
+    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     
     setup_server = staticmethod(setup_server)
