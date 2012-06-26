@@ -2,10 +2,13 @@ import os
 import decapod_utilities as utils
 import imghdr
 import zipfile
+import resourcesource
 
-BOOK_DIR = "${library}/book/images/"
-IMG_DIR = BOOK_DIR + "img/"
-TEMP_DIR = IMG_DIR + "temp/"
+BOOK_DIR = "${library}/book/"
+IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
+EXPORT_DIR = os.path.join(BOOK_DIR, "export/")
+IMG_DIR = os.path.join(EXPORT_DIR, "image/")
+TEMP_DIR = os.path.join(IMG_DIR, "temp/")
 
 class ConversionError(Exception): pass
 class ImageError(Exception): pass
@@ -89,3 +92,24 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None):
         # Return None when there are no valid image paths
         utils.rmTree(tempDir)
         return None
+ 
+#TODO: write status to a status file    
+class ImageExporter(object):
+    
+    def __init__(self, resourcesource=resourcesource, archiveName="Decapod.zip"):
+        self.rs = resourcesource
+        self.bookDirPath = self.rs.path(BOOK_DIR)
+        self.imgDirPath = self.rs.path(IMG_DIR)
+        self.tempDirPath = self.rs.path(TEMP_DIR)
+        self.archivePath = os.path.join(self.imgDirPath, archiveName)
+        
+        self.setupExportFileStructure()
+        
+    def setupExportFileStructure(self):
+        utils.makeDirs(self.imgDirPath)
+        utils.makeDirs(self.tempDirPath)
+    
+    #TODO Raise an exception if image generation in progress (Needs status file to determine this)
+    def deleteExport(self):
+        utils.rmTree(self.imgDirPath)
+        self.setupExportFileStructure()
