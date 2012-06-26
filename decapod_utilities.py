@@ -27,3 +27,17 @@ def invokeCommandSync(cmdArgs, error, message):
 
 def isImage(filePath):
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
+
+def imageDirToList(imageDir, sortKey=None, reverse=False):
+    '''
+    Takes a directory and returns a list of image paths.
+    Can optionally provide sort options (sortKey for the method to sort by, and reverse to specify the direction)
+    By default the list is sorted alphabetically.
+    '''
+    allImages = []
+    for fileName in os.listdir(imageDir):
+        filePath = os.path.join(imageDir, fileName)
+        
+        if isImage(filePath): 
+            allImages.append(filePath)
+    return sorted(allImages, key=sortKey, reverse=reverse)

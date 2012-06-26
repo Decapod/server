@@ -2,8 +2,6 @@ import sys
 import os
 import unittest
 import shutil
-import time
-import mimetypes
 import simplejson as json
 
 import testutils
@@ -29,47 +27,15 @@ class TestPDFModuleFunctions(unittest.TestCase):
     def tearDown(self):
         utils.rmTree(TEST_DIR)
         utils.rmTree(BOOK_DIR)
-
-    def test_01_bookPagesToArray_images(self):
-        imgOne = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
-        imgTwo = os.path.join(IMAGES_DIR, "Image_0016.JPEG")
-        shutil.copy(imgOne, TEST_DIR)
-        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
-        shutil.copy(imgTwo, TEST_DIR)
-        pages = pdf.bookPagesToArray(TEST_DIR)
-        self.assertEquals(2, len(pages))
-        timeImgOne = os.path.getmtime(pages[0])
-        timeImgTwo = os.path.getmtime(pages[1])
-        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
         
-    def test_02_bookPagesToArray_other(self):
-        pdfDir = os.path.join(DATA_DIR, "pdf")
-        pages = pdf.bookPagesToArray(pdfDir)
-        self.assertEquals(0, len(pages))
-        
-    def test_03_bookPagesToArray_mixed(self):
-        imgOne = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
-        imgTwo = os.path.join(IMAGES_DIR, "Image_0016.JPEG")
-        pdfOne = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
-        shutil.copy(imgOne, TEST_DIR)
-        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
-        shutil.copy(imgTwo, TEST_DIR)
-        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
-        shutil.copy(pdfOne, TEST_DIR)
-        pages = pdf.bookPagesToArray(TEST_DIR)
-        self.assertEquals(2, len(pages))
-        timeImgOne = os.path.getmtime(pages[0])
-        timeImgTwo = os.path.getmtime(pages[1])
-        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
-        
-    def test_04_assembleGenPDFCommand(self):
+    def test_01_assembleGenPDFCommand(self):
         tempDirPath = "../temp"
         pdfPath = "../Decapod.pdf"
         pages = ["../images/pageOne.jpg", "../images/pageTwo.jpg"]
         expectedCMD = "decapod-genpdf.py -d {0} -p {1} -v 1 -t 1 {2} {3}".format(tempDirPath, pdfPath, pages[0], pages[1])
         self.assertEquals(expectedCMD.split(), pdf.assembleGenPDFCommand(tempDirPath, pdfPath, pages))
         
-    def test_05_assembleGenPDFCommand_type(self):
+    def test_02_assembleGenPDFCommand_type(self):
         tempDirPath = "../temp"
         pdfPath = "../Decapod.pdf"
         type = 2

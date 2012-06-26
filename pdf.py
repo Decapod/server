@@ -25,16 +25,6 @@ tempDir = "genPDFTemp"
 
 class PDFGenerationError(Exception): pass
 
-def bookPagesToArray(pagesDir):
-    allPages = []
-    for fileName in os.listdir(pagesDir):
-        filePath = os.path.join(pagesDir, fileName)
-        
-        if utils.isImage(filePath): 
-            allPages.append(filePath)
-    # sorting needed to keep pages in order
-    return sorted(allPages, key = os.path.getmtime)
-
 def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
     genPDFCmd = [
         "decapod-genpdf.py",
@@ -110,7 +100,7 @@ class PDFGenerator(object):
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
-            self.pages = bookPagesToArray(self.bookDirPath);
+            self.pages = utils.imageDirToList(self.bookDirPath);
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             self.generatePDFFromPages(type)
             self.setStatus(EXPORT_COMPLETE)
@@ -123,4 +113,3 @@ class PDFGenerator(object):
         else:
             utils.rmTree(self.pdfDirPath)
             self.setupExportFileStructure()
-
