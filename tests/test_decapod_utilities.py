@@ -2,11 +2,13 @@ import sys
 import os
 import unittest
 import shutil
+import time
 sys.path.append(os.path.abspath('..'))
 import decapod_utilities as utils
 
 DATA_DIR = os.path.abspath("data/")
 IMG_DIR = os.path.join(DATA_DIR, "images")
+TEST_DIR = os.path.join(DATA_DIR, "testDir")
 
 class CommandInvokationTests(unittest.TestCase):
                         
@@ -64,16 +66,14 @@ class DirectoryManipulationTests(unittest.TestCase):
         
 class WriteTests(unittest.TestCase):
     
-    testDir = os.path.abspath("testDir")
-    
     def setUp(self):
-        utils.makeDirs(self.testDir)
+        utils.makeDirs(TEST_DIR)
         
     def tearDown(self):
-        utils.rmTree(self.testDir)
+        utils.rmTree(TEST_DIR)
     
     def test_01_writeToFile(self):
-        filePath = os.path.join(self.testDir, "testFile.txt")
+        filePath = os.path.join(TEST_DIR, "testFile.txt")
         content = "Test File"
         self.assertFalse(os.path.exists(filePath), "The file at path ({0}) should not yet exist".format(filePath))
         #tested function
@@ -94,6 +94,52 @@ class ValidationTests(unittest.TestCase):
     def test_02_isImage_other(self):
         file = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
         self.assertFalse(utils.isImage(file), "The file at path ({0}) should not be an image".format(file))
+
+class ToListTests(unittest.TestCase):
+    
+    def setUp(self):
+        utils.makeDirs(TEST_DIR)
+    
+    def tearDown(self):
+        utils.rmTree(TEST_DIR)
+        
+    def test_01_imageDirToList(self):
+        imgList = utils.imageDirToList(IMG_DIR)
+        self.assertEquals(2, len(imgList))
+        self.assertListEqual([os.path.join(IMG_DIR, "Image_0015.JPEG"), os.path.join(IMG_DIR, "Image_0016.JPEG")], imgList)
+        
+    def test_02_bookPagesToArray_noImages(self):
+        pdfDir = os.path.join(DATA_DIR, "pdf")
+        imgList = utils.imageDirToList(pdfDir)
+        self.assertEquals(0, len(imgList))
+        
+    def test_03_bookPagesToArray_mixed(self):
+        imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
+        imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
+        pdfOne = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
+        shutil.copy(imgOne, TEST_DIR)
+        shutil.copy(imgTwo, TEST_DIR)
+        shutil.copy(pdfOne, TEST_DIR)
+        imgList = utils.imageDirToList(TEST_DIR)
+        self.assertEquals(2, len(imgList))
+        self.assertListEqual([os.path.join(TEST_DIR, "Image_0015.JPEG"), os.path.join(TEST_DIR, "Image_0016.JPEG")], imgList)
+        
+    def test_04_imageDirToList_reversed(self):
+        imgList = utils.imageDirToList(IMG_DIR, reverse=True)
+        self.assertEquals(2, len(imgList))
+        self.assertListEqual([os.path.join(IMG_DIR, "Image_0016.JPEG"), os.path.join(IMG_DIR, "Image_0015.JPEG")], imgList)
+        
+    def test_05_imageDirToList_customSort(self):
+        imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
+        imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
+        shutil.copy(imgOne, TEST_DIR)
+        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
+        shutil.copy(imgTwo, TEST_DIR)
+        imgList = utils.imageDirToList(TEST_DIR)
+        self.assertEquals(2, len(imgList))
+        timeImgOne = os.path.getmtime(imgList[0])
+        timeImgTwo = os.path.getmtime(imgList[1])
+        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
 
 if __name__ == '__main__':
     unittest.main()
