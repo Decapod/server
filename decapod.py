@@ -178,11 +178,11 @@ class PDFExportController(object):
     Handler for the /library/"bookName"/export/pdf resource
     '''
     exposed = True
-    types = dict(type1 = "1", type2 = "2", type3 = "3")
     
     def __init__(self, bookName):
         self.bookName = bookName
         self.export = pdf.PDFGenerator()
+        self.typeKey = "type"
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
@@ -191,7 +191,15 @@ class PDFExportController(object):
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
-        bgtask.put(self.export.generate, self.types[args[0]])
+        type = args[0]
+        options = kwargs
+        
+        # ensures that the type aregument starts with the type keyword
+        if not type[0:4] == self.typeKey:
+            raise cherrypy.HTTPError(400)
+        
+        options[self.typeKey] = type[4:] 
+        bgtask.put(self.export.generate, options)
         cherrypy.response.status = 202
         setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()
