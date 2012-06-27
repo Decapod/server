@@ -7,9 +7,9 @@ class StatusFormatError(Exception): pass
 
 class status(object):
     
-    def __init__(self, statusFile):
+    def __init__(self, statusFile, defaultState="ready"):
         self.statusFile = statusFile
-        self.status = {"status": "ready"}
+        self.status = {"status": defaultState}
         
         self.setupStatusFile()
         

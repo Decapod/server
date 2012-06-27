@@ -31,11 +31,19 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(defaultStatus, st.status)
         self.assertDictEqual(defaultStatus, loadStatusFile(statusFile))
         
-    def test_02_init_statusFilePathError(self):
+    def test_02_init_defaultState(self):
+        defaultStatus = {"status": "none"}
+        statusFile = os.path.join(TEST_DIR, "status.json")
+        st = status(statusFile, "none")
+        self.assertTrue(os.path.exists(statusFile))
+        self.assertDictEqual(defaultStatus, st.status)
+        self.assertDictEqual(defaultStatus, loadStatusFile(statusFile))
+        
+    def test_03_init_statusFilePathError(self):
         statusFile = os.path.join(TEST_DIR, "invalidDir", "status.json")
         self.assertRaises(IOError, status, statusFile)
     
-    def test_03_init_existingStatusFile(self):
+    def test_04_init_existingStatusFile(self):
         initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
         utils.writeToFile(json.dumps(initialStatus), statusFile)
@@ -44,7 +52,7 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(initialStatus, st.status)
         self.assertDictEqual(initialStatus, loadStatusFile(statusFile))
         
-    def test_04_set(self):
+    def test_05_set(self):
         newStatus = initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
@@ -52,7 +60,7 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(newStatus, st.status)
         self.assertDictEqual(newStatus, loadStatusFile(statusFile))
         
-    def test_05_set_statusNotEmpty(self):
+    def test_06_set_statusNotEmpty(self):
         status1 = initialStatus = {"status": "none"}
         status2 = initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
@@ -62,17 +70,17 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(status2, st.status)
         self.assertDictEqual(status2, loadStatusFile(statusFile))
   
-    def test_06_set_notDictionary(self):
+    def test_07_set_notDictionary(self):
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
         self.assertRaises(StatusTypeError, st.set, "status: none")
         
-    def test_07_set_noStatusKey(self):
+    def test_08_set_noStatusKey(self):
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
         self.assertRaises(StatusFormatError, st.set, {"url": "localhost"})
         
-    def test_08_update(self):
+    def test_09_update(self):
         status1 = initialStatus = {"status": "none", "url": "localhost"}
         status2 = initialStatus = {"status": "complete"}
         expectedStatus = {"status": "complete", "url": "localhost"}
@@ -83,7 +91,7 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(expectedStatus, st.status)
         self.assertDictEqual(expectedStatus, loadStatusFile(statusFile))
         
-    def test_09_update_emptyStatus(self):
+    def test_10_update_emptyStatus(self):
         newStatus = initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
@@ -91,7 +99,7 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(newStatus, st.status)
         self.assertDictEqual(newStatus, loadStatusFile(statusFile))
         
-    def test_10_delKey(self):
+    def test_11_delKey(self):
         status1 = initialStatus = {"status": "none", "url": "localhost"}
         status2 = initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
@@ -101,18 +109,18 @@ class TestStatus(unittest.TestCase):
         self.assertDictEqual(status2, st.status)
         self.assertDictEqual(status2, loadStatusFile(statusFile))
         
-    def test_11_delKey_noKey(self):
+    def test_12_delKey_noKey(self):
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
         self.assertRaises(KeyError, st.delKey, "url")
         
-    def test_12_inState(self):
+    def test_13_inState(self):
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
         self.assertTrue(st.inState("ready"))
         self.assertFalse(st.inState("complete"))
         
-    def test_13_str(self):
+    def test_14_str(self):
         status1 = {"status": "none"}
         statusSTR = '{"status": "none"}'
         statusFile = os.path.join(TEST_DIR, "status.json")
@@ -120,7 +128,7 @@ class TestStatus(unittest.TestCase):
         st.status = status1
         self.assertEquals(statusSTR, str(st))
         
-    def test_14_str_emptyStatus(self):
+    def test_15_str_emptyStatus(self):
         statusSTR = '{"status": "ready"}'
         statusFile = os.path.join(TEST_DIR, "status.json")
         st = status(statusFile)
