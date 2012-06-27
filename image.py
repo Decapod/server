@@ -3,16 +3,26 @@ import decapod_utilities as utils
 import imghdr
 import zipfile
 import resourcesource
+from status import status
 
+#constants for paths
 BOOK_DIR = "${library}/book/"
 IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
 EXPORT_DIR = os.path.join(BOOK_DIR, "export/")
 IMG_DIR = os.path.join(EXPORT_DIR, "image/")
 TEMP_DIR = os.path.join(IMG_DIR, "temp/")
+STATUS_FILE = os.path.join(IMG_DIR, "exportStatus.json")
 
+#constants for statuses
+EXPORT_IN_PROGRESS = "in progress"
+EXPORT_COMPLETE = "complete"
+EXPORT_READY = "ready"
+
+#Exception classes
 class ConversionError(Exception): pass
 class ImageError(Exception): pass
 class OutputPathError(Exception): pass
+class ExportInProgressError(Exception): pass
 
 def convert(imagePath, format, outputDir=None):
     '''
@@ -101,15 +111,23 @@ class ImageExporter(object):
         self.bookDirPath = self.rs.path(BOOK_DIR)
         self.imgDirPath = self.rs.path(IMG_DIR)
         self.tempDirPath = self.rs.path(TEMP_DIR)
+        self.statusFilePath = self.rs.path(STATUS_FILE)
         self.archivePath = os.path.join(self.imgDirPath, archiveName)
         
         self.setupExportFileStructure()
         
     def setupExportFileStructure(self):
+        '''
+        Sets up the directory structure and initializes the status
+        '''
         utils.makeDirs(self.imgDirPath)
         utils.makeDirs(self.tempDirPath)
+        self.status = status(self.statusFilePath, EXPORT_READY)
     
     #TODO Raise an exception if image generation in progress (Needs status file to determine this)
     def deleteExport(self):
-        utils.rmTree(self.imgDirPath)
-        self.setupExportFileStructure()
+        if self.status.inState(EXPORT_IN_PROGRESS):
+            raise ExportInProgressError, "Export currently in progress, cannot delete until this process has finished"
+        else:
+            utils.rmTree(self.imgDirPath)
+            self.setupExportFileStructure()
