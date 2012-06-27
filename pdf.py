@@ -20,6 +20,7 @@ statusFileName = "exportStatus.json"
 tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
+# maps the query paramaters to the format needed by genpdf
 KEY_MAP = {
     "type": "-t",           
     "w": "-w", 
@@ -36,6 +37,9 @@ KEY_MAP = {
 class PDFGenerationError(Exception): pass
 
 def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
+    '''
+    compiles the command line call to run genpdf.
+    '''
     genPDFCmd = [
         "decapod-genpdf.py",
         "-d",
@@ -67,10 +71,17 @@ class PDFGenerator(object):
         self.setupExportFileStructure()
 
     def setupExportFileStructure(self):
+        '''
+        Sets up the directory structure and initializes the status
+        '''
         utils.makeDirs(self.pdfDirPath)
         self.status = status(self.statusFilePath, EXPORT_READY)
     
     def setStatus(self, state, includeURL=False):
+        '''
+        Updates the status file with the new state. 
+        If inlcudeURL is set to true, the url properly will be added with the path to the export
+        '''
         newStatus = {"status": state}
         
         if (includeURL):
@@ -80,9 +91,15 @@ class PDFGenerator(object):
         self.status.set(newStatus)
 
     def getStatus(self):
+        '''
+        Returns a string representation of the status
+        '''
         return str(self.status)
     
     def generatePDFFromPages(self, options={"-t": "1"}):
+        '''
+        Will trigger the pdf generation using the images at the defined by self.tiffPages
+        '''
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, options)
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
@@ -92,6 +109,10 @@ class PDFGenerator(object):
     #TODO: Raise specific Exception if pdf generation in progress
     #TODO: Raise an Exception if there are no pages in the book?
     def generate(self, options={"type": "1"}):
+        '''
+        Generates the pdf export.
+        If an export is already in progress, an exception is raised
+        '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
@@ -105,6 +126,9 @@ class PDFGenerator(object):
     
     #TODO: Raise specifid Exception if pdf generation in progress
     def deletePDF(self):
+        '''
+        Removes the export artifacts.
+        '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
