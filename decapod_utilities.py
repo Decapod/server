@@ -41,3 +41,18 @@ def imageDirToList(imageDir, sortKey=None, reverse=False):
         if isImage(filePath): 
             allImages.append(filePath)
     return sorted(allImages, key=sortKey, reverse=reverse)
+
+def rekey(origDict, keyMap, preserve=False):
+    '''
+    Used to rekey a dictionary.
+    The keyMap is a dictionary which maps old key names to the new key name {old: new}.
+    If the preserved option is set to True, for any key that exists in origDict but isn't mapped, the original key will be used.
+    If the preserved option is set to False, for any key that exists in origDict but isn't mapped, it will be omitted from the returned dictionary
+    
+    Returns a new dictionary containing the new keys.
+    '''
+    removeKey = "***NO KEY FOUND - REMOVE***" 
+    newDict = dict([(keyMap.get(key, key if preserve else removeKey), value) for key, value in origDict.iteritems()])
+    if newDict.has_key(removeKey):
+        del newDict[removeKey]
+    return newDict

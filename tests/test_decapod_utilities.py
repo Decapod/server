@@ -140,6 +140,40 @@ class ToListTests(unittest.TestCase):
         timeImgOne = os.path.getmtime(imgList[0])
         timeImgTwo = os.path.getmtime(imgList[1])
         self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
+        
+class DictTests(unittest.TestCase):
+    
+    def test_01_rekey(self):
+        orig = {"w": 1, "h": 2}
+        keyMap = {"w": "-w", "h": "-h"}
+        expected = {"-w": 1, "-h": 2}
+        
+        newMap = utils.rekey(orig, keyMap)
+        self.assertDictEqual(expected, newMap)
+        
+    def test_01_rekey_extraMapKeys(self):
+        orig = {"w": 1, "h": 2}
+        keyMap = {"w": "-w", "h": "-h", "width": "-w"}
+        expected = {"-w": 1, "-h": 2}
+        
+        newMap = utils.rekey(orig, keyMap)
+        self.assertDictEqual(expected, newMap)
+        
+    def test_01_rekey_extraDictKeys(self):
+        orig = {"w": 1, "h": 2, "dpi": 300}
+        keyMap = {"w": "-w", "h": "-h"}
+        expected = {"-w": 1, "-h": 2}
+        
+        newMap = utils.rekey(orig, keyMap)
+        self.assertDictEqual(expected, newMap)
+        
+    def test_01_rekey_extraDictKeys_preserve(self):
+        orig = {"w": 1, "h": 2, "dpi": 300}
+        keyMap = {"w": "-w", "h": "-h"}
+        expected = {"-w": 1, "-h": 2, "dpi": 300}
+        
+        newMap = utils.rekey(orig, keyMap, preserve=True)
+        self.assertDictEqual(expected, newMap)
 
 if __name__ == '__main__':
     unittest.main()
