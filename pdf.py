@@ -1,10 +1,8 @@
 import os
 import decapod_utilities as utils
-import simplejson as json
-import imghdr
-from PIL import Image
 import resourcesource
 from image import batchConvert
+from status import status
 
 BOOK_DIR = "${library}/book/"
 IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
@@ -17,7 +15,6 @@ EXPORT_COMPLETE = "complete"
 EXPORT_NONE = "none"
 
 # TODO: Move these values into configuration
-multiPageTIFFName = "Decapod-multipage.tiff"
 pdfName = "Decapod.pdf"
 statusFileName = "exportStatus.json"
 tiffDir = "tiffTemp"
@@ -56,34 +53,27 @@ class PDFGenerator(object):
         self.tiffPages = None
         
         self.setupExportFileStructure()
-        
+
     def setupExportFileStructure(self):
         utils.makeDirs(self.pdfDirPath)
-            
-        if not os.path.exists(self.statusFilePath):
+        self.status = status(self.statusFilePath)
+        if not self.status.status.has_key("status"):
             self.setStatus(EXPORT_NONE)
-        else:
-            statusFile = open(self.statusFilePath)
-            self.status = json.load(statusFile)
-        
-    def writeToStatusFile(self):
-        utils.writeToFile(self.getStatus(), self.statusFilePath)
-        
-    def setStatus(self, status):
-        st = self.status
-        url = "url"
-        st["status"] = status
-        
-        if status == EXPORT_COMPLETE:
-            virtualPath = PDF_DIR + os.path.split(self.pdfPath)[1]
-            st[url] = self.rs.url(virtualPath)
-        elif url in self.status:
-            del self.status[url]
-            
-        self.writeToStatusFile()
     
+    def setStatus(self, state, includeURL=False):
+        newStatus = {"status": state}
+        
+        if (includeURL):
+            virtualPath = PDF_DIR + os.path.split(self.pdfPath)[1]
+            newStatus["url"] = self.rs.url(virtualPath)
+            
+        self.status.set(newStatus)
+        
+    def isState(self, state):
+        return self.status.status["status"] == state
+
     def getStatus(self):
-        return json.dumps(self.status)
+        return self.status.getStatusString()
     
     def generatePDFFromPages(self, type="1"):
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, type)
@@ -95,7 +85,7 @@ class PDFGenerator(object):
     #TODO: Raise specific Exception if pdf generation in progress
     #TODO: Raise an Exception if there are no pages in the book?
     def generate(self, type="1"):
-        if self.status["status"] == EXPORT_IN_PROGRESS:
+        if self.isState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
@@ -103,12 +93,12 @@ class PDFGenerator(object):
             self.pages = utils.imageDirToList(self.bookDirPath);
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             self.generatePDFFromPages(type)
-            self.setStatus(EXPORT_COMPLETE)
+            self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
     
     #TODO: Raise specifid Exception if pdf generation in progress
     def deletePDF(self):
-        if self.status["status"] == EXPORT_IN_PROGRESS:
+        if self.isState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
             utils.rmTree(self.pdfDirPath)
