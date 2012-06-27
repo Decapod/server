@@ -56,3 +56,13 @@ def rekey(origDict, keyMap, preserve=False):
     if newDict.has_key(removeKey):
         del newDict[removeKey]
     return newDict
+
+def dictToFlagList(flagDict):
+    '''
+    Converts a dictionary of command line flags into a list
+    
+    Returns the new flag list
+    '''
+    flagList = []
+    [(flagList.append(key), flagList.append(value)) for key, value in flagDict.iteritems()]
+    return flagList

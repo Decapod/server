@@ -151,7 +151,7 @@ class DictTests(unittest.TestCase):
         newMap = utils.rekey(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
-    def test_01_rekey_extraMapKeys(self):
+    def test_02_rekey_extraMapKeys(self):
         orig = {"w": 1, "h": 2}
         keyMap = {"w": "-w", "h": "-h", "width": "-w"}
         expected = {"-w": 1, "-h": 2}
@@ -159,7 +159,7 @@ class DictTests(unittest.TestCase):
         newMap = utils.rekey(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
-    def test_01_rekey_extraDictKeys(self):
+    def test_03_rekey_extraDictKeys(self):
         orig = {"w": 1, "h": 2, "dpi": 300}
         keyMap = {"w": "-w", "h": "-h"}
         expected = {"-w": 1, "-h": 2}
@@ -167,13 +167,27 @@ class DictTests(unittest.TestCase):
         newMap = utils.rekey(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
-    def test_01_rekey_extraDictKeys_preserve(self):
+    def test_04_rekey_extraDictKeys_preserve(self):
         orig = {"w": 1, "h": 2, "dpi": 300}
         keyMap = {"w": "-w", "h": "-h"}
         expected = {"-w": 1, "-h": 2, "dpi": 300}
         
         newMap = utils.rekey(orig, keyMap, preserve=True)
         self.assertDictEqual(expected, newMap)
+        
+    def test_05_dictToFlagList(self):
+        orig = {"-w": 1, "-h": 2}
+        expected = ["-w", 1, "-h", 2]
+        
+        flagList = utils.dictToFlagList(orig)
+        self.assertListEqual(expected, flagList)
+        
+    def test_06_dictToFlagList_emptyDict(self):
+        orig = {}
+        expected = []
+        
+        flagList = utils.dictToFlagList(orig)
+        self.assertListEqual(expected, flagList)
 
 if __name__ == '__main__':
     unittest.main()
