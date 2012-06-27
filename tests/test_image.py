@@ -19,6 +19,7 @@ TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
 IMAGES_DIR = os.path.join(DATA_DIR, "images")
 TEMP_DIR = os.path.join(TEST_DIR, "temp")
 ZIP_FILE = os.path.join(TEST_DIR, "test.zip")
+
 JPEG1 = "Image_0015.JPEG"
 JPEG2 = "Image_0016.JPEG"
 TIFF1 = "Image_0015.tiff"
@@ -140,36 +141,42 @@ class TestImageExporter(unittest.TestCase):
             
     def tearDown(self):
         utils.rmTree(BOOK_DIR)
-        
+    
+    def assertStatusFile(self, status, statusFile):
+        file = open(statusFile)
+        read = file.read()
+        file.close()
+        self.assertEquals(status, read)
+    
     def test_01_init(self):
         expectedStatus = {"status": image.EXPORT_READY}
         imgExp = image.ImageExporter(self.mockRS)
         self.assertTrue(os.path.exists(os.path.join(BOOK_DIR, "export", "image")))
         self.assertDictEqual(expectedStatus, imgExp.status.status)
     
-    #TODO: verify status file
     def test_02_setStatus(self):
         st = "test"
         status = {"status": "test"}
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.setStatus(st)
+        self.assertStatusFile(json.dumps(status), imgExp.statusFilePath)
         self.assertDictEqual(status, imgExp.status.status)
-    
-    #TODO: verify status file    
+       
     def test_03_setStatus_removeURL(self):
         st = "test"
         newStatus = {"status": "test"}
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.status.status = {"status": "complete", "url": "localhost"}
         imgExp.setStatus(st)
+        self.assertStatusFile(json.dumps(newStatus), imgExp.statusFilePath)
         self.assertDictEqual(newStatus, imgExp.status.status)
-    
-    #TODO: verify status file    
+      
     def test_04_setStatus_addURL(self):
         st = "complete"
         completeStatus = {"status": st, "url": "/library/book/export/image/Decapod.zip"}
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.setStatus(st, includeURL=True)
+        self.assertStatusFile(json.dumps(completeStatus), imgExp.statusFilePath)
         self.assertDictEqual(completeStatus, imgExp.status.status)
     
     def test_05_getStatus(self):
