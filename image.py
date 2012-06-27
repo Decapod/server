@@ -102,8 +102,7 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None):
         # Return None when there are no valid image paths
         utils.rmTree(tempDir)
         return None
- 
-#TODO: write status to a status file    
+    
 class ImageExporter(object):
     
     def __init__(self, resourcesource=resourcesource, archiveName="Decapod.zip"):
@@ -123,8 +122,10 @@ class ImageExporter(object):
         utils.makeDirs(self.imgDirPath)
         utils.makeDirs(self.tempDirPath)
         self.status = status(self.statusFilePath, EXPORT_READY)
-    
-    #TODO Raise an exception if image generation in progress (Needs status file to determine this)
+
+    def getStatus(self):
+        return str(self.status)
+
     def deleteExport(self):
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot delete until this process has finished"
