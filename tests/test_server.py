@@ -234,6 +234,7 @@ class TestPDFExportInProgress(ServerTestCase):
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestPDFExportNew(ServerTestCase):
     exportURL = "/library/bookName/export/pdf"
+    invalidTypeURL = os.path.join(exportURL, "2")
     exportStatus = '{"status": "ready"}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
@@ -257,6 +258,10 @@ class TestPDFExportNew(ServerTestCase):
     
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+    def test_04_put_invalidType(self):
+        self.getPage(self.invalidTypeURL, method="PUT")
+        self.assertStatus(400)
         
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestImageExportExisting(ServerTestCase):
