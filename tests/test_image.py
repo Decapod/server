@@ -145,7 +145,12 @@ class TestImageExporter(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(BOOK_DIR, "export", "image")))
         self.assertDictEqual(expectedStatus, imgExp.status.status)
     
-    def test_02_delete(self):
+    def test_02_getStatus(self):
+        expectedStatusStr = '{"status": "ready"}'
+        imgExp = image.ImageExporter(self.mockRS)
+        self.assertEquals(expectedStatusStr, imgExp.getStatus())
+    
+    def test_03_delete(self):
         imgExp = image.ImageExporter(self.mockRS)
         shutil.copy(os.path.join(DATA_DIR, "pdf", "Decapod.pdf"), imgExp.archivePath)
         self.assertTrue(os.path.exists(imgExp.archivePath), "The zip file should be copied over")
@@ -153,7 +158,7 @@ class TestImageExporter(unittest.TestCase):
         self.assertTrue(os.path.exists(imgExp.imgDirPath), "The path {0} should exist".format(imgExp.imgDirPath))
         self.assertFalse(os.path.exists(imgExp.archivePath), "The zip file at path {0} should not exist".format(imgExp.archivePath))
     
-    def test_03_delete_exception(self):
+    def test_04_delete_exception(self):
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.status.set({"status": image.EXPORT_IN_PROGRESS})
         self.assertRaises(image.ExportInProgressError, imgExp.deleteExport)
