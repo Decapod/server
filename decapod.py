@@ -157,6 +157,25 @@ class ExportController(object):
     Handler for the /library/"bookName"/export resource
     '''
     exposed = True
+
+    def __init__(self, bookName):
+        self.bookName = bookName
+        self.paths = {
+            "pdf": PDFExportController(self.bookName)
+        }
+    
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        pathSegment = vpath[0]
+        
+        if pathSegment in self.paths:
+            return self.paths[pathSegment]
+        
+class PDFExportController(object):
+    '''
+    Handler for the /library/"bookName"/export/pdf resource
+    '''
+    exposed = True
     types = dict(type1 = "1", type2 = "2", type3 = "3")
     
     def __init__(self, bookName):
@@ -170,7 +189,7 @@ class ExportController(object):
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
-        bgtask.put(self.export.generate, self.types[args[1]])
+        bgtask.put(self.export.generate, self.types[args[0]])
         cherrypy.response.status = 202
         setJSONResponseHeaders("exportStatus.json")
         return self.export.getStatus()

@@ -169,11 +169,10 @@ class TestPages(ServerTestCase):
         self.assertUnsupportedHTTPMethods(self.pageURL, ["GET", "PUT", "DELETE"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
-class TestExistingExport(ServerTestCase):
-    exportURL = "/library/bookName/export"
+class TestPDFExportExisting(ServerTestCase):
+    exportURL = "/library/bookName/export/pdf"
     exportStatus = '{"status": "complete", "downloadSRC": "/library/book/export/pdf/Decapod.pdf"}'
-    deleteStatus = '{"status": "none"}'
-    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
+    pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     pdf = os.path.join(pdfDir, "Decapod.pdf")
     
@@ -201,10 +200,10 @@ class TestExistingExport(ServerTestCase):
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
             
-class TestInProgressExport(ServerTestCase):
-    exportURL = "/library/bookName/export"
+class TestPDFExportInProgress(ServerTestCase):
+    exportURL = "/library/bookName/export/pdf"
     exportStatus = '{"status": "in progress"}'
-    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
+    pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     
     setup_server = staticmethod(setup_server)
@@ -232,10 +231,10 @@ class TestInProgressExport(ServerTestCase):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
-class TestNewExport(ServerTestCase):
-    exportURL = "/library/bookName/export"
-    exportStatus = '{"status": "none"}'
-    pdfDir = os.path.join(BOOK_DIR, "export/pdf")
+class TestPDFExportNew(ServerTestCase):
+    exportURL = "/library/bookName/export/pdf"
+    exportStatus = '{"status": "ready"}'
+    pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     
     setup_server = staticmethod(setup_server)
