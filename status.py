@@ -3,14 +3,18 @@ import simplejson as json
 import decapod_utilities as utils
 
 class StatusTypeError(Exception): pass
+class StatusFormatError(Exception): pass
 
 class status(object):
     
     def __init__(self, statusFile):
         self.statusFile = statusFile
-        self.status = {}
+        self.status = {"status": "ready"}
         
         self.setupStatusFile()
+        
+    def __str__(self):
+        return json.dumps(self.status)
         
     def setupStatusFile(self):
         '''
@@ -29,7 +33,7 @@ class status(object):
         Meant for internal use to write the status out to the status file, 
         but can be used externally if updating the status dictionary directly
         '''
-        utils.writeToFile(self.getStatusString(), self.statusFile)
+        utils.writeToFile(str(self), self.statusFile)
     
     def set(self, status):
         '''
@@ -39,6 +43,8 @@ class status(object):
         '''
         if not isinstance(status, dict):
             raise StatusTypeError("{0} should be an instance of 'dict'".format(status))
+        if not status.has_key("status"):
+            raise StatusFormatError("The 'status' key is missing")
         self.status = status
         self.updateStatusFile()
     
@@ -56,10 +62,10 @@ class status(object):
         '''
         del self.status[key]
         self.updateStatusFile()
-    
-    def getStatusString(self):
+        
+    def inState(self, state):
         '''
-        Returns the serialized status dictionary
+        Returns a boolean indicating if it is currently in the provided state
         '''
-        return json.dumps(self.status)
+        return self.status["status"] == state
 
