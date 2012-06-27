@@ -4,6 +4,7 @@ import uuid
 import mimetypes
 import os
 import sys
+import shutil
 sys.path.append(os.path.abspath('..'))
 import decapod
 import decapod_utilities as utils
@@ -171,7 +172,7 @@ class TestPages(ServerTestCase):
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestPDFExportExisting(ServerTestCase):
     exportURL = "/library/bookName/export/pdf"
-    exportStatus = '{"status": "complete", "downloadSRC": "/library/book/export/pdf/Decapod.pdf"}'
+    exportStatus = '{"status": "complete", "url": "/library/book/export/pdf/Decapod.pdf"}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     pdf = os.path.join(pdfDir, "Decapod.pdf")
@@ -257,6 +258,94 @@ class TestPDFExportNew(ServerTestCase):
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
+# TODO: Test put method, the trouble is that it is asynchronous       
+class TestImageExportExisting(ServerTestCase):
+    exportURL = "/library/bookName/export/image"
+    exportStatus = '{"status": "complete", "url": "/library/book/export/image/Decapod.zip"}'
+    imgDir = os.path.join(BOOK_DIR, "export", "image")
+    statusFile = os.path.join(imgDir, "exportStatus.json")
+    archive = os.path.join(imgDir, "Decapod.zip")
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        utils.makeDirs(self.imgDir)
+        shutil.copy(os.path.join(DATA_DIR, "pdf", "Decapod.pdf"), self.archive) #just need a dummy file, renaming the pdf to act as the zip
+        utils.writeToFile(self.exportStatus, self.statusFile)
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    def test_02_delete(self):
+        self.assertTrue(os.path.exists(self.archive), "The Decapod.zip file should exist at path ({0})".format(self.archive))
+        self.getPage(self.exportURL, method="DELETE")
+        self.assertStatus(204)
+        self.assertFalse(os.path.exists(self.archive), "The Decapod.zip file should no longer exist at path ({0})".format(self.archive))
+    
+    def test_03_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+            
+class TestImageExportInProgress(ServerTestCase):
+    exportURL = "/library/bookName/export/image"
+    exportStatus = '{"status": "in progress"}'
+    imgDir = os.path.join(BOOK_DIR, "export", "image")
+    statusFile = os.path.join(imgDir, "exportStatus.json")
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        utils.makeDirs(self.imgDir)
+        utils.writeToFile(self.exportStatus, self.statusFile)
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+    
+    # TODO: Test response status 
+    def test_02_delete(self):
+        self.getPage(self.exportURL, method="DELETE")
+    
+    # TODO: Test response status
+    def test_03_put(self):
+        self.getPage(self.exportURL, method="PUT")
+    
+    def test_04_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+# TODO: Test put method, the trouble is that it is asynchronous       
+class TestImageExportNew(ServerTestCase):
+    exportURL = "/library/bookName/export/image"
+    exportStatus = '{"status": "ready"}'
+    imgDir = os.path.join(BOOK_DIR, "export", "image")
+    statusFile = os.path.join(imgDir, "exportStatus.json")
+    
+    setup_server = staticmethod(setup_server)
+    tearDown = staticmethod(teardown_server)
+    
+    def setUp(self):
+        utils.makeDirs(self.imgDir)
+        utils.writeToFile(self.exportStatus, self.statusFile)
+            
+    def test_01_get(self):
+        self.getPage(self.exportURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(self.exportStatus)
+     
+    def test_02_delete(self):
+        self.getPage(self.exportURL, method="DELETE")
+        self.assertStatus(204)
+    
+    def test_03_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+         
 if __name__ == '__main__':
     import nose
     nose.runmodule()
