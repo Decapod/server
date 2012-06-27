@@ -20,9 +20,22 @@ statusFileName = "exportStatus.json"
 tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
 
+KEY_MAP = {
+    "type": "-t",           
+    "w": "-w", 
+    "width": "-w", 
+    "h": "-h", 
+    "height": "-h", 
+    "dpi": "-dpi",
+    "c": "-c",
+    "color": "-c",
+    "colour": "-c",
+    "bit": "-bit",
+}
+
 class PDFGenerationError(Exception): pass
 
-def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
+def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
     genPDFCmd = [
         "decapod-genpdf.py",
         "-d",
@@ -30,10 +43,11 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
         "-p",
         pdfPath,
         "-v",
-        "1",
-        "-t",
-        str(type)
+        "1"
     ]
+    
+    flags = utils.dictToFlagList(options)
+    genPDFCmd.extend(flags)
     genPDFCmd.extend(pages)
     return genPDFCmd
 
@@ -68,8 +82,8 @@ class PDFGenerator(object):
     def getStatus(self):
         return str(self.status)
     
-    def generatePDFFromPages(self, type="1"):
-        genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, type)
+    def generatePDFFromPages(self, options={"-t": "1"}):
+        genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, options)
         utils.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")
@@ -77,7 +91,7 @@ class PDFGenerator(object):
     #TODO: Take in a the pages model and use it for determinig which pages are in a book
     #TODO: Raise specific Exception if pdf generation in progress
     #TODO: Raise an Exception if there are no pages in the book?
-    def generate(self, type="1"):
+    def generate(self, options={"type": "1"}):
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
@@ -85,7 +99,7 @@ class PDFGenerator(object):
             utils.makeDirs(self.tiffDirPath)
             self.pages = utils.imageDirToList(self.bookDirPath);
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
-            self.generatePDFFromPages(type)
+            self.generatePDFFromPages(utils.rekey(options, KEY_MAP))
             self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
     
