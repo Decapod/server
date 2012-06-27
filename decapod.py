@@ -10,6 +10,7 @@ import resourcesource as rs
 import imageImport
 import book
 import pdf
+import image
 import backgroundTaskQueue
 
 # Setup for Decapod's cherrypy configuration file.
@@ -161,7 +162,8 @@ class ExportController(object):
     def __init__(self, bookName):
         self.bookName = bookName
         self.paths = {
-            "pdf": PDFExportController(self.bookName)
+            "pdf": PDFExportController(self.bookName),
+            "image": ImageExportController(self.bookName)
         }
     
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
@@ -197,6 +199,33 @@ class PDFExportController(object):
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
         self.export.deletePDF()
+        cherrypy.response.status = 204
+        
+class ImageExportController(object):
+    '''
+    Handler for the /library/"bookName"/export/image resource
+    '''
+    exposed = True
+    
+    def __init__(self, bookName):
+        self.bookName = bookName
+        self.exporter = image.ImageExporter()
+        
+    def GET(self, *args, **kwargs):
+        #returns the status and, if available, the url to the exported pdf
+        setJSONResponseHeaders("exportStatus.json")
+        return self.exporter.getStatus()
+        
+    def PUT(self, *args, **kwargs):
+        #triggers the creation of the pdf export
+        bgtask.put(self.exporter.export, args[0])
+        cherrypy.response.status = 202
+        setJSONResponseHeaders("exportStatus.json")
+        return self.exporter.getStatus()
+    
+    def DELETE(self, *args, **kwargs):
+        #removes the pdf export artifact
+        self.exporter.deleteExport()
         cherrypy.response.status = 204
 
 if __name__ == "__main__":
