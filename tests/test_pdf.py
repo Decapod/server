@@ -48,7 +48,7 @@ class TestPDFGenerator(unittest.TestCase):
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
     status_complete = '{"status": "complete", "url": "/library/book/export/pdf/Decapod.pdf"}'
     status_inProgress = '{"status": "in progress"}'
-    status_none = '{"status": "none"}'
+    status_ready = '{"status": "ready"}'
     
     def setUp(self):
         utils.makeDirs(IMG_DIR)
@@ -77,7 +77,7 @@ class TestPDFGenerator(unittest.TestCase):
             
     def test_01_init(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        self.assertInit(pdfGen, self.status_none)
+        self.assertInit(pdfGen, self.status_ready)
             
     def test_02_init_statusFile(self):
         utils.makeDirs(PDF_DIR)
@@ -142,7 +142,7 @@ class TestPDFGenerator(unittest.TestCase):
         shutil.copy(os.path.join(DATA_DIR, "pdf/Decapod.pdf"), PDF_DIR)
         pdfGen.setStatus("complete")
         pdfGen.deletePDF()
-        self.assertInit(pdfGen, self.status_none)
+        self.assertInit(pdfGen, self.status_ready)
         self.assertFalse(os.path.exists(os.path.join(PDF_DIR, "Decapod.pdf")), "The export pdf should not exist")
         
     def test_12_deletePDF_exception(self):

@@ -12,7 +12,7 @@ PDF_DIR = os.path.join(EXPORT_DIR, "pdf/")
 #constants for statuses
 EXPORT_IN_PROGRESS = "in progress"
 EXPORT_COMPLETE = "complete"
-EXPORT_NONE = "none"
+EXPORT_READY = "ready"
 
 # TODO: Move these values into configuration
 pdfName = "Decapod.pdf"
@@ -39,8 +39,6 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, type="1"):
 
 class PDFGenerator(object):
     
-    status = {"status": EXPORT_NONE}
-    
     def __init__(self, resourcesource=resourcesource):
         self.rs = resourcesource
         self.bookDirPath = self.rs.path(IMAGES_DIR)
@@ -56,9 +54,7 @@ class PDFGenerator(object):
 
     def setupExportFileStructure(self):
         utils.makeDirs(self.pdfDirPath)
-        self.status = status(self.statusFilePath)
-        if not self.status.status.has_key("status"):
-            self.setStatus(EXPORT_NONE)
+        self.status = status(self.statusFilePath, EXPORT_READY)
     
     def setStatus(self, state, includeURL=False):
         newStatus = {"status": state}
@@ -68,12 +64,9 @@ class PDFGenerator(object):
             newStatus["url"] = self.rs.url(virtualPath)
             
         self.status.set(newStatus)
-        
-    def isState(self, state):
-        return self.status.status["status"] == state
 
     def getStatus(self):
-        return self.status.getStatusString()
+        return str(self.status)
     
     def generatePDFFromPages(self, type="1"):
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, type)
@@ -85,7 +78,7 @@ class PDFGenerator(object):
     #TODO: Raise specific Exception if pdf generation in progress
     #TODO: Raise an Exception if there are no pages in the book?
     def generate(self, type="1"):
-        if self.isState(EXPORT_IN_PROGRESS):
+        if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
@@ -98,7 +91,7 @@ class PDFGenerator(object):
     
     #TODO: Raise specifid Exception if pdf generation in progress
     def deletePDF(self):
-        if self.isState(EXPORT_IN_PROGRESS):
+        if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
             utils.rmTree(self.pdfDirPath)
