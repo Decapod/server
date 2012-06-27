@@ -107,7 +107,7 @@ class ImageExporter(object):
     
     def __init__(self, resourcesource=resourcesource, archiveName="Decapod.zip"):
         self.rs = resourcesource
-        self.bookDirPath = self.rs.path(BOOK_DIR)
+        self.bookDirPath = self.rs.path(IMAGES_DIR)
         self.imgDirPath = self.rs.path(IMG_DIR)
         self.tempDirPath = self.rs.path(TEMP_DIR)
         self.statusFilePath = self.rs.path(STATUS_FILE)
@@ -122,9 +122,28 @@ class ImageExporter(object):
         utils.makeDirs(self.imgDirPath)
         utils.makeDirs(self.tempDirPath)
         self.status = status(self.statusFilePath, EXPORT_READY)
+        
+    def setStatus(self, state, includeURL=False):
+        newStatus = {"status": state}
+        
+        if (includeURL):
+            virtualPath = IMG_DIR + os.path.split(self.archivePath)[1]
+            newStatus["url"] = self.rs.url(virtualPath)
+            
+        self.status.set(newStatus)
 
     def getStatus(self):
         return str(self.status)
+    
+    def export(self, format):
+        if self.status.inState(EXPORT_IN_PROGRESS):
+            raise ExportInProgressError, "Export currently in progress, cannot generated another export until this process has finished"
+        else:
+            self.setStatus(EXPORT_IN_PROGRESS)
+            self.imagePaths = utils.imageDirToList(self.bookDirPath);
+            archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath)
+            self.setStatus(EXPORT_COMPLETE, includeURL=True)
+            return self.getStatus()
 
     def deleteExport(self):
         if self.status.inState(EXPORT_IN_PROGRESS):
