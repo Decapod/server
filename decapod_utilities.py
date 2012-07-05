@@ -7,8 +7,9 @@ def makeDirs(path, mode=0777):
     '''
     Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
     
-    Exceptions:
-    Raises an OSError if the directory cannot be created
+    Exceptions
+    ==========
+    OSError: if the directory cannot be created
     '''
     if not os.path.exists(path):
         os.makedirs(path, mode)
@@ -17,8 +18,9 @@ def rmTree(path, ignore_errors=False, onerror=None):
     '''
     Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
     
-    Exceptions:
-    Raises an OSError if the directory cannot be created
+    Exceptions
+    ==========
+    OSError: if the directory cannot be created
     '''
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors, onerror)
@@ -28,8 +30,9 @@ def writeToFile(contents, writePath, writeMode="w"):
     Writes the supplied 'contents' to the file at the specified 'writePath'
     The file will be closed after writing
     
-    Exceptions:
-    Raises an IOError if the file cannot be opened
+    Exceptions
+    ==========
+    IOError: if the file cannot be opened
     '''
     f = open(writePath, writeMode)
     f.write(contents)
@@ -39,7 +42,8 @@ def invokeCommandSync(cmdArgs, error, message):
     '''
     Invokes a process/function on the command line
     
-    Exceptions:
+    Exceptions
+    ==========
     Raises the passed in "error" if an exception occurs
     '''
     proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)

@@ -32,7 +32,8 @@ def convert(imagePath, format, outputDir=None):
     If the format is invalid, it will convert it to jpeg
     Returns the path to the new image file.
     
-    Exceptions:
+    Exceptions
+    ==========
     ImageError: if the file at imagePath isn't a supported image format
     ConversionError: an error occurs during the conversion process
     '''
@@ -56,7 +57,8 @@ def batchConvert(imagePaths, format, outputDir=None):
     If the format is invalid, it will convert it to jpeg
     Returns a list of the paths to the new image files
     
-    Exceptions:
+    Exceptions
+    ==========
     ConversionError: an error occurs during the conversion process
     '''
     convertedImages = []
@@ -77,7 +79,8 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None):
     Returns a path to the zip file containing the converted images.
     If no valid images were provided, None is returned
     
-    Exceptions:
+    Exceptions
+    ==========
     ConversionError: an error occurs during the conversion process
     OutputPathError: the output path is malformed (e.g. path to a directory)
     '''
@@ -125,6 +128,10 @@ class ImageExporter(object):
         self.status = status(self.statusFilePath, EXPORT_READY)
         
     def setStatus(self, state, includeURL=False):
+        '''
+        Updates the status file with the new state. 
+        If inlcudeURL is set to true, the url properly will be added with the path to the export
+        '''
         newStatus = {"status": state}
         
         if (includeURL):
@@ -134,9 +141,20 @@ class ImageExporter(object):
         self.status.set(newStatus)
 
     def getStatus(self):
+        '''
+        Returns a string representation of the status
+        '''
         return str(self.status)
     
     def export(self, format):
+        '''
+        Will trigger the export of the images into a zip file containing the images converted into the specified format
+        
+        Exceptions
+        ==========
+        ExportInProgressError: if an export is currently in progress
+        ImagesNotFoundError: if no images are provided for the export
+        '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot generated another export until this process has finished"
         else:
@@ -149,6 +167,13 @@ class ImageExporter(object):
             return self.getStatus()
 
     def deleteExport(self):
+        '''
+        Removes the export artifacts.
+        
+        Exceptions
+        ==========
+        ExportInProgressError: if an export is currently in progress
+        '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot delete until this process has finished"
         else:
