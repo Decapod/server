@@ -35,7 +35,9 @@ KEY_MAP = {
     "bit": "-bit",
 }
 
+# Exception classes
 class PDFGenerationError(Exception): pass
+class PDFGenerationInProgressError(Exception): pass
 
 def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
     '''
@@ -116,6 +118,9 @@ class PDFGenerator(object):
     def generatePDFFromPages(self, options={"-t": "1"}):
         '''
         Will trigger the pdf generation using the images at the defined by self.tiffPages
+        
+        Exceptions:
+        Raises a PDFGenerationError if there is error during the pdf creation process
         '''
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, options)
         utils.invokeCommandSync(genPDFCmd,
@@ -123,15 +128,16 @@ class PDFGenerator(object):
                                 "Could not generate a PDF version of the book.")
     
     #TODO: Take in a the pages model and use it for determinig which pages are in a book
-    #TODO: Raise specific Exception if pdf generation in progress
     #TODO: Raise an Exception if there are no pages in the book?
     def generate(self, options={"type": "1"}):
         '''
         Generates the pdf export.
-        If an export is already in progress, an exception is raised
+        
+        Exceptions:
+        Raises a PDFGenerationInProgressError if an export is currently in progress
         '''
         if self.status.inState(EXPORT_IN_PROGRESS):
-            raise PDFGenerationError, "Export currently in progress, cannot generated another pdf until this process has finished"
+            raise PDFGenerationInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
@@ -141,13 +147,15 @@ class PDFGenerator(object):
             self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
     
-    #TODO: Raise specifid Exception if pdf generation in progress
     def deletePDF(self):
         '''
         Removes the export artifacts.
+        
+        Exceptions:
+        Raises a PDFGenerationInProgressError if an export is currently in progress
         '''
         if self.status.inState(EXPORT_IN_PROGRESS):
-            raise PDFGenerationError, "Export currently in progress, cannot delete the pdf until this process has finished"
+            raise PDFGenerationInProgressError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
             utils.rmTree(self.pdfDirPath)
             self.setupExportFileStructure()
