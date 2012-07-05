@@ -23,6 +23,7 @@ class ConversionError(Exception): pass
 class ImageError(Exception): pass
 class OutputPathError(Exception): pass
 class ExportInProgressError(Exception): pass
+class ImagesNotFoundError(Exception): pass
 
 def convert(imagePath, format, outputDir=None):
     '''
@@ -141,6 +142,8 @@ class ImageExporter(object):
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
             self.imagePaths = utils.imageDirToList(self.bookDirPath);
+            if len(self.imagePaths) is 0:
+                raise ImagesNotFoundError("No images found, nothing to export")
             archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath)
             self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
