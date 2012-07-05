@@ -171,7 +171,7 @@ class TestPages(ServerTestCase):
         
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestPDFExportExisting(ServerTestCase):
-    exportURL = "/library/bookName/export/pdf"
+    exportURL = "/library/bookName/export/pdf/type1"
     exportStatus = '{"status": "complete", "url": "/library/book/export/pdf/Decapod.pdf"}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
@@ -202,7 +202,7 @@ class TestPDFExportExisting(ServerTestCase):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
             
 class TestPDFExportInProgress(ServerTestCase):
-    exportURL = "/library/bookName/export/pdf"
+    exportURL = "/library/bookName/export/pdf/type1"
     exportStatus = '{"status": "in progress", "stage": ""}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
@@ -220,21 +220,22 @@ class TestPDFExportInProgress(ServerTestCase):
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
-    # TODO: Test response status 
     def test_02_delete(self):
         self.getPage(self.exportURL, method="DELETE")
+        self.assertStatus(409)
     
-    # TODO: Test response status
     def test_03_put(self):
         self.getPage(self.exportURL, method="PUT")
+        self.assertStatus(202)
     
     def test_04_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestPDFExportNew(ServerTestCase):
-    exportURL = "/library/bookName/export/pdf"
-    invalidTypeURL = os.path.join(exportURL, "2")
+    exportURLBase = "/library/bookName/export/pdf"
+    exportURLType = os.path.join(exportURLBase, "type1")
+    invalidTypeURL = os.path.join(exportURLBase, "2")
     exportStatus = '{"status": "ready"}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
@@ -247,25 +248,29 @@ class TestPDFExportNew(ServerTestCase):
         utils.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
-        self.getPage(self.exportURL)
+        self.getPage(self.exportURLType)
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
      
     def test_02_delete(self):
-        self.getPage(self.exportURL, method="DELETE")
+        self.getPage(self.exportURLType, method="DELETE")
         self.assertStatus(204)
     
     def test_03_unsupportedMethods(self):
-        self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        self.assertUnsupportedHTTPMethods(self.exportURLType, ["POST"])
         
     def test_04_put_invalidType(self):
         self.getPage(self.invalidTypeURL, method="PUT")
         self.assertStatus(400)
         
+    def test_05_put_missingType(self):
+        self.getPage(self.exportURLBase, method="PUT")
+        self.assertStatus(405)
+        
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestImageExportExisting(ServerTestCase):
-    exportURL = "/library/bookName/export/image"
+    exportURL = "/library/bookName/export/image/tiff"
     exportStatus = '{"status": "complete", "url": "/library/book/export/image/Decapod.zip"}'
     imgDir = os.path.join(BOOK_DIR, "export", "image")
     statusFile = os.path.join(imgDir, "exportStatus.json")
@@ -295,7 +300,7 @@ class TestImageExportExisting(ServerTestCase):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
             
 class TestImageExportInProgress(ServerTestCase):
-    exportURL = "/library/bookName/export/image"
+    exportURL = "/library/bookName/export/image/tiff"
     exportStatus = '{"status": "in progress"}'
     imgDir = os.path.join(BOOK_DIR, "export", "image")
     statusFile = os.path.join(imgDir, "exportStatus.json")
@@ -313,20 +318,21 @@ class TestImageExportInProgress(ServerTestCase):
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(self.exportStatus)
     
-    # TODO: Test response status 
     def test_02_delete(self):
         self.getPage(self.exportURL, method="DELETE")
+        self.assertStatus(409)
     
-    # TODO: Test response status
     def test_03_put(self):
         self.getPage(self.exportURL, method="PUT")
+        self.assertStatus(202)
     
     def test_04_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
         
 # TODO: Test put method, the trouble is that it is asynchronous       
 class TestImageExportNew(ServerTestCase):
-    exportURL = "/library/bookName/export/image"
+    exportURLBase = "/library/bookName/export/image"
+    exportURL = os.path.join(exportURLBase, "tiff")
     exportStatus = '{"status": "ready"}'
     imgDir = os.path.join(BOOK_DIR, "export", "image")
     statusFile = os.path.join(imgDir, "exportStatus.json")
@@ -350,6 +356,10 @@ class TestImageExportNew(ServerTestCase):
     
     def test_03_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.exportURL, ["POST"])
+        
+    def test_04_put_missingFormat(self):
+        self.getPage(self.exportURLBase, method="PUT")
+        self.assertStatus(405)
          
 if __name__ == '__main__':
     import nose
