@@ -10,9 +10,10 @@ def loadJSONFile(jsonFile):
     '''
     Reads in a json file and returns a python dictionary
     
-    Exceptions:
-    Raises an IOError if the jsonFile doens't exists
-    Raises a JSONDecodeError from simplejson, if the file is not in proper json format
+    Exceptions
+    ==========
+    IOError: if the jsonFile doens't exists
+    JSONDecodeError: from simplejson, if the file is not in proper json format
     '''
     jFile = open(jsonFile)
     d = json.load(jFile)
@@ -51,7 +52,9 @@ class status(object):
         '''
         Completely replaces the status with the new dictionary passed in.
         
-        Raises a StatusTypeError if the passed in status is not a dictionary
+        Exceptions
+        ==========
+        StatusTypeError: if the passed in status is not a dictionary
         '''
         if not isinstance(status, dict):
             raise StatusTypeError("{0} should be an instance of 'dict'".format(status))

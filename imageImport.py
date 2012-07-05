@@ -7,6 +7,7 @@ import resourcesource
 IMPORT_DIR = "${library}/book/images/"
 imagePrefix = "decapod-"
 
+# Exception classes
 class ImportTypeError(Exception):
     def __init__(self, message):
         self.message = message
@@ -23,23 +24,37 @@ class ImageImport(object):
         utils.makeDirs(self.importDir)
     
     def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
+        '''
+        Creates a unique name for the image file using the passed in prefix, suffix, and a generated uuid
+        '''
         id = uuid.uuid4()
         return "{0}{1}.{2}".format(prefix, id.hex, suffix)
     
     def mimeToSuffix(self, mimeType):
+        '''
+        Converts a mime type to a file extension
+        '''
         splitStr = mimeType.split('/')
         return splitStr[-1]
     
     def getFileType(self, file):
+        '''
+        Returns the file type of the given file
+        '''
         mimeType = file.content_type.value
         return self.mimeToSuffix(mimeType)
     
     def isValidType(self, file, validTypes=["jpeg", "png", "tiff"]):
+        '''
+        Returns a boolean indicating if the file is one of the specified validTypes
+        '''
         realType = imghdr.what(file)
         return realType in validTypes
     
     def writeFile(self, file, writePath):
-        #Writes the file stream to disk at the path specified by writePath
+        '''
+        Writes the file stream to disk at the path specified by writePath
+        '''
         file.file.seek(0,0)
         fileData = file.file.read(8192)
         
@@ -56,7 +71,9 @@ class ImageImport(object):
         Saves the file with the given name. 
         If no name is provided it will call genearteImageName to create one
         
-        Will raise an ImportTypeError Exception if the file is not of a valid type ["jpeg", "png", "tiff"]
+        Exceptions
+        ==========
+        ImportTypeError: if the file is not of a valid type ["jpeg", "png", "tiff"]
         '''
         fileType = self.getFileType(file)
         name = name if name else self.generateImageName(suffix=fileType)

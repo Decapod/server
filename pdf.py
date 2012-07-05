@@ -60,6 +60,10 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
     return genPDFCmd
 
 def getGENPDFStage(genPDFStatusFile):
+    '''
+    Returns the value of the "stage" key from the genPDF progress file.
+    If either the file or the stage key is not present, a default dictionary is returned with the stage an empty string ""
+    '''
     stage = {"stage": ""}
     
     if os.path.exists(genPDFStatusFile):
@@ -120,8 +124,9 @@ class PDFGenerator(object):
         '''
         Will trigger the pdf generation using the images at the defined by self.tiffPages
         
-        Exceptions:
-        Raises a PDFGenerationError if there is error during the pdf creation process
+        Exceptions
+        ==========
+        PDFGenerationError: if there is error during the pdf creation process
         '''
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, options)
         utils.invokeCommandSync(genPDFCmd,
@@ -133,9 +138,10 @@ class PDFGenerator(object):
         '''
         Generates the pdf export.
         
-        Exceptions:
-        Raises a PDFGenerationInProgressError if an export is currently in progress
-        Raises a PageImagesNotFoundError if no page images are provided for the pdf generation
+        Exceptions
+        ==========
+        PDFGenerationInProgressError: if an export is currently in progress
+        PageImagesNotFoundError: if no page images are provided for the pdf generation
         '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
@@ -154,8 +160,9 @@ class PDFGenerator(object):
         '''
         Removes the export artifacts.
         
-        Exceptions:
-        Raises a PDFGenerationInProgressError if an export is currently in progress
+        Exceptions
+        ==========
+        PDFGenerationInProgressError: if an export is currently in progress
         '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot delete the pdf until this process has finished"
