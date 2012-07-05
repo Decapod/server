@@ -4,19 +4,44 @@ import shutil
 import subprocess
 
 def makeDirs(path, mode=0777):
+    '''
+    Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
+    
+    Exceptions:
+    Raises an OSError if the directory cannot be created
+    '''
     if not os.path.exists(path):
         os.makedirs(path, mode)
 
 def rmTree(path, ignore_errors=False, onerror=None):
+    '''
+    Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
+    
+    Exceptions:
+    Raises an OSError if the directory cannot be created
+    '''
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors, onerror)
         
 def writeToFile(contents, writePath, writeMode="w"):
+    '''
+    Writes the supplied 'contents' to the file at the specified 'writePath'
+    The file will be closed after writing
+    
+    Exceptions:
+    Raises an IOError if the file cannot be opened
+    '''
     f = open(writePath, writeMode)
     f.write(contents)
     f.close()
     
 def invokeCommandSync(cmdArgs, error, message):
+    '''
+    Invokes a process/function on the command line
+    
+    Exceptions:
+    Raises the passed in "error" if an exception occurs
+    '''
     proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
     output = proc.communicate()[0]
     if proc.returncode != 0:
@@ -26,6 +51,9 @@ def invokeCommandSync(cmdArgs, error, message):
     return output
 
 def isImage(filePath):
+    '''
+    Returns a boolean indicating if the filePath points at an image
+    '''
     return os.path.isfile(filePath) and imghdr.what(filePath) != None
 
 def imageDirToList(imageDir, sortKey=None, reverse=False):
