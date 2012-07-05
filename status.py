@@ -38,9 +38,7 @@ class status(object):
         if not os.path.exists(self.statusFile):
             self.set(self.status)
         else:
-            statusFile = open(self.statusFile)
-            self.status = json.load(statusFile)
-            statusFile.close()
+            self.status = loadJSONFile(self.statusFile)
     
     def updateStatusFile(self):
         '''
