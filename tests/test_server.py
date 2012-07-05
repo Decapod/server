@@ -203,7 +203,7 @@ class TestPDFExportExisting(ServerTestCase):
             
 class TestPDFExportInProgress(ServerTestCase):
     exportURL = "/library/bookName/export/pdf"
-    exportStatus = '{"status": "in progress"}'
+    exportStatus = '{"status": "in progress", "stage": ""}'
     pdfDir = os.path.join(BOOK_DIR, "export", "pdf")
     statusFile = os.path.join(pdfDir, "exportStatus.json")
     
