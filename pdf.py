@@ -38,6 +38,7 @@ KEY_MAP = {
 # Exception classes
 class PDFGenerationError(Exception): pass
 class PDFGenerationInProgressError(Exception): pass
+class PageImagesNotFoundError(Exception): pass
 
 def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
     '''
@@ -128,13 +129,13 @@ class PDFGenerator(object):
                                 "Could not generate a PDF version of the book.")
     
     #TODO: Take in a the pages model and use it for determinig which pages are in a book
-    #TODO: Raise an Exception if there are no pages in the book?
     def generate(self, options={"type": "1"}):
         '''
         Generates the pdf export.
         
         Exceptions:
         Raises a PDFGenerationInProgressError if an export is currently in progress
+        Raises a PageImagesNotFoundError if no page images are provided for the pdf generation
         '''
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
@@ -142,6 +143,8 @@ class PDFGenerator(object):
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
             self.pages = utils.imageDirToList(self.bookDirPath);
+            if len(self.pages) is 0:
+                raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             self.generatePDFFromPages(utils.rekey(options, KEY_MAP))
             self.setStatus(EXPORT_COMPLETE, includeURL=True)

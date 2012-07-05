@@ -176,9 +176,9 @@ class TestPDFGenerator(unittest.TestCase):
         self.assertEquals(self.status_complete, json.dumps(pdfGen.status.status))
         self.assertEquals(self.status_complete, returnedStatus)
         
-    def test_12_generate_exception(self):
+    def test_12_generate_exception_noPageImages(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
-        self.assertRaises(pdf.PDFGenerationError, pdfGen.generate)
+        self.assertRaises(pdf.PageImagesNotFoundError, pdfGen.generate)
         
     def test_13_generate_exception_inProgress(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
