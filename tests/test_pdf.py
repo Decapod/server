@@ -180,7 +180,12 @@ class TestPDFGenerator(unittest.TestCase):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         self.assertRaises(pdf.PDFGenerationError, pdfGen.generate)
         
-    def test_13_deletePDF(self):
+    def test_13_generate_exception_inProgress(self):
+        pdfGen = pdf.PDFGenerator(self.mockRS)
+        pdfGen.setStatus(pdf.EXPORT_IN_PROGRESS)
+        self.assertRaises(pdf.PDFGenerationInProgressError, pdfGen.generate)
+        
+    def test_14_deletePDF(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         utils.makeDirs(PDF_DIR)
         shutil.copy(os.path.join(DATA_DIR, "pdf/Decapod.pdf"), PDF_DIR)
@@ -189,10 +194,10 @@ class TestPDFGenerator(unittest.TestCase):
         self.assertInit(pdfGen, self.status_ready)
         self.assertFalse(os.path.exists(os.path.join(PDF_DIR, "Decapod.pdf")), "The export pdf should not exist")
         
-    def test_14_deletePDF_exception(self):
+    def test_15_deletePDF_exception(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         pdfGen.setStatus("in progress")
-        self.assertRaises(pdf.PDFGenerationError, pdfGen.deletePDF)
+        self.assertRaises(pdf.PDFGenerationInProgressError, pdfGen.deletePDF)
         
 if __name__ == '__main__':
     unittest.main()
