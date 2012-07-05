@@ -2,8 +2,22 @@ import os
 import simplejson as json
 import decapod_utilities as utils
 
+# Exception classes
 class StatusTypeError(Exception): pass
 class StatusFormatError(Exception): pass
+
+def loadJSONFile(jsonFile):
+    '''
+    Reads in a json file and returns a python dictionary
+    
+    Exceptions:
+    Raises an IOError if the jsonFile doens't exists
+    Raises a JSONDecodeError from simplejson, if the file is not in proper json format
+    '''
+    jFile = open(jsonFile)
+    d = json.load(jFile)
+    jFile.close()
+    return d
 
 class status(object):
     
