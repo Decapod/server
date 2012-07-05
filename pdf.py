@@ -2,7 +2,7 @@ import os
 import decapod_utilities as utils
 import resourcesource
 from image import batchConvert
-from status import status
+from status import status, loadJSONFile
 
 BOOK_DIR = "${library}/book/"
 IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
@@ -16,6 +16,7 @@ EXPORT_READY = "ready"
 
 # TODO: Move these values into configuration
 pdfName = "Decapod.pdf"
+pdfGenerationStatusFileName = "Decapod.json"
 statusFileName = "exportStatus.json"
 tiffDir = "tiffTemp"
 tempDir = "genPDFTemp"
@@ -55,6 +56,16 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
     genPDFCmd.extend(pages)
     return genPDFCmd
 
+def getGENPDFStage(genPDFStatusFile):
+    stage = {"stage": ""}
+    
+    if os.path.exists(genPDFStatusFile):
+        genPDFStatus = loadJSONFile(genPDFStatusFile)
+        if "stage" in genPDFStatus:
+            stage["stage"] = genPDFStatus["stage"]
+        
+    return stage
+
 class PDFGenerator(object):
     
     def __init__(self, resourcesource=resourcesource):
@@ -63,6 +74,7 @@ class PDFGenerator(object):
         self.pdfDirPath = self.rs.path(PDF_DIR)
         self.tempDirPath = os.path.join(self.pdfDirPath, tempDir)
         self.tiffDirPath = os.path.join(self.pdfDirPath, tiffDir)
+        self.pdfGenerationStatusFilePath = os.path.join(self.pdfDirPath, pdfGenerationStatusFileName)
         self.statusFilePath = os.path.join(self.pdfDirPath, statusFileName)
         self.pdfPath = os.path.join(self.pdfDirPath, pdfName)
         self.pages = None
@@ -93,7 +105,12 @@ class PDFGenerator(object):
     def getStatus(self):
         '''
         Returns a string representation of the status
+        
+        If the export is in progress, it will check the genpdf progress file to add stage information to the status.
         '''
+        if self.status.inState(EXPORT_IN_PROGRESS):
+            self.status.update(getGENPDFStage(self.pdfGenerationStatusFilePath))
+        
         return str(self.status)
     
     def generatePDFFromPages(self, options={"-t": "1"}):
