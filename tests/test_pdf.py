@@ -66,6 +66,7 @@ class TestPDFModuleFunctions(unittest.TestCase):
         stageInfo = pdf.getGENPDFStage(GENPDF_STATUS_FILE)
         self.assertDictEqual(expected, stageInfo)
 
+#TODO: test that the status is set to "error" when genPDF fails
 class TestPDFGenerator(unittest.TestCase):
     book = None
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
@@ -184,7 +185,7 @@ class TestPDFGenerator(unittest.TestCase):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         pdfGen.setStatus(pdf.EXPORT_IN_PROGRESS)
         self.assertRaises(pdf.PDFGenerationInProgressError, pdfGen.generate)
-        
+    
     def test_14_deletePDF(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         utils.makeDirs(PDF_DIR)

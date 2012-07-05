@@ -13,6 +13,7 @@ PDF_DIR = os.path.join(EXPORT_DIR, "pdf/")
 EXPORT_IN_PROGRESS = "in progress"
 EXPORT_COMPLETE = "complete"
 EXPORT_READY = "ready"
+EXPORT_ERROR = "error"
 
 # TODO: Move these values into configuration
 pdfName = "Decapod.pdf"
@@ -137,6 +138,7 @@ class PDFGenerator(object):
     def generate(self, options={"type": "1"}):
         '''
         Generates the pdf export.
+        If an exception is raised from the genPDF subprocess the status will be set to EXPORT_ERROR
         
         Exceptions
         ==========
@@ -152,7 +154,11 @@ class PDFGenerator(object):
             if len(self.pages) is 0:
                 raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
-            self.generatePDFFromPages(utils.rekey(options, KEY_MAP))
+            try:
+                self.generatePDFFromPages(utils.rekey(options, KEY_MAP))
+            except:
+                self.setStatus(EXPORT_ERROR)
+                raise
             self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
     
