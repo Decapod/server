@@ -17,6 +17,7 @@ STATUS_FILE = os.path.join(IMG_DIR, "exportStatus.json")
 EXPORT_IN_PROGRESS = "in progress"
 EXPORT_COMPLETE = "complete"
 EXPORT_READY = "ready"
+EXPORT_ERROR = "error"
 
 #Exception classes
 class ConversionError(Exception): pass
@@ -149,6 +150,7 @@ class ImageExporter(object):
     def export(self, format):
         '''
         Will trigger the export of the images into a zip file containing the images converted into the specified format
+        If an exception is raised from the archiveConvert call the status will be set to EXPORT_ERROR
         
         Exceptions
         ==========
@@ -162,7 +164,11 @@ class ImageExporter(object):
             self.imagePaths = utils.imageDirToList(self.bookDirPath);
             if len(self.imagePaths) is 0:
                 raise ImagesNotFoundError("No images found, nothing to export")
-            archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath)
+            try:
+                archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath)
+            except:
+                self.setStatus(EXPORT_ERROR)
+                raise
             self.setStatus(EXPORT_COMPLETE, includeURL=True)
             return self.getStatus()
 
