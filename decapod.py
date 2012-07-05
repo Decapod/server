@@ -194,14 +194,19 @@ class PDFExportController(object):
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
-        type = args[0]
+
+        # ensures that the type argument exists
+        if len(args) is 0:
+            raise cherrypy.HTTPError(405)
+        
+        exportType = args[0]
         options = kwargs
         
-        # ensures that the type aregument starts with the type keyword
-        if not type[0:4] == self.typeKey:
+        # ensures that the type argument starts with the "type" keyword
+        if not exportType[0:4] == self.typeKey:
             raise cherrypy.HTTPError(400)
         
-        options[self.typeKey] = type[4:] 
+        options[self.typeKey] = exportType[4:] 
         bgtask.put(self.export.generate, options)
         cherrypy.response.status = 202
         setJSONResponseHeaders("exportStatus.json")
@@ -209,7 +214,10 @@ class PDFExportController(object):
     
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
-        self.export.deletePDF()
+        try:
+            self.export.deletePDF()
+        except pdf.PDFGenerationInProgressError as e:
+            raise cherrypy.HTTPError(409, e.message)
         cherrypy.response.status = 204
         
 class ImageExportController(object):
@@ -229,6 +237,11 @@ class ImageExportController(object):
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
+        
+        # ensures that the format argument exists
+        if len(args) is 0:
+            raise cherrypy.HTTPError(405)
+        
         bgtask.put(self.exporter.export, args[0])
         cherrypy.response.status = 202
         setJSONResponseHeaders("exportStatus.json")
@@ -236,7 +249,10 @@ class ImageExportController(object):
     
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
-        self.exporter.deleteExport()
+        try:
+            self.exporter.deleteExport()
+        except image.ExportInProgressError as e:
+            raise cherrypy.HTTPError(409, e.message)
         cherrypy.response.status = 204
 
 if __name__ == "__main__":
