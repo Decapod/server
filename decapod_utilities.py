@@ -53,7 +53,7 @@ def rekey(origDict, keyMap, preserve=False):
     '''
     removeKey = "***NO KEY FOUND - REMOVE***" 
     newDict = dict([(keyMap.get(key, key if preserve else removeKey), value) for key, value in origDict.iteritems()])
-    if newDict.has_key(removeKey):
+    if removeKey in newDict:
         del newDict[removeKey]
     return newDict
 

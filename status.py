@@ -55,7 +55,7 @@ class status(object):
         '''
         if not isinstance(status, dict):
             raise StatusTypeError("{0} should be an instance of 'dict'".format(status))
-        if not status.has_key("status"):
+        if "status" not in status:
             raise StatusFormatError("The 'status' key is missing")
         self.status = status
         self.updateStatusFile()
