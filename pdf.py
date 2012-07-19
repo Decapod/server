@@ -25,15 +25,16 @@ tempDir = "genPDFTemp"
 # maps the query paramaters to the format needed by genpdf
 KEY_MAP = {
     "type": "-t",           
-    "w": "-w", 
-    "width": "-w", 
-    "h": "-h", 
-    "height": "-h", 
-    "dpi": "-dpi",
-    "c": "-c",
-    "color": "-c",
-    "colour": "-c",
-    "bit": "-bit",
+    "w": "--width", 
+    "width": "--width", 
+    "h": "--height", 
+    "height": "--height", 
+    "dpi": "-r", # should be -dpi, but set to -r due to DECA-294
+# removing colour options due to DECA-295
+#    "c": "-c",
+#    "color": "-c",
+#    "colour": "-c",
+    "bit": "--bit", # should be -bit, but set to --bit due to DECA-294
 }
 
 # Exception classes
