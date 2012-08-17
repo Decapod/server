@@ -106,7 +106,7 @@ class TestImageModuleFunctions(unittest.TestCase):
             self.assertEquals("tiff", imghdr.what(img))
         self.assertListEqual(expectedPaths, convertedImages)
     
-    def test_11_batchConvert_invalidFile(self):
+    def test_12_batchConvert_invalidFile(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
         expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
         convertedImages = image.batchConvert(images, "tiff", TEST_DIR)
@@ -116,11 +116,11 @@ class TestImageModuleFunctions(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(TEST_DIR, "Decapod.tiff")))
         self.assertListEqual(expectedPaths, convertedImages)
         
-    def test_12_batchConvert_invalidOutputDir(self):
+    def test_13_batchConvert_invalidOutputDir(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         self.assertRaises(image.ConversionError, image.batchConvert, images, "tiff", os.path.join(TEST_DIR, "invalidDir"))
         
-    def test_13_archiveConvert(self):
+    def test_14_archiveConvert(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         expectedFiles = [TIFF1, TIFF2]
         zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR)
@@ -131,8 +131,20 @@ class TestImageModuleFunctions(unittest.TestCase):
         self.assertListEqual(expectedFiles, zf.namelist())
         zf.close()
         self.assertFalse(os.path.exists(TEMP_DIR))
+        
+    def test_15_archiveConvert_nameTemplate(self):
+        images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
+        expectedFiles = ["image-0.tiff", "image-1.tiff"]
+        zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR, "image-$index")
+        self.assertEquals(ZIP_FILE, zip)
+        self.assertTrue(zipfile.is_zipfile(zip))
+        zf = zipfile.ZipFile(zip, 'r')
+        self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zf.namelist())
+        zf.close()
+        self.assertFalse(os.path.exists(TEMP_DIR))
             
-    def test_14_archiveConvert_invalidFile(self):
+    def test_16_archiveConvert_invalidFile(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
         expectedFiles = [TIFF1, TIFF2]
         zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR)
@@ -144,7 +156,7 @@ class TestImageModuleFunctions(unittest.TestCase):
         zf.close()
         self.assertFalse(os.path.exists(TEMP_DIR))
     
-    def test_15_archiveConvert_invalidOutputPath(self):
+    def test_17_archiveConvert_invalidOutputPath(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         self.assertRaises(image.OutputPathError, image.archiveConvert, images, "tiff", TEST_DIR, TEMP_DIR)
         self.assertFalse(os.path.exists(TEMP_DIR))

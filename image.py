@@ -75,13 +75,15 @@ def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
             index += 1;
     return convertedImages
 
-def archiveConvert(imagePaths, format, archivePath, tempDir=None):
+def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=None):
     '''
     Converts the images in the list of imagePaths to tiff format.
     Must specify the output path, including the file name, for the zip file to be saved.
     If the image path provided is not an image, it will be ignored.
     Can optionally specify a temp derictory for use during conversion, 
     it will default to creating a temp directory in the current working directory.
+    Can optionaly specify a name tempalte to rename the converted images with. The template 
+    should include the "$index" token.By default the files will retain their original name.
     Note that in all cases, the temp directory will be removed after completion.
     Returns a path to the zip file containing the converted images.
     If no valid images were provided, None is returned
@@ -94,7 +96,7 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None):
     currentDir = os.getcwd()
     temp = tempDir if tempDir != None else os.path.join(os.getcwd(), "temp")
     utils.makeDirs(tempDir)
-    converted = batchConvert(imagePaths, format, temp)
+    converted = batchConvert(imagePaths, format, temp, nameTemplate)
     if len(converted) > 0:
         try:
             zip = zipfile.ZipFile(archivePath, mode="a")
