@@ -26,10 +26,11 @@ class OutputPathError(Exception): pass
 class ExportInProgressError(Exception): pass
 class ImagesNotFoundError(Exception): pass
 
-def convert(imagePath, format, outputDir=None):
+def convert(imagePath, format, outputDir=None, name=None):
     '''
     Converts the image at imagePath into the specified image format
     Can optionaly specify the directory where to save the new file, will default to the same directory as the original file.
+    Can optionaly specify a new name for the file, will default to using the same name as the original file.
     If the format is invalid, it will convert it to jpeg
     Returns the path to the new image file.
     
@@ -41,10 +42,10 @@ def convert(imagePath, format, outputDir=None):
     if utils.isImage(imagePath):
         ext = format if format[0] == "." else "." + format
         origDir, fileName = os.path.split(imagePath)
-        name = os.path.splitext(fileName)[0]
+        newName = name if name != None else os.path.splitext(fileName)[0]
         writeDir = outputDir if outputDir != None else origDir
         
-        writePath = os.path.join(writeDir, name + ext)
+        writePath = os.path.join(writeDir, newName + ext)
         utils.invokeCommandSync(["convert", imagePath, writePath], ConversionError, "Error converting {0} to '{1}' format".format(imagePath, format))
         return writePath
     else:
