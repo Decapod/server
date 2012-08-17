@@ -100,7 +100,7 @@ class TestImageModuleFunctions(unittest.TestCase):
         
     def test_11_batchConvert_nameTemplate(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
-        expectedPaths = [os.path.join(TEST_DIR, "image-0.tiff"), os.path.join(TEST_DIR, "image-1.tiff")]
+        expectedPaths = [os.path.join(TEST_DIR, "image-1.tiff"), os.path.join(TEST_DIR, "image-2.tiff")]
         convertedImages = image.batchConvert(images, "tiff", TEST_DIR, "image-$index")
         for img in convertedImages:
             self.assertEquals("tiff", imghdr.what(img))
@@ -134,7 +134,7 @@ class TestImageModuleFunctions(unittest.TestCase):
         
     def test_15_archiveConvert_nameTemplate(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
-        expectedFiles = ["image-0.tiff", "image-1.tiff"]
+        expectedFiles = ["image-1.tiff", "image-2.tiff"]
         zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR, "image-$index")
         self.assertEquals(ZIP_FILE, zip)
         self.assertTrue(zipfile.is_zipfile(zip))
@@ -231,7 +231,7 @@ class TestImageExporter(unittest.TestCase):
     
     def test_07_export_nameTemplate(self):
         completeStatus = {"status": image.EXPORT_COMPLETE, "url": "/library/book/export/image/Decapod.zip"}
-        expectedFiles = ["image-0.tiff"]
+        expectedFiles = ["image-1.tiff"]
         imgExp = image.ImageExporter(self.mockRS, nameTemplate="image-$index")
         utils.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)

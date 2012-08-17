@@ -66,10 +66,11 @@ def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
     ConversionError: an error occurs during the conversion process
     '''
     convertedImages = []
-    index = 0;
+    index = 1;
+    digits = len(str(len(imagePaths))) #retrieves the number of digits in the length of imagePaths
     for imagePath in imagePaths:
         if utils.isImage(imagePath):
-            name = Template(nameTemplate).safe_substitute(index=index) if nameTemplate != None else None
+            name = Template(nameTemplate).safe_substitute(index=str(index).zfill(digits)) if nameTemplate != None else None
             convertedImage = convert(imagePath, format, outputDir, name)
             convertedImages.append(convertedImage)
             index += 1;
