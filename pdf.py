@@ -151,7 +151,7 @@ class PDFGenerator(object):
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
             utils.makeDirs(self.tiffDirPath)
-            self.pages = utils.imageDirToList(self.bookDirPath);
+            self.pages = utils.imageDirToList(self.bookDirPath, sortKey=os.path.getmtime);
             if len(self.pages) is 0:
                 raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)

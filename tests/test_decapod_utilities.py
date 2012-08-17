@@ -130,12 +130,12 @@ class ToListTests(unittest.TestCase):
         self.assertListEqual([os.path.join(IMG_DIR, "Image_0016.JPEG"), os.path.join(IMG_DIR, "Image_0015.JPEG")], imgList)
         
     def test_05_imageDirToList_customSort(self):
-        imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
-        imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
+        imgOne = os.path.join(IMG_DIR, "Image_0016.JPEG")
+        imgTwo = os.path.join(IMG_DIR, "Image_0015.JPEG")
         shutil.copy(imgOne, TEST_DIR)
         time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
         shutil.copy(imgTwo, TEST_DIR)
-        imgList = utils.imageDirToList(TEST_DIR)
+        imgList = utils.imageDirToList(TEST_DIR, sortKey=os.path.getmtime)
         self.assertEquals(2, len(imgList))
         timeImgOne = os.path.getmtime(imgList[0])
         timeImgTwo = os.path.getmtime(imgList[1])
