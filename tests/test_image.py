@@ -229,7 +229,23 @@ class TestImageExporter(unittest.TestCase):
         self.assertListEqual(expectedFiles, zf.namelist())
         zf.close()
     
-    def test_07_export_exception_errorDuringArchive(self):
+    def test_07_export_nameTemplate(self):
+        completeStatus = {"status": image.EXPORT_COMPLETE, "url": "/library/book/export/image/Decapod.zip"}
+        expectedFiles = ["image-0.tiff"]
+        imgExp = image.ImageExporter(self.mockRS, nameTemplate="image-$index")
+        utils.makeDirs(IMG_DIR)
+        shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
+        returnedStatus = imgExp.export("tiff")
+        self.assertTrue(os.path.exists(imgExp.archivePath), "The output file should exist at path {0}".format(imgExp.archivePath))
+        self.assertDictEqual(completeStatus, imgExp.status.status)
+        self.assertEquals(json.dumps(completeStatus), returnedStatus)
+        self.assertDictEqual(completeStatus, loadJSONFile(imgExp.statusFilePath))
+        zf = zipfile.ZipFile(imgExp.archivePath, 'r')
+        self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zf.namelist())
+        zf.close()
+    
+    def test_08_export_exception_errorDuringArchive(self):
         errorStatus = {"status": image.EXPORT_ERROR}
         imgExp = image.ImageExporter(self.mockRS)
         utils.makeDirs(IMG_DIR)
@@ -240,17 +256,17 @@ class TestImageExporter(unittest.TestCase):
         self.assertDictEqual(errorStatus, imgExp.status.status)
         self.assertDictEqual(errorStatus, loadJSONFile(imgExp.statusFilePath))
     
-    def test_08_export_exception_noImages(self):
+    def test_09_export_exception_noImages(self):
         imgExp = image.ImageExporter(self.mockRS)
         utils.makeDirs(IMG_DIR)
         self.assertRaises(image.ImagesNotFoundError, imgExp.export, "tiff")
     
-    def test_09_export_exception_inProgress(self):
+    def test_10_export_exception_inProgress(self):
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.status.set({"status": image.EXPORT_IN_PROGRESS})
         self.assertRaises(image.ExportInProgressError, imgExp.export, "tiff")
     
-    def test_10_delete(self):
+    def test_11_delete(self):
         imgExp = image.ImageExporter(self.mockRS)
         shutil.copy(os.path.join(DATA_DIR, "pdf", "Decapod.pdf"), imgExp.archivePath)
         self.assertTrue(os.path.exists(imgExp.archivePath), "The zip file should be copied over")
@@ -258,7 +274,7 @@ class TestImageExporter(unittest.TestCase):
         self.assertTrue(os.path.exists(imgExp.imgDirPath), "The path {0} should exist".format(imgExp.imgDirPath))
         self.assertFalse(os.path.exists(imgExp.archivePath), "The zip file at path {0} should not exist".format(imgExp.archivePath))
     
-    def test_11_delete_exception(self):
+    def test_12_delete_exception(self):
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.status.set({"status": image.EXPORT_IN_PROGRESS})
         self.assertRaises(image.ExportInProgressError, imgExp.deleteExport)

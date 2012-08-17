@@ -56,7 +56,7 @@ def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
     '''
     Converts the image at imagePath into the specified image format
     Can optionaly specify the directory where the converted images will be saved, will default to putting them back into their original directories.
-    Can optionaly specify a name tempalte to rename the converted images with. The template should include the "$index" token.By default the files will retain their original name. 
+    Can optionaly specify a name tempalte to rename the converted images with. The template should include the "$index" token. By default the files will retain their original name. 
     If the path provided is not an image, it will be ignored.
     If the format is invalid, it will convert it to jpeg
     Returns a list of the paths to the new image files
@@ -83,7 +83,7 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
     Can optionally specify a temp derictory for use during conversion, 
     it will default to creating a temp directory in the current working directory.
     Can optionaly specify a name tempalte to rename the converted images with. The template 
-    should include the "$index" token.By default the files will retain their original name.
+    should include the "$index" token. By default the files will retain their original name.
     Note that in all cases, the temp directory will be removed after completion.
     Returns a path to the zip file containing the converted images.
     If no valid images were provided, None is returned
@@ -118,13 +118,19 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
     
 class ImageExporter(object):
     
-    def __init__(self, resourcesource=resourcesource, archiveName="Decapod.zip"):
+    def __init__(self, resourcesource=resourcesource, archiveName="Decapod.zip", nameTemplate=None):
+        '''
+        Creates the ImageExporter instance.
+        Can optionaly specify an archiveName, including extension, for the exported file package.
+        Can optionaly specify a name tempalte to rename the converted images with. The template should include the "$index" token. By default the files will retain their original name.
+        '''
         self.rs = resourcesource
         self.bookDirPath = self.rs.path(IMAGES_DIR)
         self.imgDirPath = self.rs.path(IMG_DIR)
         self.tempDirPath = self.rs.path(TEMP_DIR)
         self.statusFilePath = self.rs.path(STATUS_FILE)
         self.archivePath = os.path.join(self.imgDirPath, archiveName)
+        self.nameTemplate = nameTemplate
         
         self.setupExportFileStructure()
         
@@ -173,7 +179,7 @@ class ImageExporter(object):
             if len(self.imagePaths) is 0:
                 raise ImagesNotFoundError("No images found, nothing to export")
             try:
-                archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath)
+                archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath, self.nameTemplate)
             except:
                 self.setStatus(EXPORT_ERROR)
                 raise
