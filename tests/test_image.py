@@ -97,6 +97,14 @@ class TestImageModuleFunctions(unittest.TestCase):
         for img in convertedImages:
             self.assertEquals("tiff", imghdr.what(img))
         self.assertListEqual(expectedPaths, convertedImages)
+        
+    def test_11_batchConvert_nameTemplate(self):
+        images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
+        expectedPaths = [os.path.join(TEST_DIR, "image-0.tiff"), os.path.join(TEST_DIR, "image-1.tiff")]
+        convertedImages = image.batchConvert(images, "tiff", TEST_DIR, "image-$index")
+        for img in convertedImages:
+            self.assertEquals("tiff", imghdr.what(img))
+        self.assertListEqual(expectedPaths, convertedImages)
     
     def test_11_batchConvert_invalidFile(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
