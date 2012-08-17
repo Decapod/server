@@ -25,6 +25,7 @@ JPEG1 = "Image_0015.JPEG"
 JPEG2 = "Image_0016.JPEG"
 TIFF1 = "Image_0015.tiff"
 TIFF2 = "Image_0016.tiff"
+TIFF3 = "image.tiff"
 PNG1 = "Image_0015.png"
 PNG2 = "Image_0016.png"
 
@@ -73,7 +74,13 @@ class TestImageModuleFunctions(unittest.TestCase):
         convertedIMG = image.convert(img, "invalid", TEST_DIR)
         self.assertEquals("jpeg", imghdr.what(convertedIMG))
     
-    def test_08_batchConvert(self):
+    def test_08_convert_name(self):
+        img = os.path.join(IMAGES_DIR, JPEG1)
+        convertedIMG = os.path.join(TEST_DIR, TIFF3)
+        image.convert(img, "tiff", TEST_DIR, os.path.splitext(TIFF3)[0])
+        self.assertEquals("tiff", imghdr.what(convertedIMG))
+    
+    def test_09_batchConvert(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
         convertedImages = image.batchConvert(images, "tiff", TEST_DIR)
@@ -81,7 +88,7 @@ class TestImageModuleFunctions(unittest.TestCase):
             self.assertEquals("tiff", imghdr.what(img))
         self.assertListEqual(expectedPaths, convertedImages)
             
-    def test_09_batchConvert_defaultDir(self):
+    def test_10_batchConvert_defaultDir(self):
         shutil.copy(os.path.join(IMAGES_DIR, JPEG1), TEST_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, JPEG2), TEST_DIR)
         images = [os.path.join(TEST_DIR, JPEG1), os.path.join(TEST_DIR, JPEG2)]
@@ -91,7 +98,7 @@ class TestImageModuleFunctions(unittest.TestCase):
             self.assertEquals("tiff", imghdr.what(img))
         self.assertListEqual(expectedPaths, convertedImages)
     
-    def test_10_batchConvert_invalidFile(self):
+    def test_11_batchConvert_invalidFile(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
         expectedPaths = [os.path.join(TEST_DIR, TIFF1), os.path.join(TEST_DIR, TIFF2)]
         convertedImages = image.batchConvert(images, "tiff", TEST_DIR)
@@ -101,11 +108,11 @@ class TestImageModuleFunctions(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(TEST_DIR, "Decapod.tiff")))
         self.assertListEqual(expectedPaths, convertedImages)
         
-    def test_11_batchConvert_invalidOutputDir(self):
+    def test_12_batchConvert_invalidOutputDir(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         self.assertRaises(image.ConversionError, image.batchConvert, images, "tiff", os.path.join(TEST_DIR, "invalidDir"))
         
-    def test_11_archiveConvert(self):
+    def test_13_archiveConvert(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         expectedFiles = [TIFF1, TIFF2]
         zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR)
@@ -117,7 +124,7 @@ class TestImageModuleFunctions(unittest.TestCase):
         zf.close()
         self.assertFalse(os.path.exists(TEMP_DIR))
             
-    def test_12_archiveConvert_invalidFile(self):
+    def test_14_archiveConvert_invalidFile(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2), os.path.join(DATA_DIR, "pdf", "Decapod.pdf")]
         expectedFiles = [TIFF1, TIFF2]
         zip = image.archiveConvert(images, "tiff", ZIP_FILE, TEMP_DIR)
@@ -129,7 +136,7 @@ class TestImageModuleFunctions(unittest.TestCase):
         zf.close()
         self.assertFalse(os.path.exists(TEMP_DIR))
     
-    def test_13_archiveConvert_invalidOutputPath(self):
+    def test_15_archiveConvert_invalidOutputPath(self):
         images = [os.path.join(IMAGES_DIR, JPEG1), os.path.join(IMAGES_DIR, JPEG2)]
         self.assertRaises(image.OutputPathError, image.archiveConvert, images, "tiff", TEST_DIR, TEMP_DIR)
         self.assertFalse(os.path.exists(TEMP_DIR))
