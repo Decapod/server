@@ -3,6 +3,7 @@ import decapod_utilities as utils
 import imghdr
 import zipfile
 import resourcesource
+from string import Template
 from status import status
 
 #constants for paths
@@ -51,10 +52,11 @@ def convert(imagePath, format, outputDir=None, name=None):
     else:
         raise ImageError("{0} is not a valid image file".format(imagePath))
 
-def batchConvert(imagePaths, format, outputDir=None):
+def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
     '''
     Converts the image at imagePath into the specified image format
     Can optionaly specify the directory where the converted images will be saved, will default to putting them back into their original directories.
+    Can optionaly specify a name tempalte to rename the converted images with. The template should include the "$index" token.By default the files will retain their original name. 
     If the path provided is not an image, it will be ignored.
     If the format is invalid, it will convert it to jpeg
     Returns a list of the paths to the new image files
@@ -64,10 +66,13 @@ def batchConvert(imagePaths, format, outputDir=None):
     ConversionError: an error occurs during the conversion process
     '''
     convertedImages = []
+    index = 0;
     for imagePath in imagePaths:
         if utils.isImage(imagePath):
-            convertedImage = convert(imagePath, format, outputDir)
+            name = Template(nameTemplate).safe_substitute(index=index) if nameTemplate != None else None
+            convertedImage = convert(imagePath, format, outputDir, name)
             convertedImages.append(convertedImage)
+            index += 1;
     return convertedImages
 
 def archiveConvert(imagePaths, format, archivePath, tempDir=None):
