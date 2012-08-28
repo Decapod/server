@@ -228,7 +228,7 @@ class ImageExportController(object):
     
     def __init__(self, bookName):
         self.bookName = bookName
-        self.nameTemplate = "image-$index" #TODO: Move to configuration or take in as an argument
+        self.nameTemplate = "Image-$index" #TODO: Move to configuration or take in as an argument
         self.exporter = image.ImageExporter(nameTemplate=self.nameTemplate)
         
     def GET(self, *args, **kwargs):
