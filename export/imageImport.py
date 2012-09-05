@@ -2,8 +2,8 @@ import sys
 import os
 import uuid
 import imghdr
-import resourcesource
 
+import resourcesource
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 from utils import io
 
