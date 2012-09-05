@@ -1,6 +1,10 @@
 import os
+import sys
 import simplejson as json
-import utils
+
+sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+from utils import io
+
 
 # Exception classes
 class StatusTypeError(Exception): pass
@@ -46,7 +50,7 @@ class status(object):
         Meant for internal use to write the status out to the status file, 
         but can be used externally if updating the status dictionary directly
         '''
-        utils.io.writeToFile(str(self), self.statusFile)
+        io.writeToFile(str(self), self.statusFile)
     
     def set(self, status):
         '''

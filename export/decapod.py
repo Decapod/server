@@ -11,6 +11,7 @@ import imageImport
 import book
 import pdf
 import image
+sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import backgroundTaskQueue
 
 # Setup for Decapod's cherrypy configuration file.
