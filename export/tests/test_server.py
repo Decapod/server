@@ -22,15 +22,15 @@ CONFIG = {
     },
     "/lib": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../decapod-ui/lib"
+        "tools.staticdir.dir": "../../../decapod-ui/lib"
     },
     "/components": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../decapod-ui/components"
+        "tools.staticdir.dir": "../../../decapod-ui/components"
     },
     "/shared": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../decapod-ui/shared"
+        "tools.staticdir.dir": "../../../decapod-ui/shared"
     },
     "/library": {
         "tools.staticdir.on": True,

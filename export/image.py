@@ -1,10 +1,14 @@
 import os
-import utils
+import sys
 import imghdr
 import zipfile
+
 import resourcesource
 from string import Template
 from status import status
+
+sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import utils
 
 #constants for paths
 BOOK_DIR = "${library}/book/"
