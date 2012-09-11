@@ -1,5 +1,9 @@
-import decapod_utilities as utils
+import sys
+import os
+
 import resourcesource
+sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+from utils import io
 
 BOOK_DIR = "${library}/book/"
 
@@ -10,4 +14,4 @@ class Book(object):
         self.bookDir = self.rs.path(BOOK_DIR)
         
     def delete(self):
-        utils.rmTree(self.bookDir)
+        io.rmTree(self.bookDir)

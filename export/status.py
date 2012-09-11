@@ -1,6 +1,6 @@
 import os
 import simplejson as json
-import decapod_utilities as utils
+import utils
 
 # Exception classes
 class StatusTypeError(Exception): pass
@@ -46,7 +46,7 @@ class status(object):
         Meant for internal use to write the status out to the status file, 
         but can be used externally if updating the status dictionary directly
         '''
-        utils.writeToFile(str(self), self.statusFile)
+        utils.io.writeToFile(str(self), self.statusFile)
     
     def set(self, status):
         '''

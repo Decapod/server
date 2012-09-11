@@ -5,9 +5,11 @@ import mimetypes
 import os
 import sys
 import shutil
-sys.path.append(os.path.abspath('..'))
+
+sys.path.append(os.path.abspath(os.path.join('..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import decapod
-import decapod_utilities as utils
+from utils import io
 
 DATA_DIR = os.path.abspath("data")
 LIBRARY_DIR = os.path.join(DATA_DIR, "library")
@@ -40,7 +42,7 @@ def setup_server(config=CONFIG):
     decapod.mountApp(config)
     
 def teardown_server(dir=BOOK_DIR):
-    utils.rmTree(dir)
+    io.rmTree(dir)
 
 class ServerTestCase(helper.CPWebCase):
     '''
@@ -137,10 +139,10 @@ class TestBook(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(BOOK_DIR)
+        io.makeDirs(BOOK_DIR)
     
     def tearDown(self):
-        utils.rmTree(BOOK_DIR)
+        io.rmTree(BOOK_DIR)
      
     def test_01_delete(self):
         self.assertTrue(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should currently exist".format(BOOK_DIR))
@@ -182,9 +184,9 @@ class TestPDFExportExisting(ServerTestCase):
     
     def setUp(self):
         pdfSRC = os.path.abspath("data/pdf/Decapod.pdf")
-        utils.makeDirs(self.pdfDir)
-        utils.makeDirs(self.pdf)
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.makeDirs(self.pdfDir)
+        io.makeDirs(self.pdf)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -211,8 +213,8 @@ class TestPDFExportInProgress(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(self.pdfDir)
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.makeDirs(self.pdfDir)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -244,8 +246,8 @@ class TestPDFExportNew(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(self.pdfDir)
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.makeDirs(self.pdfDir)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURLType)
@@ -280,9 +282,9 @@ class TestImageExportExisting(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(self.imgDir)
+        io.makeDirs(self.imgDir)
         shutil.copy(os.path.join(DATA_DIR, "pdf", "Decapod.pdf"), self.archive) #just need a dummy file, renaming the pdf to act as the zip
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -309,8 +311,8 @@ class TestImageExportInProgress(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(self.imgDir)
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.makeDirs(self.imgDir)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)
@@ -341,8 +343,8 @@ class TestImageExportNew(ServerTestCase):
     tearDown = staticmethod(teardown_server)
     
     def setUp(self):
-        utils.makeDirs(self.imgDir)
-        utils.writeToFile(self.exportStatus, self.statusFile)
+        io.makeDirs(self.imgDir)
+        io.writeToFile(self.exportStatus, self.statusFile)
             
     def test_01_get(self):
         self.getPage(self.exportURL)

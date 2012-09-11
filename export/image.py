@@ -1,5 +1,5 @@
 import os
-import decapod_utilities as utils
+import utils
 import imghdr
 import zipfile
 import resourcesource
@@ -40,14 +40,14 @@ def convert(imagePath, format, outputDir=None, name=None):
     ImageError: if the file at imagePath isn't a supported image format
     ConversionError: an error occurs during the conversion process
     '''
-    if utils.isImage(imagePath):
+    if utils.image.isImage(imagePath):
         ext = format if format[0] == "." else "." + format
         origDir, fileName = os.path.split(imagePath)
         newName = name if name != None else os.path.splitext(fileName)[0]
         writeDir = outputDir if outputDir != None else origDir
         
         writePath = os.path.join(writeDir, newName + ext)
-        utils.invokeCommandSync(["convert", imagePath, writePath], ConversionError, "Error converting {0} to '{1}' format".format(imagePath, format))
+        utils.io.invokeCommandSync(["convert", imagePath, writePath], ConversionError, "Error converting {0} to '{1}' format".format(imagePath, format))
         return writePath
     else:
         raise ImageError("{0} is not a valid image file".format(imagePath))
@@ -69,7 +69,7 @@ def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
     index = 1;
     digits = len(str(len(imagePaths))) #retrieves the number of digits in the length of imagePaths
     for imagePath in imagePaths:
-        if utils.isImage(imagePath):
+        if utils.image.isImage(imagePath):
             name = Template(nameTemplate).safe_substitute(index=str(index).zfill(digits)) if nameTemplate != None else None
             convertedImage = convert(imagePath, format, outputDir, name)
             convertedImages.append(convertedImage)
@@ -96,13 +96,13 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
     '''
     currentDir = os.getcwd()
     temp = tempDir if tempDir != None else os.path.join(os.getcwd(), "temp")
-    utils.makeDirs(tempDir)
+    utils.io.makeDirs(tempDir)
     converted = batchConvert(imagePaths, format, temp, nameTemplate)
     if len(converted) > 0:
         try:
             zip = zipfile.ZipFile(archivePath, mode="a")
         except IOError:
-            utils.rmTree(tempDir)
+            utils.io.rmTree(tempDir)
             raise OutputPathError("{0} is not a valid path".format(archivePath))
         os.chdir(tempDir) # Need to change to the tempDir where the images are so that the zip file won't contain any directory structure
         for imagePath in converted:
@@ -110,11 +110,11 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
             zip.write(imageFile)
         zip.close()
         os.chdir(currentDir)
-        utils.rmTree(tempDir)
+        utils.io.rmTree(tempDir)
         return archivePath
     else:
         # Return None when there are no valid image paths
-        utils.rmTree(tempDir)
+        utils.io.rmTree(tempDir)
         return None
     
 class ImageExporter(object):
@@ -139,8 +139,8 @@ class ImageExporter(object):
         '''
         Sets up the directory structure and initializes the status
         '''
-        utils.makeDirs(self.imgDirPath)
-        utils.makeDirs(self.tempDirPath)
+        utils.io.makeDirs(self.imgDirPath)
+        utils.io.makeDirs(self.tempDirPath)
         self.status = status(self.statusFilePath, EXPORT_READY)
         
     def setStatus(self, state, includeURL=False):
@@ -176,7 +176,7 @@ class ImageExporter(object):
             raise ExportInProgressError, "Export currently in progress, cannot generated another export until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
-            self.imagePaths = utils.imageDirToList(self.bookDirPath, sortKey=os.path.getmtime);
+            self.imagePaths = utils.image.imageListFromDir(self.bookDirPath, sortKey=os.path.getmtime);
             if len(self.imagePaths) is 0:
                 raise ImagesNotFoundError("No images found, nothing to export")
             try:
@@ -198,5 +198,5 @@ class ImageExporter(object):
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot delete until this process has finished"
         else:
-            utils.rmTree(self.imgDirPath)
+            utils.io.rmTree(self.imgDirPath)
             self.setupExportFileStructure()
