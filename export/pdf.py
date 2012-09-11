@@ -1,5 +1,5 @@
 import os
-import decapod_utilities as utils
+import utils
 import resourcesource
 from image import batchConvert
 from status import status, loadJSONFile
@@ -56,7 +56,7 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
         "1"
     ]
     
-    flags = utils.dictToFlagList(options)
+    flags = utils.translate.weave(options)
     genPDFCmd.extend(flags)
     genPDFCmd.extend(pages)
     return genPDFCmd
@@ -95,7 +95,7 @@ class PDFGenerator(object):
         '''
         Sets up the directory structure and initializes the status
         '''
-        utils.makeDirs(self.pdfDirPath)
+        utils.io.makeDirs(self.pdfDirPath)
         self.status = status(self.statusFilePath, EXPORT_READY)
     
     def setStatus(self, state, includeURL=False):
@@ -131,7 +131,7 @@ class PDFGenerator(object):
         PDFGenerationError: if there is error during the pdf creation process
         '''
         genPDFCmd = assembleGenPDFCommand(self.tempDirPath, self.pdfPath, self.tiffPages, options)
-        utils.invokeCommandSync(genPDFCmd,
+        utils.io.invokeCommandSync(genPDFCmd,
                                 PDFGenerationError,
                                 "Could not generate a PDF version of the book.")
     
@@ -150,13 +150,13 @@ class PDFGenerator(object):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
-            utils.makeDirs(self.tiffDirPath)
-            self.pages = utils.imageDirToList(self.bookDirPath, sortKey=os.path.getmtime);
+            utils.io.makeDirs(self.tiffDirPath)
+            self.pages = utils.image.imageListFromDir(self.bookDirPath, sortKey=os.path.getmtime);
             if len(self.pages) is 0:
                 raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
             self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             try:
-                self.generatePDFFromPages(utils.rekey(options, KEY_MAP))
+                self.generatePDFFromPages(utils.translate.map(options, KEY_MAP))
             except:
                 self.setStatus(EXPORT_ERROR)
                 raise
@@ -174,5 +174,5 @@ class PDFGenerator(object):
         if self.status.inState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
-            utils.rmTree(self.pdfDirPath)
+            utils.io.rmTree(self.pdfDirPath)
             self.setupExportFileStructure()

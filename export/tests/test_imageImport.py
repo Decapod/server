@@ -3,10 +3,11 @@ import os
 import unittest
 import filecmp
 
+sys.path.append(os.path.abspath(os.path.join('..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import testutils
-sys.path.append(os.path.abspath('..'))
 import imageImport
-import decapod_utilities as utils
+from utils import io
 
 DATA_DIR = os.path.abspath("data")
 IMAGES_DIR = os.path.join(DATA_DIR, "images")
@@ -24,7 +25,7 @@ class ImportImageTest(unittest.TestCase):
         self.iImport = imageImport.ImageImport(self.mockRS)
         
     def tearDown(self):
-        utils.rmTree(BOOK_DIR)
+        io.rmTree(BOOK_DIR)
     
     # Custom assertions
     def assertNameFormat(self, name, prefix="decapod-", suffix="jpeg"):

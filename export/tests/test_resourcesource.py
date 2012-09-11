@@ -1,7 +1,8 @@
 import sys
 import os
 import unittest
-sys.path.append(os.path.abspath('..'))
+
+sys.path.append(os.path.abspath(os.path.join('..')))
 import resourcesource as rs
 
 

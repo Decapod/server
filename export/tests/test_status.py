@@ -3,9 +3,10 @@ import os
 import unittest
 import simplejson as json
 
-sys.path.append(os.path.abspath('..'))
+sys.path.append(os.path.abspath(os.path.join('..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 from status import status, StatusTypeError, StatusFormatError, loadJSONFile
-import decapod_utilities as utils
+from utils import io
 
 DATA_DIR = os.path.abspath("data/")
 TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
@@ -13,22 +14,22 @@ TEST_DIR = os.path.join(DATA_DIR, "test_dir/")
 class TestStatusModuleFunctions(unittest.TestCase):
     
     def setUp(self):
-        utils.makeDirs(TEST_DIR)
+        io.makeDirs(TEST_DIR)
             
     def tearDown(self):
-        utils.rmTree(TEST_DIR)
+        io.rmTree(TEST_DIR)
     
     def test_01_loadJSONFile(self):
         expected = {"sample": "json"}
         JSONFile = os.path.join(TEST_DIR, "sample.json")
-        utils.writeToFile(json.dumps(expected), JSONFile)
+        io.writeToFile(json.dumps(expected), JSONFile)
         loadedJSON = loadJSONFile(JSONFile)
         self.assertDictEqual(expected, loadedJSON)
         
     def test_02_loadJSONFile_nonJSONFile(self):
         expected = {"sample": "json"}
         JSONFile = os.path.join(TEST_DIR, "sample.json")
-        utils.writeToFile("json", JSONFile)
+        io.writeToFile("json", JSONFile)
         self.assertRaises(json.JSONDecodeError, loadJSONFile, JSONFile)
         
     def test_03_loadJSONFile_noFile(self):
@@ -38,10 +39,10 @@ class TestStatusModuleFunctions(unittest.TestCase):
         
 class TestStatus(unittest.TestCase):
     def setUp(self):
-        utils.makeDirs(TEST_DIR)
+        io.makeDirs(TEST_DIR)
             
     def tearDown(self):
-        utils.rmTree(TEST_DIR)
+        io.rmTree(TEST_DIR)
         
     def test_01_init(self):
         defaultStatus = {"status": "ready"}
@@ -66,7 +67,7 @@ class TestStatus(unittest.TestCase):
     def test_04_init_existingStatusFile(self):
         initialStatus = {"status": "none"}
         statusFile = os.path.join(TEST_DIR, "status.json")
-        utils.writeToFile(json.dumps(initialStatus), statusFile)
+        io.writeToFile(json.dumps(initialStatus), statusFile)
         st = status(statusFile)
         self.assertTrue(os.path.exists(statusFile))
         self.assertDictEqual(initialStatus, st.status)

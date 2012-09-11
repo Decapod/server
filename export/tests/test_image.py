@@ -4,13 +4,14 @@ import unittest
 import shutil
 import imghdr
 import zipfile
-import testutils
 import simplejson as json
 
-sys.path.append(os.path.abspath('..'))
+sys.path.append(os.path.abspath(os.path.join('..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
+import testutils
 import image
 from status import loadJSONFile
-import decapod_utilities as utils
+from utils import io
 
 DATA_DIR = os.path.abspath("data/")
 LIBRARY_DIR = os.path.join(DATA_DIR, "library/")
@@ -32,10 +33,10 @@ PNG2 = "Image_0016.png"
 class TestImageModuleFunctions(unittest.TestCase):
     
     def setUp(self):
-        utils.makeDirs(TEST_DIR)
+        io.makeDirs(TEST_DIR)
             
     def tearDown(self):
-        utils.rmTree(TEST_DIR)
+        io.rmTree(TEST_DIR)
         
     def test_01_convert(self):
         img = os.path.join(IMAGES_DIR, JPEG1)
@@ -166,10 +167,10 @@ class TestImageExporter(unittest.TestCase):
     mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_DIR, "url": "/library"}})
     
     def setUp(self):
-        utils.makeDirs(BOOK_DIR)
+        io.makeDirs(BOOK_DIR)
             
     def tearDown(self):
-        utils.rmTree(BOOK_DIR)
+        io.rmTree(BOOK_DIR)
     
     def assertStatusFile(self, status, statusFile):
         file = open(statusFile)
@@ -217,7 +218,7 @@ class TestImageExporter(unittest.TestCase):
         completeStatus = {"status": image.EXPORT_COMPLETE, "url": "/library/book/export/image/Decapod.zip"}
         expectedFiles = ["Image_0015.tiff"]
         imgExp = image.ImageExporter(self.mockRS)
-        utils.makeDirs(IMG_DIR)
+        io.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = imgExp.export("tiff")
         self.assertTrue(os.path.exists(imgExp.archivePath), "The output file should exist at path {0}".format(imgExp.archivePath))
@@ -233,7 +234,7 @@ class TestImageExporter(unittest.TestCase):
         completeStatus = {"status": image.EXPORT_COMPLETE, "url": "/library/book/export/image/Decapod.zip"}
         expectedFiles = ["image-1.tiff"]
         imgExp = image.ImageExporter(self.mockRS, nameTemplate="image-$index")
-        utils.makeDirs(IMG_DIR)
+        io.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = imgExp.export("tiff")
         self.assertTrue(os.path.exists(imgExp.archivePath), "The output file should exist at path {0}".format(imgExp.archivePath))
@@ -248,7 +249,7 @@ class TestImageExporter(unittest.TestCase):
     def test_08_export_exception_errorDuringArchive(self):
         errorStatus = {"status": image.EXPORT_ERROR}
         imgExp = image.ImageExporter(self.mockRS)
-        utils.makeDirs(IMG_DIR)
+        io.makeDirs(IMG_DIR)
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         imgExp.archivePath = os.path.join(BOOK_DIR, "invalidPath", "invalid.zip") #sets the archivePath to an invalid path to force the exception
         self.assertRaises(image.OutputPathError, imgExp.export, "tiff")
@@ -258,7 +259,7 @@ class TestImageExporter(unittest.TestCase):
     
     def test_09_export_exception_noImages(self):
         imgExp = image.ImageExporter(self.mockRS)
-        utils.makeDirs(IMG_DIR)
+        io.makeDirs(IMG_DIR)
         self.assertRaises(image.ImagesNotFoundError, imgExp.export, "tiff")
     
     def test_10_export_exception_inProgress(self):

@@ -1,8 +1,12 @@
-import decapod_utilities as utils
-import uuid
+import sys
 import os
+import uuid
 import imghdr
 import resourcesource
+
+UTILS_DIR = os.path.abspath("utils")
+sys.path.append(os.path.join(UTILS_DIR))
+from utils import io
 
 IMPORT_DIR = "${library}/book/images/"
 imagePrefix = "decapod-"
@@ -21,7 +25,7 @@ class ImageImport(object):
         self.importDir = self.rs.path(IMPORT_DIR)
                 
         # Setup the import location.
-        utils.makeDirs(self.importDir)
+        io.makeDirs(self.importDir)
     
     def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
         '''
