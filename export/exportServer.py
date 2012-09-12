@@ -16,7 +16,7 @@ import backgroundTaskQueue
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
-DECAPOD_CONFIG_FILE = os.path.abspath("config/decapod.conf")
+DECAPOD_CONFIG_FILE = os.path.abspath("config/exportServer.conf")
 
 # Determine if the server is running under an SCGI-WSGI interface
 IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
@@ -63,7 +63,7 @@ def mountApp(config=DECAPOD_CONFIG_FILE):
     if another process starts cherrypy (e.g. when run in the unit tests).
     '''
     # Set up the server application and its controllers
-    root = DecapodServer()
+    root = ExportServer()
     root.library = LibraryController()
     
     # update the servers configuration (e.g. sever.socket_host)
@@ -73,7 +73,7 @@ def mountApp(config=DECAPOD_CONFIG_FILE):
     cherrypy.tree.mount(root, "/", config)
     return root
 
-class DecapodServer(object):
+class ExportServer(object):
     '''
     Handler for the / resource
     
