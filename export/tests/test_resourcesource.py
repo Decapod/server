@@ -1,6 +1,7 @@
 import sys
 import os
 import unittest
+import cherrypy
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 import resourcesource as rs
@@ -32,8 +33,16 @@ class TestResourceSource(unittest.TestCase):
         self.assertRaises(Exception, rs.parseVirtualPath, "library}")
         
     def tests_04_url(self):
+        port = "8080"
+        
+        cherrypy.config.update({
+            "global": {
+                "server.socket_port": port
+            }
+        })
+        
         url = rs.url("${library}/path")
-        self.assertEquals("http://127.0.0.1:8080/library/path", url)
+        self.assertEquals("http://127.0.0.1:{0}/library/path".format(port), url)
         
     def tests_05_url_invalidVirtualPath(self):
         self.assertRaises(Exception, rs.url, "library/path")
