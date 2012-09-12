@@ -8,7 +8,7 @@ import shutil
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
-import decapod
+import exportServer
 from utils import io
 
 DATA_DIR = os.path.abspath("data")
@@ -39,7 +39,7 @@ CONFIG = {
 }
 
 def setup_server(config=CONFIG):
-    decapod.mountApp(config)
+    exportServer.mountApp(config)
     
 def teardown_server(dir=BOOK_DIR):
     io.rmTree(dir)
