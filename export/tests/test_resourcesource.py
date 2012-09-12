@@ -3,7 +3,7 @@ import os
 import unittest
 import cherrypy
 
-sys.path.append(os.path.abspath(os.path.join('..')))
+sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 
 
