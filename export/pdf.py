@@ -1,10 +1,10 @@
 import os
 import sys
 
-import resourcesource
 from image import batchConvert
 from status import status, loadJSONFile
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import resourcesource
 import utils
 
 BOOK_DIR = "${library}/book/"

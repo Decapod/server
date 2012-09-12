@@ -6,13 +6,13 @@ import cherrypy
 import os
 import sys
 
-import resourcesource as rs
 import imageImport
 import book
 import pdf
 import image
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import backgroundTaskQueue
+import resourcesource as rs
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()

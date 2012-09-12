@@ -3,8 +3,8 @@ import os
 import uuid
 import imghdr
 
-import resourcesource
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import resourcesource
 from utils import io
 
 IMPORT_DIR = "${library}/book/images/"

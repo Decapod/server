@@ -1,8 +1,8 @@
 import sys
 import os
 
-import resourcesource
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import resourcesource
 from utils import io
 
 BOOK_DIR = "${library}/book/"
