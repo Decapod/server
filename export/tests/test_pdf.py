@@ -6,7 +6,7 @@ import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
-import testutils
+from mockClasses import mockResourceSource
 import pdf
 from utils import io
 
@@ -70,7 +70,7 @@ class TestPDFModuleFunctions(unittest.TestCase):
 #TODO: test that the status is set to "error" when genPDF fails
 class TestPDFGenerator(unittest.TestCase):
     book = None
-    mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
+    mockRS = mockResourceSource({"/library": {"path": LIBRARY_PATH, "url": "/library"}})
     status_complete = '{"status": "complete", "url": "/library/book/export/pdf/Decapod.pdf"}'
     status_inProgress = '{"status": "in progress"}'
     status_ready = '{"status": "ready"}'

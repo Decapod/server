@@ -2,6 +2,7 @@ import os
 import imghdr
 import shutil
 import subprocess
+import uuid
 
 class io:
     
@@ -83,6 +84,14 @@ class image:
             if image.isImage(filePath): 
                 allImages.append(filePath)
         return sorted(allImages, key=sortKey, reverse=reverse)
+    
+    @staticmethod
+    def generateImageName(prefix="decapod-", suffix="jpeg"):
+        '''
+        Creates a unique name for the image file using the passed in prefix, suffix, and a generated uuid
+        '''
+        id = uuid.uuid4()
+        return "{0}{1}.{2}".format(prefix, id.hex, suffix)
     
 class translate:
     

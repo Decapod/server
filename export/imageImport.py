@@ -1,14 +1,12 @@
 import sys
 import os
-import uuid
 import imghdr
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource
-from utils import io
+import utils
 
 IMPORT_DIR = "${library}/book/images/"
-imagePrefix = "decapod-"
 
 # Exception classes
 class ImportTypeError(Exception):
@@ -24,14 +22,7 @@ class ImageImport(object):
         self.importDir = self.rs.path(IMPORT_DIR)
                 
         # Setup the import location.
-        io.makeDirs(self.importDir)
-    
-    def generateImageName(self, prefix=imagePrefix, suffix="jpeg"):
-        '''
-        Creates a unique name for the image file using the passed in prefix, suffix, and a generated uuid
-        '''
-        id = uuid.uuid4()
-        return "{0}{1}.{2}".format(prefix, id.hex, suffix)
+        utils.io.makeDirs(self.importDir)
     
     def mimeToSuffix(self, mimeType):
         '''
@@ -79,7 +70,7 @@ class ImageImport(object):
         ImportTypeError: if the file is not of a valid type ["jpeg", "png", "tiff"]
         '''
         fileType = self.getFileType(file)
-        name = name if name else self.generateImageName(suffix=fileType)
+        name = name if name else utils.image.generateImageName(suffix=fileType)
         imagePath = os.path.join(self.importDir, name)
         self.writeFile(file, imagePath)
         if not self.isValidType(imagePath):

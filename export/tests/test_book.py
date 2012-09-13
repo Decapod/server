@@ -5,7 +5,7 @@ import unittest
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import book
-import testutils
+from mockClasses import mockResourceSource
 from utils import io
 
 LIBRARY_PATH = os.path.abspath("data/library/")
@@ -14,7 +14,7 @@ BOOK_DIR = os.path.join(LIBRARY_PATH, "book")
 class TestBookExisting(unittest.TestCase):
     
     book = None
-    mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_PATH}})
+    mockRS = mockResourceSource({"/library": {"path": LIBRARY_PATH}})
     
     def setUp(self):
         self.book = book.Book(self.mockRS)
@@ -28,7 +28,7 @@ class TestBookExisting(unittest.TestCase):
 class TestBookNone(unittest.TestCase):
     
     book = None
-    mockRS = testutils.mockResourceSource({"/library": {"path": BOOK_DIR}})
+    mockRS = mockResourceSource({"/library": {"path": BOOK_DIR}})
     
     def setUp(self):
         self.book = book.Book(self.mockRS)
