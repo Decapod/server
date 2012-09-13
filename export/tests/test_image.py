@@ -8,7 +8,7 @@ import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
-import testutils
+from mockClasses import mockResourceSource
 import image
 from status import loadJSONFile
 from utils import io
@@ -164,7 +164,7 @@ class TestImageModuleFunctions(unittest.TestCase):
 
 #TODO: test that the status is set to "error" when archiveConvert throws an exception   
 class TestImageExporter(unittest.TestCase):
-    mockRS = testutils.mockResourceSource({"/library": {"path": LIBRARY_DIR, "url": "/library"}})
+    mockRS = mockResourceSource({"/library": {"path": LIBRARY_DIR, "url": "/library"}})
     
     def setUp(self):
         io.makeDirs(BOOK_DIR)

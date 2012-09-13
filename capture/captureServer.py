@@ -6,6 +6,7 @@ import cherrypy
 import os
 import sys
 
+import cameras
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import backgroundTaskQueue
@@ -79,7 +80,7 @@ class CaptureServer(object):
     book = []
         
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/cameras/html/cameras.html"), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${components}/cameras/html/cameras.html    "), 301)
     
 # Library Controller
 # TODO: Support GET requests to return the Library model
@@ -91,8 +92,12 @@ class CamerasController(object):
     '''
     exposed = True
     
-    def GET(self):
-        return "camera info"
+    def __init__(self):
+        self.cameras = cameras.Cameras()
+        
+    def GET(self, *args, **kwargs):
+        #returns the info of the detected cameras
+        return self.cameras.getCameraSummary()
 
 if __name__ == "__main__":
     startServer()
