@@ -11,6 +11,7 @@ import utils
 class DetectCamerasError(Exception): pass
 class InvalidPortError(Exception): pass
 class CaptureError(Exception): pass
+class GetResolutionError(Exception): pass
 
 def parseCamerasInfo(info):
     infoList = []
@@ -43,7 +44,6 @@ def detectCameras():
                             "Could not detect cameras.")
     
     return parseCamerasInfo(camerasInfo)
-#cameras.detectCameras()    
 
 def isPortValid(port):
     '''
@@ -57,11 +57,19 @@ def isPortValid(port):
 
     return False
 
-def getCameraSummary(port):
+def getInfo(summaryStr, startKeyword, endKeyword='\n'):
+    '''
+    Extract capture formats information from the camera summary string
+    '''
+    
+    removedFront = summaryStr[summaryStr.index(startKeyword) + len(startKeyword):]
+    return removedFront[0:removedFront.index(endKeyword)].strip()
+    
+def getCameraSummaryByPort(port):
     '''
     Return the summary information of the camera that's connected to the given port
     '''
-    cameraInfo = {}
+    summary = {}
     
     #cameras.getCameraSummary("usb:001,010")
     if (isPortValid(port)):
@@ -71,13 +79,28 @@ def getCameraSummary(port):
             "--port={0}".format(port)
         ]
         
-        cameraInfo = utils.io.invokeCommandSync(cmd,
+        summaryStr = utils.io.invokeCommandSync(cmd,
                                 DetectCamerasError,
                                 "Could not get the camera summary.")
         
-        return cameraInfo
+        summary['port'] = port
+        summary['resolution'] = getResolution(port)
+        summary['captureFormats'] = getInfo(summaryStr, 'Capture Formats: ')   
+        summary['model'] = getInfo(summaryStr, 'Model: ')
+        summary['capabilities'] = getInfo(summaryStr, 'Device Capabilities:', 'Storage Devices Summary:')
 
-    return cameraInfo
+    return summary
+
+def getAllCamerasSummary():
+    allInfo = {}
+    allInfo['cameras'] = []
+    
+    connectedCameras = detectCameras()
+    
+    for camera in connectedCameras:
+        allInfo['cameras'].append(getCameraSummaryByPort(camera['port']))
+    
+    return allInfo
 
 def capture(port, filename, dir='images'):
     '''
@@ -97,7 +120,7 @@ def capture(port, filename, dir='images'):
         
         captureInfo = utils.io.invokeCommandSync(cmd,
                                 CaptureError,
-                                "Could not capture an images from port {0}.".format(port))
+                                "Could not capture an image from port {0}.".format(port))
         
         return fileLocation
     else:
@@ -109,7 +132,10 @@ def getResolution(port):
     '''
     imageName = utils.image.generateImageName()
     
-    capture(port, imageName, '')
+    try:
+        capture(port, imageName, '')
+    except CaptureError:
+        raise GetResolutionError("Could not get resolution: Error at capturing a test image from port {0}.".format(port))
     
     img = Image.open(imageName)
     width, height = img.size
