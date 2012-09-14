@@ -5,6 +5,7 @@
 import cherrypy
 import os
 import sys
+import simplejson as json
 
 import cameras
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
@@ -22,7 +23,7 @@ IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
     
-def setJSONResponseHeaders(fileName="model.json"):
+def setJSONResponseHeaders(fileName="camerasSummary.json"):
     '''
     Sets the JSON Response headers that will be returned by the server
     '''
@@ -97,7 +98,8 @@ class CamerasController(object):
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        return self.cameras.getCameraSummary()
+        setJSONResponseHeaders()
+        return json.dumps(self.cameras.getCamerasSummary())
 
 if __name__ == "__main__":
     startServer()
