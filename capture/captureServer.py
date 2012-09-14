@@ -11,6 +11,7 @@ import cameras
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import backgroundTaskQueue
+from utils import server
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
@@ -22,13 +23,6 @@ IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
 #subscribe to BackgroundTaskQueue plugin
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
-    
-def setJSONResponseHeaders(fileName="camerasSummary.json"):
-    '''
-    Sets the JSON Response headers that will be returned by the server
-    '''
-    cherrypy.response.headers["Content-Type"] = "application/json"
-    cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
        
 def startServer():
     '''
@@ -98,7 +92,7 @@ class CamerasController(object):
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        setJSONResponseHeaders()
+        server.setJSONResponseHeaders(cherrypy, "camerasSummary.json")
         return json.dumps(self.cameras.getCamerasSummary())
 
 if __name__ == "__main__":

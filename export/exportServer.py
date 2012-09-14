@@ -13,6 +13,7 @@ import image
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import backgroundTaskQueue
 import resourcesource as rs
+from utils import server
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
@@ -24,13 +25,6 @@ IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
 #subscribe to BackgroundTaskQueue plugin
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
-    
-def setJSONResponseHeaders(fileName="model.json"):
-    '''
-    Sets the JSON Response headers that will be returned by the server
-    '''
-    cherrypy.response.headers["Content-Type"] = "application/json"
-    cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
        
 def startServer():
     '''
@@ -190,7 +184,7 @@ class PDFExportController(object):
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
-        setJSONResponseHeaders("exportStatus.json")
+        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
         return self.export.getStatus()
         
     def PUT(self, *args, **kwargs):
@@ -210,7 +204,7 @@ class PDFExportController(object):
         options[self.typeKey] = exportType[4:] 
         bgtask.put(self.export.generate, options)
         cherrypy.response.status = 202
-        setJSONResponseHeaders("exportStatus.json")
+        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
         return self.export.getStatus()
     
     def DELETE(self, *args, **kwargs):
@@ -234,7 +228,7 @@ class ImageExportController(object):
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
-        setJSONResponseHeaders("exportStatus.json")
+        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
         return self.exporter.getStatus()
         
     def PUT(self, *args, **kwargs):
@@ -246,7 +240,7 @@ class ImageExportController(object):
         
         bgtask.put(self.exporter.export, args[0])
         cherrypy.response.status = 202
-        setJSONResponseHeaders("exportStatus.json")
+        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
         return self.exporter.getStatus()
     
     def DELETE(self, *args, **kwargs):
