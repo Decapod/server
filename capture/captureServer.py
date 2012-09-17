@@ -47,22 +47,23 @@ def startServer():
     # Block if running standalone, nut under an SCGI-SWGI interface
     if (not IS_SCGIWSGI) :
         cherrypy.engine.block()
-        
+
 def mountApp(config=DECAPOD_CONFIG_FILE):
     '''
     Mounts the app and updates the cherryp configuration from the provided config file.
     Is used by startServer to start the cherrypy server, but can be called independently 
     if another process starts cherrypy (e.g. when run in the unit tests).
     '''
+    # update the servers configuration (e.g. sever.socket_host)
+    cherrypy.config.update(config)
+    
     # Set up the server application and its controllers
     root = CaptureServer()
     root.cameras = CamerasController()
     
-    # update the servers configuration (e.g. sever.socket_host)
-    cherrypy.config.update(config)
-    
     # mount the app
     cherrypy.tree.mount(root, "/", config)
+
     return root
 
 class CaptureServer(object):
@@ -88,7 +89,7 @@ class CamerasController(object):
     exposed = True
     
     def __init__(self):
-        self.cameras = cameras.Cameras()
+        self.cameras = cameras.Cameras(cherrypy.config["app_opts.general"]["testmode"])
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
