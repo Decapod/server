@@ -57,6 +57,15 @@ def isPortValid(port):
 
     return False
 
+def arePortsValid(ports):
+    '''
+    Check if all the ports in a list are valid
+    '''
+    for port in ports:
+        if not isPortValid(port): return False
+    
+    return True
+
 def getInfo(summaryStr, startKeyword, endKeyword='\n'):
     '''
     Extract capture formats information from the camera summary string
@@ -125,6 +134,31 @@ def capture(port, filename, dir='images'):
         return fileLocation
     else:
         raise InvalidPortError
+
+def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
+    '''
+    Takes a picture with the cameras at each of the specified ports in order.
+    Can take in a filenameTemplate to be used for naming the captured images. {0} will be replaced by an index representing the camera.
+    Can also specify a directory where the images should be stored to.
+    
+    Retuns a list of paths to the captured images.
+    If there is an exception during capture it will attempt to remove all of the successful captures. However, any created directory structure will remain in place.
+    '''
+    if not arePortsValid(ports): raise InvalidPortError
+
+    fileLocations = []
+    
+    try:
+        for index, port in enumerate(ports):
+            filename = filenameTemplate.format(index)
+            fileLocations.append(capture(port, filename, dir))
+    except Exception:
+        for fileLocation in fileLocations:
+                os.remove(fileLocation)
+        raise
+        
+    return fileLocations
+        
 
 def getResolution(port):
     '''
