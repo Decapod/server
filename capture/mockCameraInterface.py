@@ -33,6 +33,12 @@ def detectCameras():
 
 def isPortValid(port):
     return port in CAMERA_INFO_BY_PORT
+
+def arePortsValid(ports):
+    for port in ports:
+        if not isPortValid(port): return False
+    
+    return True
     
 def getCameraSummaryByPort(port):
     summary = {}
@@ -61,6 +67,12 @@ def capture(port, filename, dir="images"):
         return None
     else: 
         raise InvalidPortError
+    
+def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
+    '''
+    Not yet implemented
+    '''
+    if not arePortsValid(ports): raise InvalidPortError
 
 def getResolution(port):
     return CAMERA_INFO_BY_PORT[port]["resolution"]
