@@ -1,13 +1,10 @@
-
-# TODO: File system or CouchDB persistence for the Book, including:
-#   * the images array
-
 import cherrypy
 import os
 import sys
 import simplejson as json
 
 import cameras
+import conventional
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import backgroundTaskQueue
@@ -15,7 +12,7 @@ from utils import server
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
-DECAPOD_CONFIG_FILE = os.path.abspath("config/captureServer.conf")
+DECAPOD_CONFIG_FILE = os.path.abspath(os.path.join("config", "captureServer.conf"))
 
 # Determine if the server is running under an SCGI-WSGI interface
 IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
@@ -54,12 +51,13 @@ def mountApp(config=DECAPOD_CONFIG_FILE):
     Is used by startServer to start the cherrypy server, but can be called independently 
     if another process starts cherrypy (e.g. when run in the unit tests).
     '''
-    # update the servers configuration (e.g. sever.socket_host)
-    cherrypy.config.update(config)
-    
     # Set up the server application and its controllers
     root = CaptureServer()
-    root.cameras = CamerasController()
+#    root.cameras = CamerasController()
+#    root.conventional = ConventionalController()
+    
+    # update the servers configuration (e.g. sever.socket_host)
+    cherrypy.config.update(config)
     
     # mount the app
     cherrypy.tree.mount(root, "/", config)
@@ -73,17 +71,25 @@ class CaptureServer(object):
     Redirects requests to the root url to the apps start page.
     '''
     exposed = True
-    book = []
         
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        self.paths = {
+            "cameras": CamerasController(),
+            "conventional": ConventionalController()
+        }
+        
+        pathSegment = vpath[0]
+        
+        if pathSegment in self.paths:
+            return self.paths[pathSegment]
+
     def GET(self):
         raise cherrypy.HTTPRedirect(rs.url("${components}/cameras/html/cameras.html    "), 301)
     
-# Library Controller
-# TODO: Support GET requests to return the Library model
-# TODO: Support POST requests to create a Book and return the new Library model
 class CamerasController(object):
     '''
-    Parses the positional arguments starting after /Cameras/
+    Parses the positional arguments starting after /cameras/
     and calls the appropriate handlers for the various resources 
     '''
     exposed = True
@@ -95,6 +101,21 @@ class CamerasController(object):
         #returns the info of the detected cameras
         server.setJSONResponseHeaders(cherrypy, "camerasSummary.json")
         return json.dumps(self.cameras.getCamerasSummary())
+
+class ConventionalController(object):
+    '''
+    Parses the positional arguments starting after /conventional/
+    and calls the appropriate handlers for the various resources 
+    '''
+    exposed = True
+    
+    def __init__(self):
+        self.conventional = conventional.Conventional(cherrypy.config["app_opts.general"]["testmode"])
+        
+    def GET(self, *args, **kwargs):
+        #returns the info of the detected cameras
+        server.setJSONResponseHeaders(cherrypy, 'conventionalInfo.json')
+        return self.conventional.getStatus()
 
 if __name__ == "__main__":
     startServer()
