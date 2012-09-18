@@ -10,6 +10,7 @@ import utils
 
 DATA_DIR = os.path.abspath("data/")
 IMG_DIR = os.path.join(DATA_DIR, "images")
+FILES_DIR = os.path.join(DATA_DIR, "files")
 TEST_DIR = os.path.join(DATA_DIR, "testDir")
 
 class CommandInvokationTests(unittest.TestCase):
@@ -138,14 +139,13 @@ class ToListTests(unittest.TestCase):
         self.assertListEqual([os.path.join(IMG_DIR, "Image_0015.JPEG"), os.path.join(IMG_DIR, "Image_0016.JPEG")], imgList)
         
     def test_02_bookPagesToArray_noImages(self):
-        pdfDir = os.path.join(DATA_DIR, "pdf")
-        imgList = utils.image.imageListFromDir(pdfDir)
+        imgList = utils.image.imageListFromDir(FILES_DIR)
         self.assertEquals(0, len(imgList))
         
     def test_03_bookPagesToArray_mixed(self):
         imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
         imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
-        pdfOne = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
+        pdfOne = os.path.join(FILES_DIR, "Decapod.pdf")
         shutil.copy(imgOne, TEST_DIR)
         shutil.copy(imgTwo, TEST_DIR)
         shutil.copy(pdfOne, TEST_DIR)
