@@ -45,26 +45,25 @@ def detectCameras():
     
     return parseCamerasInfo(camerasInfo)
 
+def getPorts():
+    '''
+    Return an array of all the ports that have camera connected
+    '''
+    ports = []
+    
+    connectedCameras = detectCameras()
+    
+    for camera in connectedCameras:
+        ports.append(camera['port'])
+    
+    return ports
+
 def isPortValid(port):
     '''
     Check if the given port has a camera connected
     '''
     # make sure the given port is valid
-    connectedCameras = detectCameras()
-    
-    for camera in connectedCameras:
-        if (camera['port'] == port): return True
-
-    return False
-
-def arePortsValid(ports):
-    '''
-    Check if all the ports in a list are valid
-    '''
-    for port in ports:
-        if not isPortValid(port): return False
-    
-    return True
+    return port in getPorts()
 
 def getInfo(summaryStr, startKeyword, endKeyword='\n'):
     '''
@@ -144,8 +143,6 @@ def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
     Retuns a list of paths to the captured images.
     If there is an exception during capture it will attempt to remove all of the successful captures. However, any created directory structure will remain in place.
     '''
-    if not arePortsValid(ports): raise InvalidPortError
-
     fileLocations = []
     
     try:

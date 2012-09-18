@@ -34,15 +34,12 @@ def detectCameras():
 
     return cameras
 
+def getPorts():
+    return CAMERA_INFO_BY_PORT.keys()
+
 def isPortValid(port):
     return port in CAMERA_INFO_BY_PORT
 
-def arePortsValid(ports):
-    for port in ports:
-        if not isPortValid(port): return False
-    
-    return True
-    
 def getCameraSummaryByPort(port):
     keysToRemove = ["capture"]
     summary = {}
@@ -77,8 +74,6 @@ def capture(port, filename, dir="images"):
         raise InvalidPortError
     
 def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
-    if not arePortsValid(ports): raise InvalidPortError
-
     fileLocations = []
     
     try:
