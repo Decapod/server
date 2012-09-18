@@ -114,8 +114,8 @@ class ConventionalController(object):
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        server.setJSONResponseHeaders(cherrypy, "conventionalInfo.json")
-        return json.dumps(self.conventional.getInfo())
+        server.setJSONResponseHeaders(cherrypy, 'conventionalInfo.json')
+        return self.conventional.getStatus()
 
 if __name__ == "__main__":
     startServer()
