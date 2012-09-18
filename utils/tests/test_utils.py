@@ -3,6 +3,7 @@ import os
 import unittest
 import shutil
 import time
+import simplejson as json
 
 sys.path.append(os.path.abspath('..'))
 import utils
@@ -84,7 +85,34 @@ class WriteTests(unittest.TestCase):
         file = open(filePath, "r")
         read = file.read()
         file.close()
-        self.assertEquals(content, read)
+        self.assertEquals(content, read) 
+        
+class JSONTests(unittest.TestCase):
+
+    def setUp(self):
+        utils.io.makeDirs(TEST_DIR)
+        self.filePath = os.path.join(TEST_DIR, "sample.json")
+        self.jsonData = {"test": "test"}
+        
+    def tearDown(self):
+        utils.io.rmTree(TEST_DIR)
+        
+    def test_01_loadJSONFile(self):
+        f = open(self.filePath, "w")
+        f.write(json.dumps(self.jsonData))
+        f.close()
+        loadedJSON = utils.io.loadJSONFile(self.filePath)
+        self.assertDictEqual(self.jsonData, loadedJSON)
+        
+    def test_02_writeToJSONFile(self):
+        utils.io.writeToJSONFile(self.jsonData, self.filePath)
+        self.assertTrue(os.path.exists(self.filePath), "The path ({0}) to the created json file should exist".format(self.filePath))
+        f = open(self.filePath)
+        loadedJSON = json.load(f)
+        f.close()
+        
+        self.assertDictEqual(self.jsonData, loadedJSON)
+        
 
 class ValidationTests(unittest.TestCase):
     
