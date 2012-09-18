@@ -1,6 +1,7 @@
 from __future__ import division
 import os
 import sys
+import shutil
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -13,13 +14,15 @@ CAMERA_INFO_BY_PORT = {
         "model": "Canon PowerShot G10",
         "captureFormats": "JPEG",
         "resolution": 14.6,
-        "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture"
+        "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture",
+        "capture": "./mockData/images/1.jpg"
     },
     "usb:001,003": {
         "model": "Canon PowerShot G10",
         "captureFormats": "JPEG",
         "resolution": 14.6,
-        "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture"
+        "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture",
+        "capture": "./mockData/images/2.jpg"
     }
 };
 
@@ -33,12 +36,23 @@ def detectCameras():
 
 def isPortValid(port):
     return port in CAMERA_INFO_BY_PORT
+
+def arePortsValid(ports):
+    for port in ports:
+        if not isPortValid(port): return False
+    
+    return True
     
 def getCameraSummaryByPort(port):
+    keysToRemove = ["capture"]
     summary = {}
     
     if (isPortValid(port)):
-        summary = CAMERA_INFO_BY_PORT[port]
+        summary = CAMERA_INFO_BY_PORT[port].copy()
+        # removes the camera info that shouldn't be included in the summary.
+        for key in keysToRemove:
+            if key in summary:
+                del summary[key]
 
     return summary
 
@@ -54,13 +68,29 @@ def getAllCamerasSummary():
     return allInfo
 
 def capture(port, filename, dir="images"):
-    '''
-    Not yet implemented
-    '''
     if (isPortValid(port)):
-        return None
+        utils.io.makeDirs(dir);
+        fileLocation = os.path.join(dir, filename)
+        shutil.copyfile(CAMERA_INFO_BY_PORT[port]["capture"], fileLocation)
+        return fileLocation
     else: 
         raise InvalidPortError
+    
+def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
+    if not arePortsValid(ports): raise InvalidPortError
+
+    fileLocations = []
+    
+    try:
+        for index, port in enumerate(ports):
+            filename = filenameTemplate.format(index)
+            fileLocations.append(capture(port, filename, dir))
+    except Exception:
+        for fileLocation in fileLocations:
+                os.remove(fileLocation)
+        raise
+        
+    return fileLocations
 
 def getResolution(port):
     return CAMERA_INFO_BY_PORT[port]["resolution"]
