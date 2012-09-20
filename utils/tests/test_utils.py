@@ -3,12 +3,14 @@ import os
 import unittest
 import shutil
 import time
+import simplejson as json
 
 sys.path.append(os.path.abspath('..'))
 import utils
 
 DATA_DIR = os.path.abspath("data/")
 IMG_DIR = os.path.join(DATA_DIR, "images")
+FILES_DIR = os.path.join(DATA_DIR, "files")
 TEST_DIR = os.path.join(DATA_DIR, "testDir")
 
 class CommandInvokationTests(unittest.TestCase):
@@ -84,7 +86,34 @@ class WriteTests(unittest.TestCase):
         file = open(filePath, "r")
         read = file.read()
         file.close()
-        self.assertEquals(content, read)
+        self.assertEquals(content, read) 
+        
+class JSONTests(unittest.TestCase):
+
+    def setUp(self):
+        utils.io.makeDirs(TEST_DIR)
+        self.filePath = os.path.join(TEST_DIR, "sample.json")
+        self.jsonData = {"test": "test"}
+        
+    def tearDown(self):
+        utils.io.rmTree(TEST_DIR)
+        
+    def test_01_loadJSONFile(self):
+        f = open(self.filePath, "w")
+        f.write(json.dumps(self.jsonData))
+        f.close()
+        loadedJSON = utils.io.loadJSONFile(self.filePath)
+        self.assertDictEqual(self.jsonData, loadedJSON)
+        
+    def test_02_writeToJSONFile(self):
+        utils.io.writeToJSONFile(self.jsonData, self.filePath)
+        self.assertTrue(os.path.exists(self.filePath), "The path ({0}) to the created json file should exist".format(self.filePath))
+        f = open(self.filePath)
+        loadedJSON = json.load(f)
+        f.close()
+        
+        self.assertDictEqual(self.jsonData, loadedJSON)
+        
 
 class ValidationTests(unittest.TestCase):
     
@@ -110,14 +139,13 @@ class ToListTests(unittest.TestCase):
         self.assertListEqual([os.path.join(IMG_DIR, "Image_0015.JPEG"), os.path.join(IMG_DIR, "Image_0016.JPEG")], imgList)
         
     def test_02_bookPagesToArray_noImages(self):
-        pdfDir = os.path.join(DATA_DIR, "pdf")
-        imgList = utils.image.imageListFromDir(pdfDir)
+        imgList = utils.image.imageListFromDir(FILES_DIR)
         self.assertEquals(0, len(imgList))
         
     def test_03_bookPagesToArray_mixed(self):
         imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
         imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
-        pdfOne = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
+        pdfOne = os.path.join(FILES_DIR, "Decapod.pdf")
         shutil.copy(imgOne, TEST_DIR)
         shutil.copy(imgTwo, TEST_DIR)
         shutil.copy(pdfOne, TEST_DIR)

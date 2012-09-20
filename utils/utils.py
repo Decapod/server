@@ -3,6 +3,7 @@ import imghdr
 import shutil
 import subprocess
 import uuid
+import simplejson as json
 
 class io:
     
@@ -43,6 +44,34 @@ class io:
         f = open(writePath, writeMode)
         f.write(contents)
         f.close()
+    
+    @staticmethod  
+    def loadJSONFile(jsonFile):
+        '''
+        Reads in a json file and returns a python dictionary
+        
+        Exceptions
+        ==========
+        IOError: if the jsonFile doens't exists
+        JSONDecodeError: from simplejson, if the file is not in proper json format
+        '''
+        jFile = open(jsonFile)
+        d = json.load(jFile)
+        jFile.close()
+        return d
+
+    @staticmethod
+    def writeToJSONFile(jsonData, jsonFile):
+        '''
+        Writes json data to a file.
+        It will replace the contents of the file with the passed in json data.
+        
+        Exceptions
+        ==========
+        IOError: if there is an error writing to the file
+        TypeError: from simplejson, if the jsonData is not JSON serializable
+        '''
+        io.writeToFile(json.dumps(jsonData), jsonFile)
         
     @staticmethod
     def readFromFile(filePath):
