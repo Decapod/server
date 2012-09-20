@@ -22,7 +22,7 @@ class io:
     @staticmethod
     def rmTree(path, ignore_errors=False, onerror=None):
         '''
-        Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
+        Will attempt to remove the full directory structure
         
         Exceptions
         ==========
