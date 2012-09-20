@@ -45,6 +45,16 @@ class io:
         f.write(contents)
         f.close()
     
+    @staticmethod
+    def readFromFile(filePath):
+        if not os.path.isfile(filePath): return None
+        
+        f = open(filePath)
+        content = f.read()
+        f.close()
+        
+        return content
+
     @staticmethod  
     def loadJSONFile(jsonFile):
         '''
@@ -73,16 +83,6 @@ class io:
         '''
         io.writeToFile(json.dumps(jsonData), jsonFile)
         
-    @staticmethod
-    def readFromFile(filePath):
-        if not os.path.isfile(filePath): return None
-        
-        f = open(filePath)
-        content = f.read()
-        f.close()
-        
-        return content
-
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message):
         '''
