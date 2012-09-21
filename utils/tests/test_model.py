@@ -21,29 +21,53 @@ class eventTests(unittest.TestCase):
         self.assertEquals("a", val1)
         self.assertEquals("c", val2)
         
-    def test_02_get_not_exist(self):
+    def test_02_get_exists_list(self):
+        val1 = model.get(self.model, "a")
+        val2 = model.get(self.model, ["b", "c"])
+        self.assertEquals("a", val1)
+        self.assertEquals("c", val2)
+        
+    def test_03_get_not_exist(self):
         val1 = model.get(self.model, "c")
         val2 = model.get(self.model, "b.d")
         self.assertIsNone(val1)
         self.assertIsNone(val2)
         
-    def test_03_set_exists(self):
+    def test_04_get_not_exist_list(self):
+        val1 = model.get(self.model, "c")
+        val2 = model.get(self.model, ["b", "d"])
+        self.assertIsNone(val1)
+        self.assertIsNone(val2)
+        
+    def test_05_set_exists(self):
         model.set(self.model, "a", "A")
         model.set(self.model, "b.c", "C")
         self.assertEquals("A", self.model["a"])
         self.assertEquals("C", self.model["b"]["c"])
         
-    def test_04_set_not_exist(self):
+    def test_06_set_exists_list(self):
+        model.set(self.model, "a", "A")
+        model.set(self.model, ["b", "c"], "C")
+        self.assertEquals("A", self.model["a"])
+        self.assertEquals("C", self.model["b"]["c"])
+        
+    def test_07_set_not_exist(self):
         model.set(self.model, "d", "d")
         model.set(self.model, "b.e", "e")
         self.assertEquals("d", self.model["d"])
         self.assertEquals("e", self.model["b"]["e"])
         
-    def test_05_init(self):
+    def test_08_set_not_exist(self):
+        model.set(self.model, "d", "d")
+        model.set(self.model, ["b", "e"], "e")
+        self.assertEquals("d", self.model["d"])
+        self.assertEquals("e", self.model["b"]["e"])
+        
+    def test_09_init(self):
         ca = model.ChangeApplier(self.model)
         self.assertDictEqual(self.model, ca.model)
         
-    def test_06_requestUpdate_modify(self):
+    def test_10_requestUpdate_modify(self):
         ca = model.ChangeApplier(self.model)
         expectedReq = {"elPath": "a", "value": "A", "type": "UPDATE"}
         def testEvent(oldModel=None, newModel=None, request=None):
@@ -54,7 +78,7 @@ class eventTests(unittest.TestCase):
         ca.onModelChanged.addListener("testEvent", testEvent)
         ca.requestUpdate("a", "A")
         
-    def test_07_requestUpdate_create(self):
+    def test_11_requestUpdate_create(self):
         ca = model.ChangeApplier(self.model)
         expectedReq = {"elPath": "c", "value": "c", "type": "UPDATE"}
         def testEvent(oldModel=None, newModel=None, request=None):
@@ -65,7 +89,7 @@ class eventTests(unittest.TestCase):
         ca.onModelChanged.addListener("testEvent", testEvent)
         ca.requestUpdate("c", "c")
         
-    def test_08_requestRemoval_exists(self):
+    def test_12_requestRemoval_exists(self):
         ca = model.ChangeApplier(self.model)
         expectedReq = {"elPath": "a", "type": "REMOVAL"}
         def testEvent(oldModel=None, newModel=None, request=None):
@@ -76,7 +100,7 @@ class eventTests(unittest.TestCase):
         ca.onModelChanged.addListener("testEvent", testEvent)
         ca.requestRemoval("a")
         
-    def test_09_requestRemoval_not_exist(self):
+    def test_13_requestRemoval_not_exist(self):
         ca = model.ChangeApplier(self.model)
         expectedReq = {"elPath": "c", "type": "REMOVAL"}
         def testEvent(oldModel=None, newModel=None, request=None):
