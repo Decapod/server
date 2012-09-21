@@ -5,6 +5,7 @@
 import cherrypy
 import os
 import sys
+import simplejson as json
 
 import imageImport
 import book
@@ -185,7 +186,7 @@ class PDFExportController(object):
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
         server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
-        return self.export.getStatus()
+        return json.dumps(self.export.getStatus())
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
@@ -205,7 +206,7 @@ class PDFExportController(object):
         bgtask.put(self.export.generate, options)
         cherrypy.response.status = 202
         server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
-        return self.export.getStatus()
+        return json.dumps(self.export.getStatus())
     
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact
@@ -229,7 +230,7 @@ class ImageExportController(object):
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
         server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
-        return self.exporter.getStatus()
+        return json.dumps(self.exporter.getStatus())
         
     def PUT(self, *args, **kwargs):
         #triggers the creation of the pdf export
@@ -241,7 +242,7 @@ class ImageExportController(object):
         bgtask.put(self.exporter.export, args[0])
         cherrypy.response.status = 202
         server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
-        return self.exporter.getStatus()
+        return json.dumps(self.exporter.getStatus())
     
     def DELETE(self, *args, **kwargs):
         #removes the pdf export artifact

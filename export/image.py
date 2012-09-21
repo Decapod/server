@@ -167,7 +167,7 @@ class ImageExporter(object):
         '''
         Returns a string representation of the status
         '''
-        return str(self.status)
+        return self.status.model
     
     def export(self, format):
         '''
