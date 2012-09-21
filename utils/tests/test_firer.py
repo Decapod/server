@@ -45,5 +45,24 @@ class firerTests(unittest.TestCase):
         firer.addListener(name, testFirer)
         firer.fire(val=firedVal)
         
+    def test_06_mulitpleFirers(self):
+        self.index = 0;
+        firer = Firer()
+        firedAVal = "expected arg"
+        firedKVal = "expected kwarg"
+        def testFirer1(aVal, kVal=""):
+            self.index = self.index + 1;
+            self.assertEquals(1, self.index)
+            self.assertEquals(firedAVal, aVal)
+            self.assertEquals(firedKVal, kVal)
+        def testFirer2(aVal, kVal=""):
+            self.index = self.index + 1
+            self.assertEquals(2, self.index)
+            self.assertEquals(firedAVal, aVal)
+            self.assertEquals(firedKVal, kVal)
+        firer.addListener("test1", testFirer1)
+        firer.addListener("test2", testFirer2)
+        firer.fire(firedAVal, kVal=firedKVal)
+        
 if __name__ == '__main__':
     unittest.main()
