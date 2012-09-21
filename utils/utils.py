@@ -22,7 +22,7 @@ class io:
     @staticmethod
     def rmTree(path, ignore_errors=False, onerror=None):
         '''
-        Will attempt to make the full directory structure, if it doesn't exist, for the supplied 'path'
+        Will attempt to remove the full directory structure
         
         Exceptions
         ==========
@@ -41,10 +41,22 @@ class io:
         ==========
         IOError: if the file cannot be opened
         '''
+        io.makeDirs(os.path.dirname(writePath))
+        
         f = open(writePath, writeMode)
         f.write(contents)
         f.close()
     
+    @staticmethod
+    def readFromFile(filePath):
+        if not os.path.isfile(filePath): return None
+        
+        f = open(filePath)
+        content = f.read()
+        f.close()
+        
+        return content
+
     @staticmethod  
     def loadJSONFile(jsonFile):
         '''
@@ -73,16 +85,6 @@ class io:
         '''
         io.writeToFile(json.dumps(jsonData), jsonFile)
         
-    @staticmethod
-    def readFromFile(filePath):
-        if not os.path.isfile(filePath): return None
-        
-        f = open(filePath)
-        content = f.read()
-        f.close()
-        
-        return content
-
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message):
         '''

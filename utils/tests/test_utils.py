@@ -67,14 +67,16 @@ class DirectoryManipulationTests(unittest.TestCase):
         utils.io.rmTree(self.existingTestDir)
         self.assertNoDir(self.existingTestDir)
         
-class WriteTests(unittest.TestCase):
-    
+class FileOperationTests(unittest.TestCase):
+
     def setUp(self):
         utils.io.makeDirs(TEST_DIR)
+        self.filePath = os.path.join(TEST_DIR, "sample.json")
+        self.jsonData = {"test": "test"}
         
     def tearDown(self):
         utils.io.rmTree(TEST_DIR)
-    
+        
     def test_01_writeToFile(self):
         filePath = os.path.join(TEST_DIR, "testFile.txt")
         content = "Test File"
@@ -88,24 +90,22 @@ class WriteTests(unittest.TestCase):
         file.close()
         self.assertEquals(content, read) 
         
-class JSONTests(unittest.TestCase):
-
-    def setUp(self):
-        utils.io.makeDirs(TEST_DIR)
-        self.filePath = os.path.join(TEST_DIR, "sample.json")
-        self.jsonData = {"test": "test"}
+    def test_02_readFromFile(self):
+        filePath = os.path.join(TEST_DIR, "testFile.txt")
+        f = open(filePath, "w")
+        content = "Test File"
+        utils.io.writeToFile(content, filePath)
+        readContent = utils.io.readFromFile(filePath)
+        self.assertEquals(readContent, content)
         
-    def tearDown(self):
-        utils.io.rmTree(TEST_DIR)
-        
-    def test_01_loadJSONFile(self):
+    def test_03_loadJSONFile(self):
         f = open(self.filePath, "w")
         f.write(json.dumps(self.jsonData))
         f.close()
         loadedJSON = utils.io.loadJSONFile(self.filePath)
         self.assertDictEqual(self.jsonData, loadedJSON)
         
-    def test_02_writeToJSONFile(self):
+    def test_04_writeToJSONFile(self):
         utils.io.writeToJSONFile(self.jsonData, self.filePath)
         self.assertTrue(os.path.exists(self.filePath), "The path ({0}) to the created json file should exist".format(self.filePath))
         f = open(self.filePath)
