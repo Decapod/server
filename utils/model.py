@@ -67,20 +67,13 @@ class ChangeApplier(object):
         '''
         Takes in an elPath into the change appliers model and removes it.
         Fires the onModelChanged event with newModel, oldModle,and request
+        If there is nothing to remove, no event will be fired.
         '''
         origModel = self.model.copy()
+        segs = getSegs(elPath)
+        key = segs.pop()
+        parent = self.model if len(segs) == 0 else get(self.model, segs)
         
-        segs = elPath.split(".")
-        if len(segs) > 1:
-            path = segs[:-1].join(".")
-            current = get(self.model, path)
-            key = segs[-1]
-            if key in current:
-                del current[key]
-        else:
-            key = segs[0]
-            if key in self.model:
-                del self.model[key]
-        
-        self.onModelChanged.fire(newModel=self.model, oldModel=origModel, request={"elPath": elPath, "type": "REMOVAL"})
-        
+        if parent is not None and key in parent:
+            del parent[key]
+            self.onModelChanged.fire(newModel=self.model, oldModel=origModel, request={"elPath": elPath, "type": "REMOVAL"})
