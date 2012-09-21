@@ -128,7 +128,7 @@ class PDFGenerator(object):
         else:
             self.status.remove("stage")
         
-        return str(self.status)
+        return self.status.model
     
     def generatePDFFromPages(self, options={"-t": "1"}):
         '''

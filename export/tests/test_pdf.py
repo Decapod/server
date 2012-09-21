@@ -2,7 +2,6 @@ import sys
 import os
 import unittest
 import shutil
-import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
@@ -132,17 +131,17 @@ class TestPDFGenerator(unittest.TestCase):
     def test_07_getStatus(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
         status = pdfGen.getStatus()
-        self.assertEqual(json.loads(status), pdfGen.status.model)
+        self.assertDictEqual(status, pdfGen.status.model)
         
     def test_08_getStatus_inProgress(self):
         io.makeDirs(PDF_DIR)
         testStatus = {"stage": "generating"}
-        io.writeToFile(json.dumps(testStatus), GENPDF_STATUS_FILE)
+        io.writeToJSONFile(testStatus, GENPDF_STATUS_FILE)
         pdfGen = pdf.PDFGenerator(self.mockRS)
         pdfGen.setStatus(pdf.EXPORT_IN_PROGRESS)
         status = pdfGen.getStatus()
-        self.assertStatusFile(json.loads(status))
-        self.assertDictEqual(json.loads(status), pdfGen.status.model)
+        self.assertStatusFile(status)
+        self.assertDictEqual(status, pdfGen.status.model)
         self.assertEquals(testStatus["stage"], pdfGen.status.model["stage"])
     
     def test_09_generatePDFFromPages_exception(self):
@@ -158,7 +157,7 @@ class TestPDFGenerator(unittest.TestCase):
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
         self.assertStatusFile(self.status_complete)
         self.assertDictEqual(self.status_complete, pdfGen.status.model)
-        self.assertEquals(self.status_complete, json.loads(returnedStatus))
+        self.assertDictEqual(self.status_complete, returnedStatus)
         
     def test_11_generate_options(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
@@ -168,7 +167,7 @@ class TestPDFGenerator(unittest.TestCase):
         self.assertTrue(os.path.exists(pdfGen.pdfPath), "The output file should exist at path {0}".format(pdfGen.pdfPath))
         self.assertStatusFile(self.status_complete)
         self.assertDictEqual(self.status_complete, pdfGen.status.model)
-        self.assertEquals(self.status_complete, json.loads(returnedStatus))
+        self.assertDictEqual(self.status_complete, returnedStatus)
         
     def test_12_generate_exception_noPageImages(self):
         pdfGen = pdf.PDFGenerator(self.mockRS)
