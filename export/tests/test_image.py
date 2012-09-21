@@ -4,13 +4,11 @@ import unittest
 import shutil
 import imghdr
 import zipfile
-import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 from mockClasses import mockResourceSource
 import image
-from status import loadJSONFile
 from utils import io
 
 DATA_DIR = os.path.abspath("data/")
@@ -173,46 +171,45 @@ class TestImageExporter(unittest.TestCase):
         io.rmTree(BOOK_DIR)
     
     def assertStatusFile(self, status, statusFile):
-        file = open(statusFile)
-        read = file.read()
-        file.close()
-        self.assertEquals(status, read)
+        readStatus = io.loadJSONFile(statusFile)
+        self.assertDictEqual(status, readStatus)
     
     def test_01_init(self):
         expectedStatus = {"status": image.EXPORT_READY}
         imgExp = image.ImageExporter(self.mockRS)
         self.assertTrue(os.path.exists(os.path.join(BOOK_DIR, "export", "image")))
-        self.assertDictEqual(expectedStatus, imgExp.status.status)
+        self.assertDictEqual(expectedStatus, imgExp.status.model)
     
     def test_02_setStatus(self):
         st = "test"
-        status = {"status": "test"}
+        status = {"status": st}
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.setStatus(st)
-        self.assertStatusFile(json.dumps(status), imgExp.statusFilePath)
-        self.assertDictEqual(status, imgExp.status.status)
+        self.assertStatusFile(status, imgExp.statusFilePath)
+        self.assertDictEqual(status, imgExp.status.model)
        
     def test_03_setStatus_removeURL(self):
         st = "test"
-        newStatus = {"status": "test"}
+        newStatus = {"status": st}
         imgExp = image.ImageExporter(self.mockRS)
-        imgExp.status.status = {"status": "complete", "url": "localhost"}
+        imgExp.status.update("status", "complete")
+        imgExp.status.update("url", "localhost")        
         imgExp.setStatus(st)
-        self.assertStatusFile(json.dumps(newStatus), imgExp.statusFilePath)
-        self.assertDictEqual(newStatus, imgExp.status.status)
+        self.assertStatusFile(newStatus, imgExp.statusFilePath)
+        self.assertDictEqual(newStatus, imgExp.status.model)
       
     def test_04_setStatus_addURL(self):
         st = "complete"
         completeStatus = {"status": st, "url": "/library/book/export/image/Decapod.zip"}
         imgExp = image.ImageExporter(self.mockRS)
         imgExp.setStatus(st, includeURL=True)
-        self.assertStatusFile(json.dumps(completeStatus), imgExp.statusFilePath)
-        self.assertDictEqual(completeStatus, imgExp.status.status)
+        self.assertStatusFile(completeStatus, imgExp.statusFilePath)
+        self.assertDictEqual(completeStatus, imgExp.status.model)
     
     def test_05_getStatus(self):
-        expectedStatusStr = '{"status": "ready"}'
+        expectedStatusStr = {"status": "ready"}
         imgExp = image.ImageExporter(self.mockRS)
-        self.assertEquals(expectedStatusStr, imgExp.getStatus())
+        self.assertDictEqual(expectedStatusStr, imgExp.getStatus())
     
     def test_06_export(self):
         completeStatus = {"status": image.EXPORT_COMPLETE, "url": "/library/book/export/image/Decapod.zip"}
@@ -222,9 +219,9 @@ class TestImageExporter(unittest.TestCase):
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = imgExp.export("tiff")
         self.assertTrue(os.path.exists(imgExp.archivePath), "The output file should exist at path {0}".format(imgExp.archivePath))
-        self.assertDictEqual(completeStatus, imgExp.status.status)
-        self.assertEquals(json.dumps(completeStatus), returnedStatus)
-        self.assertDictEqual(completeStatus, loadJSONFile(imgExp.statusFilePath))
+        self.assertDictEqual(completeStatus, imgExp.status.model)
+        self.assertDictEqual(completeStatus, returnedStatus)
+        self.assertDictEqual(completeStatus, io.loadJSONFile(imgExp.statusFilePath))
         zf = zipfile.ZipFile(imgExp.archivePath, 'r')
         self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zf.namelist())
@@ -238,9 +235,9 @@ class TestImageExporter(unittest.TestCase):
         shutil.copy(os.path.join(IMAGES_DIR, "Image_0015.JPEG"), IMG_DIR)
         returnedStatus = imgExp.export("tiff")
         self.assertTrue(os.path.exists(imgExp.archivePath), "The output file should exist at path {0}".format(imgExp.archivePath))
-        self.assertDictEqual(completeStatus, imgExp.status.status)
-        self.assertEquals(json.dumps(completeStatus), returnedStatus)
-        self.assertDictEqual(completeStatus, loadJSONFile(imgExp.statusFilePath))
+        self.assertDictEqual(completeStatus, imgExp.status.model)
+        self.assertDictEqual(completeStatus, returnedStatus)
+        self.assertDictEqual(completeStatus, io.loadJSONFile(imgExp.statusFilePath))
         zf = zipfile.ZipFile(imgExp.archivePath, 'r')
         self.assertIsNone(zf.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zf.namelist())
@@ -254,8 +251,8 @@ class TestImageExporter(unittest.TestCase):
         imgExp.archivePath = os.path.join(BOOK_DIR, "invalidPath", "invalid.zip") #sets the archivePath to an invalid path to force the exception
         self.assertRaises(image.OutputPathError, imgExp.export, "tiff")
         self.assertFalse(os.path.exists(imgExp.archivePath), "The output file should not exist at path {0}".format(imgExp.archivePath))
-        self.assertDictEqual(errorStatus, imgExp.status.status)
-        self.assertDictEqual(errorStatus, loadJSONFile(imgExp.statusFilePath))
+        self.assertDictEqual(errorStatus, imgExp.status.model)
+        self.assertDictEqual(errorStatus, io.loadJSONFile(imgExp.statusFilePath))
     
     def test_09_export_exception_noImages(self):
         imgExp = image.ImageExporter(self.mockRS)
@@ -264,7 +261,7 @@ class TestImageExporter(unittest.TestCase):
     
     def test_10_export_exception_inProgress(self):
         imgExp = image.ImageExporter(self.mockRS)
-        imgExp.status.set({"status": image.EXPORT_IN_PROGRESS})
+        imgExp.status.update("status", image.EXPORT_IN_PROGRESS)
         self.assertRaises(image.ExportInProgressError, imgExp.export, "tiff")
     
     def test_11_delete(self):
@@ -277,7 +274,7 @@ class TestImageExporter(unittest.TestCase):
     
     def test_12_delete_exception(self):
         imgExp = image.ImageExporter(self.mockRS)
-        imgExp.status.set({"status": image.EXPORT_IN_PROGRESS})
+        imgExp.status.update("status", image.EXPORT_IN_PROGRESS)
         self.assertRaises(image.ExportInProgressError, imgExp.deleteExport)
   
 if __name__ == '__main__':
