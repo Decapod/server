@@ -25,27 +25,13 @@ class TestConventional(unittest.TestCase):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
 
     def test_02_capture(self):
-        expected = ["./mockData/images/1.jpg", "./mockData/images/2.jpg"]
+        expected = [os.path.join(CONVENTIONAL_DIR, "capture-0_1.jpg"), os.path.join(CONVENTIONAL_DIR, "capture-0_2.jpg")]
         
         self.assertListEqual(self.conventional.capture(), expected)
         
     def test_03_delete(self):
         self.conventional.delete()
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
-
-#class TestBookNone(unittest.TestCase):
-#    
-#    book = None
-#    mockRS = mockResourceSource({"/library": {"path": BOOK_DIR}})
-#    
-#    def setUp(self):
-#        self.book = book.Book(self.mockRS)
-#        io.rmTree(BOOK_DIR)
-#            
-#    def test_01_delete(self):
-#        self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
-#        self.book.delete()
-#        self.assertFalse(os.path.exists(BOOK_DIR), "The 'book' directory (at path: {0}) should have been removed".format(BOOK_DIR))
 
 if __name__ == '__main__':
     unittest.main()

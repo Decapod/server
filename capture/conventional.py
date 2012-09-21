@@ -4,9 +4,13 @@ import sys
 import cameraInterface
 import mockCameraInterface
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import model
+from store import FSStore
 from utils import io
 
 class Conventional(object):
+    
+    initialStatus = {"index": 0, "totalCaptures": 0}
     
     def __init__(self, conventionalDir, captureStatusFile, test=False):
         self.conventionalDir = conventionalDir
@@ -17,23 +21,37 @@ class Conventional(object):
         # keep track of the  ports of connected cameras
         self.cameraPorts = self.cameraController.getPorts()
         
-        # ToDo: retrieve the last capture status
-        self.status = {"index": 0, "totalCaptures": 0}
+        # retrieve the last capture status
+        self.fsstore = FSStore(self.captureInfoFilePath)
+        self.status = self.fsstore.load()
+        
+        if (self.status is None):
+            self.status = Conventional.initialStatus
 
+        # prepare the change applier for saving status
+        self.changeApplier = model.ChangeApplier(self.status)
+        self.changeApplier.onModelChanged.addListener("onSaveStatus", self.saveStatus)
+        
         # Create the data dir if not exists
         io.makeDirs(conventionalDir)
     
+    def saveStatus(self, newModel, oldModel, request):
+        self.fsstore.save(newModel)
+        
     def capture(self):
         fileLocations = []
-        captureNameTemplate = "capture-" + str(self.status["index"]) + "_{0}.jpg"
+        
+        # Use the string keyword format to keep {0} intact which is used by the camera capture filename template
+        # TODO: Defining the template into config file
+        captureNameTemplate = "capture-{0}_{1}.jpg".format(self.status["index"], "{0}")
         
         try:
             fileLocations = self.cameraController.multiCameraCapture(self.cameraPorts, captureNameTemplate, self.conventionalDir)
         except Exception:
             raise
         
-        # ToDo: increase the total captures and save
-        self.status["totalCaptures"] = self.status["totalCaptures"] + len(self.cameraPorts)
+        # Increase the total captures and save
+        self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] + len(self.cameraPorts))
         
         return fileLocations
     
