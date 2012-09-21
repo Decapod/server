@@ -1,11 +1,38 @@
 from events import Events
 
-def get(dictionary, elPath):
+def getImp(dictionary, segs):
     '''
-    Takes in a dictionary object to search in and an elPath (string with . separated path segments) into it.
+    Takes in a dictionary object to search in and a list of path segments into it.
     Will return the value at the path or None if it doesn't exist.
     '''
-    segs = elPath.split(".")
+    seg = segs.pop(0)
+    segVal = dictionary.get(seg)
+    
+    if len(segs) > 0 and segVal is not None:
+        return getImp(segVal, segs)
+    else:
+        return segVal
+
+def setImp(dictionary, segs, value):
+    '''
+    Takes in a dictionary object and a list of path segments into it.
+    Will set the value at the specified path, and will create intermediate segments if they do not currently exist.
+    Note that this will convert path segments to dictionaries if they currently are not.
+    '''
+    seg = segs.pop(0)
+
+    if len(segs) > 0:
+        dictionary.setdefault(seg, {})
+        setImp(dictionary[seg], segs, value)
+    else:
+        dictionary[seg] = value
+        
+def get(dictionary, elPath):
+    '''
+    Takes in a dictionary object to search in and an elPath (string with . separated path segments, or list of path segments) into it.
+    Will return the value at the path or None if it doesn't exist.
+    '''
+    segs = elPath.split(".") if isinstance(elPath, str) else elPath
     current = dictionary
     
     for seg in segs:
@@ -15,25 +42,17 @@ def get(dictionary, elPath):
             current = None
             break
     return current
-    
+
 def set(dictionary, elPath, value):
     '''
-    Takes in a dictionary object and an elPath (string with . separated path segments) into it.
+    Takes in a dictionary object and an elPath (string with . separated path segments, or list of path segments) into it.
     Will set the value at the specified path, and will create intermediate segments if they do not currently exist.
     Note that this will convert path segments to dictionaries if they currently are not.
     '''
     
-    segs = elPath.split(".")
-    current = dictionary
-    lastSegIndex = len(segs) - 1
-    
-    for index, seg in enumerate(segs):
-        if not seg in current:
-            current[seg] = {} 
-        current[seg] = current[seg] if not index == lastSegIndex else value
-        current = current[seg]
-    
-
+    segs = elPath.split(".") if isinstance(elPath, str) else elPath
+    setImp(dictionary, segs, value)
+                   
 class ChangeApplier(object):
     def __init__(self, dictionary):
         self.model = dictionary
