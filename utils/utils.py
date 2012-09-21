@@ -41,6 +41,8 @@ class io:
         ==========
         IOError: if the file cannot be opened
         '''
+        io.makeDirs(os.path.dirname(writePath))
+        
         f = open(writePath, writeMode)
         f.write(contents)
         f.close()

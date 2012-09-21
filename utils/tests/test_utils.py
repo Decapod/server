@@ -67,7 +67,7 @@ class DirectoryManipulationTests(unittest.TestCase):
         utils.io.rmTree(self.existingTestDir)
         self.assertNoDir(self.existingTestDir)
         
-class JSONTests(unittest.TestCase):
+class FileOperationTests(unittest.TestCase):
 
     def setUp(self):
         utils.io.makeDirs(TEST_DIR)
