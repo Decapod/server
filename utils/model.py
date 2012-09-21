@@ -1,5 +1,12 @@
 from events import Events
 
+def getSegs(elPath):
+    '''
+    Takes in a string of path segment or a list of path segments.
+    Returns a list of path segments.
+    '''
+    return elPath.split(".") if isinstance(elPath, str) else elPath
+
 def getImp(dictionary, segs):
     '''
     Takes in a dictionary object to search in and a list of path segments into it.
@@ -32,8 +39,7 @@ def get(dictionary, elPath):
     Takes in a dictionary object to search in and an elPath (string with . separated path segments, or list of path segments) into it.
     Will return the value at the path or None if it doesn't exist.
     '''
-    segs = elPath.split(".") if isinstance(elPath, str) else elPath
-    return getImp(dictionary, segs)
+    return getImp(dictionary, getSegs(elPath))
 
 def set(dictionary, elPath, value):
     '''
@@ -41,9 +47,7 @@ def set(dictionary, elPath, value):
     Will set the value at the specified path, and will create intermediate segments if they do not currently exist.
     Note that this will convert path segments to dictionaries if they currently are not.
     '''
-    
-    segs = elPath.split(".") if isinstance(elPath, str) else elPath
-    setImp(dictionary, segs, value)
+    setImp(dictionary, getSegs(elPath), value)
                    
 class ChangeApplier(object):
     def __init__(self, dictionary):
