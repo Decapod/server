@@ -1,4 +1,4 @@
-from events import Events
+from firer import Firer
 
 def getSegs(elPath):
     '''
@@ -52,7 +52,7 @@ def set(dictionary, elPath, value):
 class ChangeApplier(object):
     def __init__(self, dictionary):
         self.model = dictionary
-        self.onModelChanged = Events()
+        self.onModelChanged = Firer()
              
     def requestUpdate(self, elPath, value):
         '''
