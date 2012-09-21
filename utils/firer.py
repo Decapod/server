@@ -1,5 +1,5 @@
 
-class Events(object):
+class Firer(object):
     def __init__(self):
         self.listeners = {}
 
