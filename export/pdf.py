@@ -2,10 +2,11 @@ import os
 import sys
 
 from image import batchConvert
-from status import status, loadJSONFile
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
-import resourcesource
 import utils
+import resourcesource
+from status import Status
+from store import FSStore
 
 BOOK_DIR = "${library}/book/"
 IMAGES_DIR = os.path.join(BOOK_DIR, "images/")
@@ -66,15 +67,13 @@ def assembleGenPDFCommand(tempDirPath, pdfPath, pages, options={"-t": "1"}):
 
 def getGENPDFStage(genPDFStatusFile):
     '''
-    Returns the value of the "stage" key from the genPDF progress file.
-    If either the file or the stage key is not present, a default dictionary is returned with the stage an empty string ""
+    Returns the value of the "stage" key from the genPDF progress file or None if it is not present.
     '''
-    stage = {"stage": ""}
+    stage = None
     
     if os.path.exists(genPDFStatusFile):
-        genPDFStatus = loadJSONFile(genPDFStatusFile)
-        if "stage" in genPDFStatus:
-            stage["stage"] = genPDFStatus["stage"]
+        genPDFStatus = utils.io.loadJSONFile(genPDFStatusFile)
+        stage = genPDFStatus.get("stage")
         
     return stage
 
@@ -93,26 +92,29 @@ class PDFGenerator(object):
         self.tiffPages = None
         
         self.setupExportFileStructure()
+        self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})  
 
     def setupExportFileStructure(self):
         '''
         Sets up the directory structure and initializes the status
         '''
         utils.io.makeDirs(self.pdfDirPath)
-        self.status = status(self.statusFilePath, EXPORT_READY)
-    
+        
     def setStatus(self, state, includeURL=False):
         '''
         Updates the status file with the new state. 
         If inlcudeURL is set to true, the url properly will be added with the path to the export
         '''
-        newStatus = {"status": state}
+        self.status.update("status", state)
         
-        if (includeURL):
-            virtualPath = PDF_DIR + os.path.split(self.pdfPath)[1]
-            newStatus["url"] = self.rs.url(virtualPath)
-            
-        self.status.set(newStatus)
+        if includeURL:
+            virtualPath = os.path.join(PDF_DIR, os.path.split(self.pdfPath)[1])
+            self.status.update("url", self.rs.url(virtualPath))
+        else:
+            self.status.remove("url")
+
+    def isInState(self, state):
+        return self.status.model["status"] == state
 
     def getStatus(self):
         '''
@@ -120,8 +122,11 @@ class PDFGenerator(object):
         
         If the export is in progress, it will check the genpdf progress file to add stage information to the status.
         '''
-        if self.status.inState(EXPORT_IN_PROGRESS):
-            self.status.update(getGENPDFStage(self.pdfGenerationStatusFilePath))
+        if self.isInState(EXPORT_IN_PROGRESS):
+            genPDFStage = getGENPDFStage(self.pdfGenerationStatusFilePath)
+            self.status.update("stage", genPDFStage if genPDFStage is not None else "")
+        else:
+            self.status.remove("stage")
         
         return str(self.status)
     
@@ -149,7 +154,7 @@ class PDFGenerator(object):
         PDFGenerationInProgressError: if an export is currently in progress
         PageImagesNotFoundError: if no page images are provided for the pdf generation
         '''
-        if self.status.inState(EXPORT_IN_PROGRESS):
+        if self.isInState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
@@ -174,8 +179,9 @@ class PDFGenerator(object):
         ==========
         PDFGenerationInProgressError: if an export is currently in progress
         '''
-        if self.status.inState(EXPORT_IN_PROGRESS):
+        if self.isInState(EXPORT_IN_PROGRESS):
             raise PDFGenerationInProgressError, "Export currently in progress, cannot delete the pdf until this process has finished"
         else:
             utils.io.rmTree(self.pdfDirPath)
             self.setupExportFileStructure()
+            self.setStatus(EXPORT_READY)

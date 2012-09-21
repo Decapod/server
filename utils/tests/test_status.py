@@ -1,5 +1,6 @@
 import os
 import sys
+import simplejson as json
 import unittest
 
 sys.path.append(os.path.abspath(os.path.join('..')))
@@ -78,6 +79,11 @@ class TestStatus(unittest.TestCase):
             self.assertDictEqual(expected, kwargs["newModel"])
         status.applier.onModelChanged.addListener("testRemove", testRemove)
         status.remove("test")
+        
+    def test_08_str(self):
+        store = mockStore()
+        status = Status(store, self.statusModel)
+        self.assertEquals(json.dumps(self.statusModel), str(status))
         
 if __name__ == '__main__':
     unittest.main()
