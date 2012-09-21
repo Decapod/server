@@ -4,9 +4,10 @@ import imghdr
 import zipfile
 
 from string import Template
-from status import status
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource
+from store import FSStore
+from status import Status
 import utils
 
 #constants for paths
@@ -137,27 +138,30 @@ class ImageExporter(object):
         self.nameTemplate = nameTemplate
         
         self.setupExportFileStructure()
+        self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})      
         
     def setupExportFileStructure(self):
         '''
-        Sets up the directory structure and initializes the status
+        Sets up the directory structure
         '''
         utils.io.makeDirs(self.imgDirPath)
         utils.io.makeDirs(self.tempDirPath)
-        self.status = status(self.statusFilePath, EXPORT_READY)
         
     def setStatus(self, state, includeURL=False):
         '''
         Updates the status file with the new state. 
         If inlcudeURL is set to true, the url properly will be added with the path to the export
         '''
-        newStatus = {"status": state}
+        self.status.update("status", state)
         
-        if (includeURL):
-            virtualPath = IMG_DIR + os.path.split(self.archivePath)[1]
-            newStatus["url"] = self.rs.url(virtualPath)
-            
-        self.status.set(newStatus)
+        if includeURL:
+            virtualPath = os.path.join(IMG_DIR, os.path.split(self.archivePath)[1])
+            self.status.update("url", self.rs.url(virtualPath))
+        else:
+            self.status.remove("url")
+
+    def isInState(self, state):
+        return self.status.model["status"] == state
 
     def getStatus(self):
         '''
@@ -175,7 +179,7 @@ class ImageExporter(object):
         ExportInProgressError: if an export is currently in progress
         ImagesNotFoundError: if no images are provided for the export
         '''
-        if self.status.inState(EXPORT_IN_PROGRESS):
+        if self.isInState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot generated another export until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
@@ -198,8 +202,9 @@ class ImageExporter(object):
         ==========
         ExportInProgressError: if an export is currently in progress
         '''
-        if self.status.inState(EXPORT_IN_PROGRESS):
+        if self.isInState(EXPORT_IN_PROGRESS):
             raise ExportInProgressError, "Export currently in progress, cannot delete until this process has finished"
         else:
             utils.io.rmTree(self.imgDirPath)
             self.setupExportFileStructure()
+            self.setStatus(EXPORT_READY)

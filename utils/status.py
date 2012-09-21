@@ -1,3 +1,4 @@
+import simplejson as json
 from model import ChangeApplier
 
 class Status(object):
@@ -28,6 +29,9 @@ class Status(object):
 
         self.applier = ChangeApplier(self.model)
         self.applier.onModelChanged.addListener("internal.onSaveStatus", self.saveModel)
+        
+    def __str__(self):
+        return json.dumps(self.model)
     
     def saveModel(self, newModel, oldModel, request):
         self.store.save(newModel)
