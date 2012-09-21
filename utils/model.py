@@ -33,15 +33,7 @@ def get(dictionary, elPath):
     Will return the value at the path or None if it doesn't exist.
     '''
     segs = elPath.split(".") if isinstance(elPath, str) else elPath
-    current = dictionary
-    
-    for seg in segs:
-        if seg in current:
-            current = current[seg]
-        else:
-            current = None
-            break
-    return current
+    return getImp(dictionary, segs)
 
 def set(dictionary, elPath, value):
     '''
