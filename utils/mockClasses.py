@@ -29,3 +29,14 @@ class mockFileStream(object):
 class mockMimeType(object):
     def __init__(self, filePath):
         self.value = mimetypes.guess_type(filePath)[0]
+        
+class mockStore(object):
+    def __init__(self, stored=None):
+        self.stored  = stored
+        
+    def load(self):
+        return self.stored
+    
+    def save(self, value):
+        self.stored = value
+        
