@@ -45,12 +45,12 @@ def convert(imagePath, format, outputDir=None, name=None):
     ConversionError: an error occurs during the conversion process
     '''
     if utils.image.isImage(imagePath):
-        ext = format if format[0] == "." else "." + format
+        ext = format[1:] if format.startswith(".") else format
         origDir, fileName = os.path.split(imagePath)
-        newName = name if name != None else os.path.splitext(fileName)[0]
-        writeDir = outputDir if outputDir != None else origDir
+        newName = name if name else os.path.splitext(fileName)[0]
+        writeDir = outputDir if outputDir else origDir
         
-        writePath = os.path.join(writeDir, newName + ext)
+        writePath = os.path.join(writeDir, "{0}.{1}".format(newName, ext))
         utils.io.invokeCommandSync(["convert", imagePath, writePath], ConversionError, "Error converting {0} to '{1}' format".format(imagePath, format))
         return writePath
     else:
@@ -74,7 +74,8 @@ def batchConvert(imagePaths, format, outputDir=None, nameTemplate=None):
     digits = len(str(len(imagePaths))) #retrieves the number of digits in the length of imagePaths
     for imagePath in imagePaths:
         if utils.image.isImage(imagePath):
-            name = Template(nameTemplate).safe_substitute(index=str(index).zfill(digits)) if nameTemplate != None else None
+            count = str(index).zfill(digits) # converts the index to start from 1 instead of 0. and pads it with leading 0s if needed.
+            name = Template(nameTemplate).safe_substitute(index=count) if nameTemplate else None
             convertedImage = convert(imagePath, format, outputDir, name)
             convertedImages.append(convertedImage)
             index += 1;
@@ -99,8 +100,8 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
     OutputPathError: the output path is malformed (e.g. path to a directory)
     '''
     currentDir = os.getcwd()
-    temp = tempDir if tempDir != None else os.path.join(os.getcwd(), "temp")
-    utils.io.makeDirs(tempDir)
+    temp = tempDir if tempDir else os.path.join(os.getcwd(), "temp")
+    utils.io.makeDirs(temp)
     converted = batchConvert(imagePaths, format, temp, nameTemplate)
     if len(converted) > 0:
         try:
@@ -110,15 +111,15 @@ def archiveConvert(imagePaths, format, archivePath, tempDir=None, nameTemplate=N
             raise OutputPathError("{0} is not a valid path".format(archivePath))
         os.chdir(tempDir) # Need to change to the tempDir where the images are so that the zip file won't contain any directory structure
         for imagePath in converted:
-            imageFile = os.path.split(imagePath)[1] # extacts the filename from the path
+            imageFile = os.path.basename(imagePath)
             zip.write(imageFile)
         zip.close()
         os.chdir(currentDir)
-        utils.io.rmTree(tempDir)
+        utils.io.rmTree(temp)
         return archivePath
     else:
         # Return None when there are no valid image paths
-        utils.io.rmTree(tempDir)
+        utils.io.rmTree(temp)
         return None
     
 class ImageExporter(object):
@@ -164,9 +165,6 @@ class ImageExporter(object):
         return self.status.model["status"] == state
 
     def getStatus(self):
-        '''
-        Returns a string representation of the status
-        '''
         return self.status.model
     
     def export(self, format):
@@ -185,6 +183,7 @@ class ImageExporter(object):
             self.setStatus(EXPORT_IN_PROGRESS)
             self.imagePaths = utils.image.imageListFromDir(self.bookDirPath, sortKey=os.path.getmtime);
             if len(self.imagePaths) is 0:
+                self.setStatus(EXPORT_ERROR)
                 raise ImagesNotFoundError("No images found, nothing to export")
             try:
                 archiveConvert(self.imagePaths, format, self.archivePath, self.tempDirPath, self.nameTemplate)
