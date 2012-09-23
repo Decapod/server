@@ -26,7 +26,7 @@ class io:
         
         Exceptions
         ==========
-        OSError: if the directory cannot be created
+        OSError: if the directory cannot be removed
         '''
         if os.path.exists(path):
             shutil.rmtree(path, ignore_errors, onerror)
