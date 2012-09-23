@@ -118,8 +118,6 @@ class PDFGenerator(object):
 
     def getStatus(self):
         '''
-        Returns a string representation of the status
-        
         If the export is in progress, it will check the genpdf progress file to add stage information to the status.
         '''
         if self.isInState(EXPORT_IN_PROGRESS):
@@ -161,9 +159,10 @@ class PDFGenerator(object):
             utils.io.makeDirs(self.tiffDirPath)
             self.pages = utils.image.imageListFromDir(self.bookDirPath, sortKey=os.path.getmtime);
             if len(self.pages) is 0:
+                self.setStatus(EXPORT_ERROR)
                 raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
-            self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
             try:
+                self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
                 self.generatePDFFromPages(utils.translate.map(options, KEY_MAP))
             except:
                 self.setStatus(EXPORT_ERROR)
