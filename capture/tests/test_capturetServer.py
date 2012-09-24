@@ -12,6 +12,7 @@ import captureServer
 from utils import io
 
 DATA_DIR = os.path.abspath("data")
+CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
 
 CONFIG = {
     "global": {
@@ -42,6 +43,9 @@ CONFIG = {
 def setup_server(config=CONFIG):
     captureServer.mountApp(config)
     
+def teardown_server(dir=CONVENTIONAL_DIR):
+    io.rmTree(dir)
+
 class ServerTestCase(helper.CPWebCase):
     '''
     A subclass of helper.CPWebCase
@@ -97,10 +101,55 @@ class TestCameras(ServerTestCase):
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.camerasURL, ["PUT", "POST", "DELETE"])
 
-    def test_02_supportedMethods(self):
+    def test_02_get(self):
         self.getPage(self.camerasURL)
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+class TestConventional(ServerTestCase):
+    conventionalURL = "/conventional/"
+    
+    setup_server = staticmethod(setup_server)
+        
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.conventionalURL, ["PUT", "POST", "DELETE"])
+
+    def test_02_get(self):
+        self.getPage(self.conventionalURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+class TestConventionalCapture(ServerTestCase):
+    conventionalCaptureURL = "/conventional/capture/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+        
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.conventionalCaptureURL, ["PUT"])
+
+    def test_02_get(self): pass
+#        self.getPage(self.conventionalCaptureURL)
+#        self.assertStatus(200)
+#        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+    def test_03_post(self):
+        headers = [
+            ("Content-Length", 0),
+            ("Content-Type", "text/plain"),
+            ("Pragma", "no-cache"),
+            ("Cache-Control", "no-cache")
+        ]
+        
+        self.getPage(self.conventionalCaptureURL, headers, "POST", "")
+        self.assertStatus(202)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+    def test_04_delete(self):
+        self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
+        self.getPage(self.conventionalCaptureURL, method="DELETE")
+        self.assertStatus(204)
+        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'book' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
 
 if __name__ == '__main__':
     import nose
