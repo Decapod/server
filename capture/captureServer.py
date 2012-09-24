@@ -154,8 +154,14 @@ class ConventionalCaptureController(object):
         
     def GET(self, *args, **kwargs):
         # returns the zipped captured images
-        pass
+        server.setJSONResponseHeaders(cherrypy, 'capturedImages.zip')
+        cherrypy.response.status = 202
 
+    def POST(self, *args, **kwargs):
+        server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
+        cherrypy.response.status = 202
+        return json.dumps(self.conventional.capture())
+        
     def DELETE(self, *args, **kwargs):
         self.conventional.delete()
         cherrypy.response.status = 204
