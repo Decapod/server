@@ -2,6 +2,7 @@ from __future__ import division
 import os
 import sys
 import shutil
+from string import Template
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -73,12 +74,12 @@ def capture(port, filename, dir="images"):
     else: 
         raise InvalidPortError
     
-def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
+def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
     fileLocations = []
     
     try:
-        for index, port in enumerate(ports):
-            filename = filenameTemplate.format(index)
+        for camera, port in enumerate(ports):
+            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
             fileLocations.append(capture(port, filename, dir))
     except Exception:
         for fileLocation in fileLocations:
