@@ -56,7 +56,20 @@ class Conventional(object):
         zip.close()
         
         return self.exportZipFilePath
-        
+    
+    #TODO: write test for this.
+    def getImagesByIndex(self, index, dir, filenameTemplate="capture-${cameraID}_${captureIndex}.jpg"):
+       regex = re.compile(Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="(?p<index>\d*)"))
+       imagePaths = utils.io.imageListFromDir(dir)
+       images = []
+       
+       for imagePath in imagePaths:
+           match = regex.match(imagePath)
+           if match and match.groupdict()["index"] == index:
+               images.append(imagePath)
+           
+       return images;
+    
     def capture(self):
         fileLocations = []
         
