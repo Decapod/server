@@ -1,5 +1,6 @@
 import os
 import sys
+from string import Template
 
 import cameraInterface
 import mockCameraInterface
@@ -41,9 +42,9 @@ class Conventional(object):
     def capture(self):
         fileLocations = []
         
-        # Use the string keyword format to keep {0} intact which is used by the camera capture filename template
+        # $cameraID is used by the camera capture filename template
         # TODO: Defining the template into config file
-        captureNameTemplate = "capture-{0}_{1}.jpg".format(self.status["index"], "{0}")
+        captureNameTemplate = Template("capture-${cameraID}_${captureIndex}.jpg").safe_substitute(captureIndex=self.status["index"])
         
         try:
             fileLocations = self.cameraController.multiCameraCapture(self.cameraPorts, captureNameTemplate, self.conventionalDir)

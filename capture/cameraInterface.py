@@ -3,6 +3,7 @@ import os
 import sys
 from PIL import Image
 import math
+from string import Template
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -134,10 +135,10 @@ def capture(port, filename, dir='images'):
     else:
         raise InvalidPortError
 
-def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
+def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
     '''
     Takes a picture with the cameras at each of the specified ports in order.
-    Can take in a filenameTemplate to be used for naming the captured images. {0} will be replaced by an index representing the camera.
+    Can take in a filenameTemplate to be used for naming the captured images. "$cameraID" will be replaced by a number representing the camera.
     Can also specify a directory where the images should be stored to.
     
     Retuns a list of paths to the captured images.
@@ -146,8 +147,9 @@ def multiCameraCapture(ports, filenameTemplate="capture{0}", dir="images"):
     fileLocations = []
     
     try:
-        for index, port in enumerate(ports):
-            filename = filenameTemplate.format(index)
+        for camera, port in enumerate(ports):
+            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
+#            filename = filenameTemplate.format(index)
             fileLocations.append(capture(port, filename, dir))
     except Exception:
         for fileLocation in fileLocations:
