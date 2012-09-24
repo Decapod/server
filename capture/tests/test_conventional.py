@@ -39,6 +39,6 @@ class TestConventional(unittest.TestCase):
     def test_03_delete(self):
         self.conventional.delete()
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
-
+        
 if __name__ == '__main__':
     unittest.main()
