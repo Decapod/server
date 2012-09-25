@@ -86,7 +86,7 @@ class io:
         io.writeToFile(json.dumps(jsonData), jsonFile)
         
     @staticmethod
-    def invokeCommandSync(cmdArgs, error, message):
+    def invokeCommandSync(cmdArgs, error, message, waitForRtn=True):
         '''
         Invokes a process/function on the command line
         
@@ -95,12 +95,14 @@ class io:
         Raises the passed in "error" if an exception occurs
         '''
         proc = subprocess.Popen(cmdArgs, stdout=subprocess.PIPE)
-        output = proc.communicate()[0]
-        if proc.returncode != 0:
-            print(output)
-            raise error, message
         
-        return output
+        if waitForRtn:
+            output = proc.communicate()[0]
+            if proc.returncode != 0:
+                print(output)
+                raise error, message
+            
+            return output
     
 class image:
     

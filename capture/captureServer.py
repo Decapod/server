@@ -158,9 +158,14 @@ class ConventionalCaptureController(object):
         cherrypy.response.status = 202
 
     def POST(self, *args, **kwargs):
+        try:
+            captures = self.conventional.capture()
+        except conventional.MultiCaptureError as e:
+            raise cherrypy.HTTPError(500, e.message)
+
         server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
         cherrypy.response.status = 202
-        return json.dumps(self.conventional.capture())
+        return json.dumps(captures)
         
     def DELETE(self, *args, **kwargs):
         self.conventional.delete()

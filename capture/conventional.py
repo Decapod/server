@@ -1,5 +1,6 @@
 import os
 import sys
+import cherrypy
 from string import Template
 import zipfile
 
@@ -11,6 +12,7 @@ from store import FSStore
 from utils import io
 
 class OutputPathError(Exception): pass
+class MultiCaptureError(Exception): pass
 
 class Conventional(object):
     
@@ -22,6 +24,9 @@ class Conventional(object):
         self.exportZipFilePath = os.path.join(self.dataDir, "..", "conventional.zip")
         
         self.cameraController = cameraInterface if not test else mockCameraInterface
+        
+#        self.multiCapture = "cameraInterface." + cherrypy.config["app_opts.general"]["multiCapture"]
+        self.multiCapture = cherrypy.config["app_opts.general"]["multiCapture"]
         
         # keep track of the  ports of connected cameras
         self.cameraPorts = self.cameraController.getPorts()
@@ -78,9 +83,17 @@ class Conventional(object):
         captureNameTemplate = Template("capture-${cameraID}_${captureIndex}.jpg").safe_substitute(captureIndex=self.status["index"])
         
         try:
-            fileLocations = self.cameraController.multiCameraCapture(self.cameraPorts, captureNameTemplate, self.dataDir)
-        except Exception:
-            raise
+            multiCapture = getattr(self.cameraController, self.multiCapture)
+            fileLocations = multiCapture(ports=self.cameraPorts, 
+                                         filenameTemplate=captureNameTemplate, 
+                                         dir=self.dataDir, 
+                                         delay=cherrypy.config["app_opts.general"]["delay"],
+                                         interval=cherrypy.config["app_opts.general"]["interval"])
+        except self.cameraController.TimeoutError as e:
+            # TODO: fall back to sequential capture
+            raise MultiCaptureError(e.message)
+        except self.cameraController.CaptureError as e:
+            raise MultiCaptureError(e.message)
         
         # Increase the total captures and save
         self.changeApplier.requestUpdate("index", self.status["index"] + 1)

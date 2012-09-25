@@ -1,8 +1,9 @@
 from __future__ import division
 import os
 import sys
-from PIL import Image
 import math
+import time
+from PIL import Image
 from string import Template
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
@@ -13,6 +14,7 @@ class DetectCamerasError(Exception): pass
 class InvalidPortError(Exception): pass
 class CaptureError(Exception): pass
 class GetResolutionError(Exception): pass
+class TimeoutError(Exception): pass
 
 def parseCamerasInfo(info):
     infoList = []
@@ -135,7 +137,9 @@ def capture(port, filename, dir='images'):
     else:
         raise InvalidPortError
 
-def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
+#def sequentialCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
+def sequentialCapture(**kwargs):
+    
     '''
     Takes a picture with the cameras at each of the specified ports in order.
     Can take in a filenameTemplate to be used for naming the captured images. "$cameraID" will be replaced by a number representing the camera.
@@ -144,6 +148,10 @@ def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images")
     Retuns a list of paths to the captured images.
     If there is an exception during capture it will attempt to remove all of the successful captures. However, any created directory structure will remain in place.
     '''
+    ports = kwargs["ports"]
+    filenameTemplate = kwargs["filenameTemplate"]
+    dir = kwargs["dir"]
+    
     fileLocations = []
     
     try:
@@ -154,10 +162,132 @@ def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images")
     except Exception:
         for fileLocation in fileLocations:
                 os.remove(fileLocation)
-        raise
+        raise CaptureError("Cannot complete sequential captures.")
         
     return fileLocations
+
+'''
+A global variable to indicate if the simultaneous capture has been prepared
+'''
+multiCamerasPrepared = False
+
+'''
+A global variable to keep track of the last processed ports. If the requested ports in simultaneous capture
+don't match with the previous ports, unset flag "multiCamerasPrepared" to re-prepare the new cameras
+'''
+previousPorts = []
+
+'''
+Global list variables to save the locations of temporary and actual files used by multi camera capture
+'''
+tempCaptureLocations = []
+
+def simultaneousCapture(**kwargs):
+    '''
+    Takes a picture with the cameras at each of the specified ports in order.
+    Can take in a filenameTemplate to be used for naming the captured images. "${cameraID}" will be replaced by a number representing the camera.
+    Can also specify a directory where the images should be stored to.
+    
+    Retuns a list of paths to the captured images.
+    If there is an exception during capture it will attempt to remove all of the successful captures. However, any created directory structure will remain in place.
+    '''
+    actualCaptureLocations = []
+
+    ports = kwargs["ports"]
+    filenameTemplate = kwargs["filenameTemplate"]
+    dir = kwargs["dir"]
+    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else "temp"
+    delay = kwargs["delay"] if kwargs["delay"] else 10
+    interval = kwargs["interval"] if kwargs.has_key("interval") else 0.5
+    
+    global multiCamerasPrepared, tempCaptureLocations
+    
+    if len(ports) == 0: return actualCaptureLocations
+
+    for port in ports:
+        if (not isPortValid(port)):
+            raise InvalidPortError
+    
+    # Re-prepare cameras if the ports are changed
+    if len(actualCaptureLocations) > 0 and ports != previousPorts:
+        multiCamerasPrepared = False
+    
+    previousPorts = ports
+    
+    try:
+        utils.io.makeDirs(tempDir)
+    except Exception:
+        raise IOError("Cannot create directory {0}".format(tempDir))
+    
+    try:
+        utils.io.makeDirs(dir)
+    except Exception:
+        raise IOError("Cannot create directory {0}".format(dir))
+    
+    try:
+        if not multiCamerasPrepared:
+            # Prepare the cameras for the simultaneous capture. Only run once.
+            for camera, port in enumerate(ports):
+                tempFileLocation = os.path.join(tempDir, str(camera) + ".jpg")
+                tempCaptureLocations.append(tempFileLocation)
+                
+                cmd = [
+                    "gphoto2",
+                    "--capture-image-and-download",
+                    "--force-overwrite",
+                    "--port={0}".format(port),
+                    "--filename={0}".format(tempFileLocation),
+                    "-I -1"
+                ]
+                
+                captureInfo = utils.io.invokeCommandSync(cmd, None, None, False)
+            
+            multiCamerasPrepared = True
+        else:
+            # Subsequent simultaneous captures after the preparation by sending USR1 signal to gphoto2
+            cmd = [
+                "killall",
+                "-USR1",
+                "gphoto2"
+            ]
+            
+            captureInfo = utils.io.invokeCommandSync(cmd,
+                                    CaptureError,
+                                    "Could not simultaneously capture images from these ports {0}.".format("; ".join(ports)))
+            
+            # rename
+    except Exception:
+        for fileLocation in tempCaptureLocations:
+            os.remove(fileLocation)
+        raise
+    
+    # rename image name to the desired image name
+    for camera, tempFile in enumerate(tempCaptureLocations):
+        actualCaptureLocation = os.path.join(dir, Template(filenameTemplate).safe_substitute(cameraID=camera))
+        try:
+            currentDelay = 0
+            
+            while True:
+                time.sleep(interval)
+                currentDelay = currentDelay + interval
+                
+                if os.path.exists(tempFile):
+                    os.rename(tempFile, actualCaptureLocation)
+                    break
+                if currentDelay == delay:
+                    raise TimeoutError
+                    break
+                
+        except TimeoutError:
+            for fileLocation in tempCaptureLocations[camera:]:
+                if os.path.exists(fileLocation): os.remove(fileLocation)
+            for fileLocation in actualCaptureLocations:
+                if os.path.exists(fileLocation): os.remove(fileLocation)
+            raise TimeoutError("Could not simultaneously capture images.")
+            
+        actualCaptureLocations.append(actualCaptureLocation)
         
+    return actualCaptureLocations
 
 def getResolution(port):
     '''
