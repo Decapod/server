@@ -1,6 +1,5 @@
 import os
 import sys
-import cherrypy
 from string import Template
 import zipfile
 import re
@@ -19,15 +18,16 @@ class Conventional(object):
     
     initialStatus = {"index": 0, "totalCaptures": 0}
     
-    def __init__(self, dataDir, captureStatusFile, test=False):
+    def __init__(self, dataDir, captureStatusFile, config):
         self.dataDir = dataDir
+        self.config = config
+        
         self.captureInfoFilePath = os.path.join(dataDir, captureStatusFile)
         self.exportZipFilePath = os.path.join(self.dataDir, "..", "conventional.zip")
         
-        self.cameraController = cameraInterface if not test else mockCameraInterface
+        self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
         
-#        self.multiCapture = "cameraInterface." + cherrypy.config["app_opts.general"]["multiCapture"]
-        self.multiCapture = cherrypy.config["app_opts.general"]["multiCapture"]
+        self.multiCapture = self.config["multiCapture"]
         
         # keep track of the  ports of connected cameras
         self.cameraPorts = self.cameraController.getPorts()
@@ -87,15 +87,15 @@ class Conventional(object):
         
         # $cameraID is used by the camera capture filename template
         # TODO: Defining the template into config file
-        captureNameTemplate = Template("capture-${cameraID}_${captureIndex}.jpg").safe_substitute(captureIndex=self.status["index"])
+        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}.jpg").safe_substitute(captureIndex=self.status["index"])
         
         try:
             multiCapture = getattr(self.cameraController, self.multiCapture)
             fileLocations = multiCapture(ports=self.cameraPorts, 
                                          filenameTemplate=captureNameTemplate, 
                                          dir=self.dataDir, 
-                                         delay=cherrypy.config["app_opts.general"]["delay"],
-                                         interval=cherrypy.config["app_opts.general"]["interval"])
+                                         delay=self.config["delay"],
+                                         interval=self.config["interval"])
         except self.cameraController.TimeoutError as e:
             # TODO: fall back to sequential capture
             raise MultiCaptureError(e.message)

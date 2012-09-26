@@ -16,6 +16,10 @@ class CaptureError(Exception): pass
 class GetResolutionError(Exception): pass
 class TimeoutError(Exception): pass
 
+DEFAULT_TEMP_DIR = "temp"
+DEFAULT_DELAY = 10
+DEFAULT_INTERVAL = 0.5
+
 def parseCamerasInfo(info):
     infoList = []
     
@@ -137,7 +141,6 @@ def capture(port, filename, dir='images'):
     else:
         raise InvalidPortError
 
-#def sequentialCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
 def sequentialCapture(**kwargs):
     
     '''
@@ -172,12 +175,6 @@ A global variable to indicate if the simultaneous capture has been prepared
 multiCamerasPrepared = False
 
 '''
-A global variable to keep track of the last processed ports. If the requested ports in simultaneous capture
-don't match with the previous ports, unset flag "multiCamerasPrepared" to re-prepare the new cameras
-'''
-previousPorts = []
-
-'''
 Global list variables to save the locations of temporary and actual files used by multi camera capture
 '''
 tempCaptureLocations = []
@@ -196,9 +193,9 @@ def simultaneousCapture(**kwargs):
     ports = kwargs["ports"]
     filenameTemplate = kwargs["filenameTemplate"]
     dir = kwargs["dir"]
-    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else "temp"
-    delay = kwargs["delay"] if kwargs["delay"] else 10
-    interval = kwargs["interval"] if kwargs.has_key("interval") else 0.5
+    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else DEFAULT_TEMP_DIR
+    delay = kwargs["delay"] if kwargs["delay"] else DEFAULT_DELAY
+    interval = kwargs["interval"] if kwargs.has_key("interval") else DEFAULT_INTERVAL
     
     global multiCamerasPrepared, tempCaptureLocations
     
@@ -207,12 +204,6 @@ def simultaneousCapture(**kwargs):
     for port in ports:
         if (not isPortValid(port)):
             raise InvalidPortError
-    
-    # Re-prepare cameras if the ports are changed
-    if len(actualCaptureLocations) > 0 and ports != previousPorts:
-        multiCamerasPrepared = False
-    
-    previousPorts = ports
     
     try:
         utils.io.makeDirs(tempDir)
