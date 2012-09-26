@@ -63,10 +63,9 @@ class Conventional(object):
         
         return self.exportZipFilePath
     
-    #TODO: write test for this.
-    def getImagesByIndex(self, index, dir, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+    def getImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
         regex = re.compile(Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="(?P<index>\d*)"))
-        imagePaths = image.imageListFromDir(dir)
+        imagePaths = image.imageListFromDir(self.dataDir)
         images = []
         
         for imagePath in imagePaths:
@@ -75,6 +74,13 @@ class Conventional(object):
                 images.append(imagePath)
             
         return images;
+    
+    def deleteImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+        images = self.getImagesByIndex(index, filenameTemplate)
+        for image in images:
+            if os.path.exists(image):
+                os.remove(image)
+                self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] + len(self.cameraPorts))
     
     def capture(self):
         fileLocations = []
