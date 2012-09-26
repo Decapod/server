@@ -171,8 +171,8 @@ class ConventionalCaptureImages(ServerTestCase):
         self.assertBody(json.dumps(expected))
         
     def test_03_delete(self):
-        #TODO: implement
-        pass
+        self.getPage(self.conventionalCaptureImagesIndexURL, method="DELETE");
+        self.assertStatus(204)
 
 if __name__ == '__main__':
     import nose

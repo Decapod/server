@@ -195,8 +195,7 @@ class ConventionalCaptureImagesController(object):
     def GET(self, *args):
         if len(args) and args[0].isdigit():
             server.setJSONResponseHeaders(cherrypy, "images.json")
-            cherrypy.response.status = 200
-            return json.dumps({"images": self.conventional.getImagesByIndex(args[0], rs.path(CONVENTIONAL_DATA_DIR))})
+            return json.dumps({"images": self.conventional.getImagesByIndex(args[0])})
         else:
             raise cherrypy.HTTPError(405)
     
@@ -204,8 +203,8 @@ class ConventionalCaptureImagesController(object):
         if not len(args) or args[0].isdigit():
             raise cherrypy.HTTPError(405)
         else:
-            #TODO: Implement
-            pass
+            self.deleteImagesByIndex(args[0])
+            cherrypy.response.status = 204
     
 if __name__ == "__main__":
     startServer()
