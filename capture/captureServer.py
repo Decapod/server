@@ -124,7 +124,7 @@ class ConventionalController(object):
     exposed = True
     
     def __init__(self, conventionalDir):
-        self.conventional = conventional.Conventional(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"]["testmode"])
+        self.conventional = conventional.Conventional(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
         
         self.paths = {
             "capture": ConventionalCaptureController(self.conventional)

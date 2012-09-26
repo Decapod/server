@@ -8,7 +8,15 @@ sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import utils
 
+class DetectCamerasError(Exception): pass
 class InvalidPortError(Exception): pass
+class CaptureError(Exception): pass
+class GetResolutionError(Exception): pass
+class TimeoutError(Exception): pass
+
+DEFAULT_TEMP_DIR = "temp"
+DEFAULT_DELAY = 10
+DEFAULT_INTERVAL = 0.5
 
 CAMERA_INFO_BY_PORT = {
     "usb:001,002": {
@@ -74,9 +82,43 @@ def capture(port, filename, dir="images"):
     else: 
         raise InvalidPortError
     
-def multiCameraCapture(ports, filenameTemplate="capture$cameraID", dir="images"):
-    fileLocations = []
+def sequentialCapture(**kwargs):
     
+    '''
+    Takes a picture with the cameras at each of the specified ports in order.
+    Can take in a filenameTemplate to be used for naming the captured images. "$cameraID" will be replaced by a number representing the camera.
+    Can also specify a directory where the images should be stored to.
+    
+    Retuns a list of paths to the captured images.
+    If there is an exception during capture it will attempt to remove all of the successful captures. However, any created directory structure will remain in place.
+    '''
+    ports = kwargs["ports"]
+    filenameTemplate = kwargs["filenameTemplate"]
+    dir = kwargs["dir"]
+    
+    fileLocations = []
+
+    try:
+        for camera, port in enumerate(ports):
+            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
+            fileLocations.append(capture(port, filename, dir))
+    except Exception:
+        for fileLocation in fileLocations:
+                os.remove(fileLocation)
+        raise
+        
+    return fileLocations
+
+def simultaneousCapture(**kwargs):
+    ports = kwargs["ports"]
+    filenameTemplate = kwargs["filenameTemplate"]
+    dir = kwargs["dir"]
+    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else DEFAULT_TEMP_DIR
+    delay = kwargs["delay"] if kwargs["delay"] else DEFAULT_DELAY
+    interval = kwargs["interval"] if kwargs.has_key("interval") else DEFAULT_INTERVAL
+    
+    fileLocations = []
+
     try:
         for camera, port in enumerate(ports):
             filename = Template(filenameTemplate).safe_substitute(cameraID=camera)

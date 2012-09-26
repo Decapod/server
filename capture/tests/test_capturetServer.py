@@ -17,7 +17,7 @@ CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
 
 CONFIG = {
     "global": {
-        "app_opts.general": {"testmode": True}
+        "app_opts.general": {"testmode": True, "multiCapture": "simultaneousCapture", "delay": 10, "interval": 1}
     },
     "/": {
         "tools.staticdir.root": os.getcwd(),
@@ -71,6 +71,7 @@ class TestConfig(helper.CPWebCase):
         })
     
     setup_server = staticmethod(customServerSetup)
+    teardown_server = staticmethod(teardown_server)
     
     def test_01_socket_host(self):
         self.assertEquals("0.0.0.0", cherrypy.config["server.socket_host"])
@@ -80,6 +81,7 @@ class TestRoot(ServerTestCase):
     expectedRedirectURL = "/components/cameras/html/cameras.html"
     
     setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
     
     def test_01_get(self):
         self.getPage(self.rootURL)
@@ -98,6 +100,7 @@ class TestCameras(ServerTestCase):
     camerasURL = "/cameras/"
     
     setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
         
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.camerasURL, ["PUT", "POST", "DELETE"])
@@ -111,6 +114,7 @@ class TestConventional(ServerTestCase):
     conventionalURL = "/conventional/"
     
     setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
         
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalURL, ["PUT", "POST", "DELETE"])

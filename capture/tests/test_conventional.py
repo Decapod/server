@@ -7,12 +7,14 @@ sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import conventional
 from store import FSStore
-from utils import io, image
+import model
+import utils
 
 DATA_DIR = os.path.abspath("data")
 MOCK_DATA_DIR = os.path.abspath("mockData")
 CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
 CAPTURE_STATUS_FILENAME = "captureStatus.json"
+MOCK_CONFIG = {"testmode": True, "multiCapture": "simultaneousCapture", "delay": 10, "interval": 1}
 
 class TestConventional(unittest.TestCase):
     
@@ -20,10 +22,11 @@ class TestConventional(unittest.TestCase):
     
     def setUp(self):
         self.statusFile = os.path.join(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME)
-        self.conventional = conventional.Conventional(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, True)
+        self.conventional = conventional.Conventional(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, MOCK_CONFIG)
+        self.changeApplier = model.ChangeApplier({"index": 0, "totalCaptures": 0})
     
     def tearDown(self):
-        io.rmTree(CONVENTIONAL_DIR)
+        utils.io.rmTree(CONVENTIONAL_DIR)
         
     def test_01_init(self):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
@@ -46,7 +49,7 @@ class TestConventional(unittest.TestCase):
     def test_04_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         dataDir = self.conventional.dataDir
-        images = image.imageListFromDir(imgDir)
+        images = utils.image.imageListFromDir(imgDir)
         for image in images:
             shutil.copy(image, dataDir)
             
@@ -60,16 +63,15 @@ class TestConventional(unittest.TestCase):
     def test_04_deleteImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         dataDir = self.conventional.dataDir
-        images = image.imageListFromDir(imgDir)
+        images = utils.image.imageListFromDir(imgDir)
         img1 = os.path.join(dataDir, "capture-0_1.jpg")
         for image in images:
             shutil.copy(image, dataDir)
         self.changeApplier.requestUpdate("totalCaptures", len(images))
         
         self.conventional.deleteImagesByIndex("1")
-        self.assertListEqual([], self.getImagesByIndex("1"))
+        self.assertListEqual([], self.conventional.getImagesByIndex("1"))
         self.assertEquals(1, self.conventional.status["totalCaptures"])
-        
         
 if __name__ == '__main__':
     unittest.main()
