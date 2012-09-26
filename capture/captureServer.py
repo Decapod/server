@@ -151,6 +151,9 @@ class ConventionalCaptureController(object):
     
     def __init__(self, conventional):
         self.conventional = conventional
+        self.paths = {
+            "images": ConventionalCaptureImagesController(self.conventional)
+        }
         
     def GET(self, *args, **kwargs):
         # returns the zipped captured images
@@ -170,6 +173,39 @@ class ConventionalCaptureController(object):
     def DELETE(self, *args, **kwargs):
         self.conventional.delete()
         cherrypy.response.status = 204
+        
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        pathSegment = vpath[0]
+        
+        if pathSegment in self.paths:
+            return self.paths[pathSegment]
+        
+class ConventionalCaptureImagesController(object):
+    '''
+    Parses the positinal arguments starting after /conventional/capture/images
+    If /images/ isn't followed by an index it raises an error.
+    '''
+    
+    exposed = True
+    
+    def __init__(self, conventional):
+        self.conventional = conventional
+    
+    def GET(self, *args):
+        if len(args) and args[0].isdigit():
+            server.setJSONResponseHeaders(cherrypy, "images.json")
+            cherrypy.response.status = 200
+            return json.dumps({"images": self.conventional.getImagesByIndex(args[0], rs.path(CONVENTIONAL_DATA_DIR))})
+        else:
+            raise cherrypy.HTTPError(405)
+    
+    def DELETE(self, *args):
+        if not len(args) or args[0].isdigit():
+            raise cherrypy.HTTPError(405)
+        else:
+            #TODO: Implement
+            pass
     
 if __name__ == "__main__":
     startServer()
