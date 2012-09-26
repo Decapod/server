@@ -40,5 +40,14 @@ class TestConventional(unittest.TestCase):
         self.conventional.delete()
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
+    def test_04_getImagesByIndex(self):
+        imgDir = os.path.join("mockData", "images")
+        img1 = os.path.join(imgDir, "capture-0_1.jpg")
+        img2 = os.path.join(imgDir, "capture-0_2.jpg")
+        t1 = self.conventional.getImagesByIndex("1", imgDir)
+        t2 = self.conventional.getImagesByIndex("0", imgDir, filenameTemplate="capture-${captureIndex}_${cameraID}")
+        self.assertListEqual([img1], t1)
+        self.assertListEqual([img1, img2], t2)
+        
 if __name__ == '__main__':
     unittest.main()
