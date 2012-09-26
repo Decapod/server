@@ -5,6 +5,7 @@ import mimetypes
 import os
 import sys
 import shutil
+import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
@@ -150,6 +151,28 @@ class TestConventionalCapture(ServerTestCase):
         self.getPage(self.conventionalCaptureURL, method="DELETE")
         self.assertStatus(204)
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'book' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
+        
+class ConventionalCaptureImages(ServerTestCase):
+    conventionalCaptureImagesURL = "/conventional/capture/images/"
+    conventionalCaptureImagesIndexURL = conventionalCaptureImagesURL + "1/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+    
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesURL, ["GET", "DELETE", "POST", "PUT"])
+        self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesIndexURL, ["POST", "PUT"])
+        
+    def test_02_get(self):
+        expected = {"images": []}
+        self.getPage(self.conventionalCaptureImagesIndexURL);
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+        self.assertBody(json.dumps(expected))
+        
+    def test_03_delete(self):
+        #TODO: implement
+        pass
 
 if __name__ == '__main__':
     import nose

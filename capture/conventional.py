@@ -3,13 +3,14 @@ import sys
 import cherrypy
 from string import Template
 import zipfile
+import re
 
 import cameraInterface
 import mockCameraInterface
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import model
 from store import FSStore
-from utils import io
+from utils import io, image
 
 class OutputPathError(Exception): pass
 class MultiCaptureError(Exception): pass
@@ -63,17 +64,17 @@ class Conventional(object):
         return self.exportZipFilePath
     
     #TODO: write test for this.
-    def getImagesByIndex(self, index, dir, filenameTemplate="capture-${cameraID}_${captureIndex}.jpg"):
-       regex = re.compile(Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="(?p<index>\d*)"))
-       imagePaths = utils.io.imageListFromDir(dir)
-       images = []
-       
-       for imagePath in imagePaths:
-           match = regex.match(imagePath)
-           if match and match.groupdict()["index"] == index:
-               images.append(imagePath)
-           
-       return images;
+    def getImagesByIndex(self, index, dir, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+        regex = re.compile(Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="(?P<index>\d*)"))
+        imagePaths = image.imageListFromDir(dir)
+        images = []
+        
+        for imagePath in imagePaths:
+            result = regex.search(imagePath)
+            if result.groupdict().get("index") == index:
+                images.append(imagePath)
+            
+        return images;
     
     def capture(self):
         fileLocations = []
