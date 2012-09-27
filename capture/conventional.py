@@ -53,6 +53,7 @@ class Conventional(object):
         self.fsstore.save(newModel)
         
     def export(self):
+        currentDir = os.getcwd()
         try:
             zip = zipfile.ZipFile(self.exportZipFilePath, mode="w")
         except IOError:
@@ -63,6 +64,7 @@ class Conventional(object):
         for file in os.listdir("."):
             zip.write(file)
         zip.close()
+        os.chdir(currentDir)
         
         return self.exportZipFilePath
     

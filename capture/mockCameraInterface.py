@@ -24,14 +24,14 @@ CAMERA_INFO_BY_PORT = {
         "captureFormats": "JPEG",
         "resolution": 14.6,
         "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture",
-        "capture": "../mockData/images/capture-0_1.jpg"
+        "capture": "mockData/images/capture-0_1.jpg"
     },
     "usb:001,003": {
         "model": "Canon PowerShot G10",
         "captureFormats": "JPEG",
         "resolution": 14.6,
         "capabilities": "File Download, File Deletion, File Upload\n\tGeneric Image Capture, No Open Capture, Canon Capture",
-        "capture": "../mockData/images/capture-0_2.jpg"
+        "capture": "mockData/images/capture-0_2.jpg"
     }
 };
 
