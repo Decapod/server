@@ -80,7 +80,7 @@ class Conventional(object):
         for image in images:
             if os.path.exists(image):
                 os.remove(image)
-                self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] + len(self.cameraPorts))
+                self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] - 1)
     
     def capture(self):
         fileLocations = []
