@@ -26,6 +26,7 @@ class TestConventional(unittest.TestCase):
         self.changeApplier = model.ChangeApplier({"index": 0, "totalCaptures": 0})
     
     def tearDown(self):
+        os.remove(self.statusFile)
         utils.io.rmTree(CONVENTIONAL_DIR)
         
     def test_01_init(self):
@@ -42,11 +43,25 @@ class TestConventional(unittest.TestCase):
         self.assertEqual(status["index"], 1)
         self.assertEqual(status["totalCaptures"], 2)
         
-    def test_03_delete(self):
+    def test_03_multiCapture_fallback(self):
+        config = {"testmode": True, "multiCapture": "raiseTimeoutError", "delay": 10, "interval": 1}
+        conventionalObj = conventional.Conventional(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, config)
+        
+        expected = "sequentialCapture"
+        
+        conventionalObj.capture()
+        self.assertEqual(conventionalObj.trackedMultiCaptureFunc, expected)
+        
+        fsstore = FSStore(self.statusFile)
+        status = fsstore.load()
+        self.assertEqual(status["index"], 1)
+        self.assertEqual(status["totalCaptures"], 2)
+
+    def test_04_delete(self):
         self.conventional.delete()
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
-    def test_04_getImagesByIndex(self):
+    def test_05_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         dataDir = self.conventional.dataDir
         images = utils.image.imageListFromDir(imgDir)
@@ -60,7 +75,7 @@ class TestConventional(unittest.TestCase):
         self.assertListEqual([img1], t1)
         self.assertListEqual([img1, img2], t2)
         
-    def test_04_deleteImagesByIndex(self):
+    def test_06_deleteImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         dataDir = self.conventional.dataDir
         images = utils.image.imageListFromDir(imgDir)
