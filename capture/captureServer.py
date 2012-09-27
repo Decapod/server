@@ -200,11 +200,11 @@ class ConventionalCaptureImagesController(object):
             raise cherrypy.HTTPError(405)
     
     def DELETE(self, *args):
-        if not len(args) or args[0].isdigit():
-            raise cherrypy.HTTPError(405)
-        else:
-            self.deleteImagesByIndex(args[0])
+        if len(args) and args[0].isdigit():
+            self.conventional.deleteImagesByIndex(args[0])
             cherrypy.response.status = 204
+        else:
+            raise cherrypy.HTTPError(405)
     
 if __name__ == "__main__":
     startServer()
