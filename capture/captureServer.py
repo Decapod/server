@@ -7,6 +7,8 @@ import zipfile
 import cameras
 import status
 import conventional
+import cameraInterface
+import mockCameraInterface
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -48,6 +50,8 @@ def startServer():
     if hasattr(cherrypy.engine, "console_control_handler"): 
         cherrypy.engine.console_control_handler.subscribe() 
     
+    cherrypy.engine.subscribe('stop', releaseCameras)
+    
     # start the server
     cherrypy.engine.start()
     
@@ -55,6 +59,10 @@ def startServer():
     if (not IS_SCGIWSGI) :
         cherrypy.engine.block()
 
+def releaseCameras():
+    cameraController = cameraInterface if not cherrypy.config["app_opts.general"]["testmode"] else mockCameraInterface
+    cameraController.releaseCameras()
+    
 def mountApp(config=DECAPOD_CONFIG_FILE):
     '''
     Mounts the app and updates the cherryp configuration from the provided config file.
