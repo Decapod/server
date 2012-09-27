@@ -20,6 +20,11 @@ DEFAULT_TEMP_DIR = "temp"
 DEFAULT_DELAY = 10
 DEFAULT_INTERVAL = 0.5
 
+'''
+A global variable to indicate if the simultaneous capture has been prepared
+'''
+multiCamerasPrepared = False
+
 def parseCamerasInfo(info):
     infoList = []
     
@@ -84,6 +89,10 @@ def getCameraSummaryByPort(port):
     '''
     Return the summary information of the camera that's connected to the given port
     '''
+    
+    if multiCamerasPrepared:
+        releaseCameras()
+        
     summary = {}
     
     #cameras.getCameraSummary("usb:001,010")
@@ -122,6 +131,9 @@ def capture(port, filename, dir='images'):
     Take a picture with the given name into the given directory, and return the path to the picture
     '''
     
+    if multiCamerasPrepared:
+        releaseCameras()
+        
     fileLocation = os.path.join(dir, filename)
     
     if (isPortValid(port)):
@@ -170,11 +182,6 @@ def sequentialCapture(**kwargs):
     return fileLocations
 
 '''
-A global variable to indicate if the simultaneous capture has been prepared
-'''
-multiCamerasPrepared = False
-
-'''
 Global list variables to save the locations of temporary and actual files used by multi camera capture
 '''
 tempCaptureLocations = []
@@ -199,8 +206,6 @@ def simultaneousCapture(**kwargs):
     
     global multiCamerasPrepared, tempCaptureLocations
     
-    if len(ports) == 0: return actualCaptureLocations
-
     for port in ports:
         if (not isPortValid(port)):
             raise InvalidPortError
@@ -249,26 +254,16 @@ def simultaneousCapture(**kwargs):
             # rename
     except Exception:
         for fileLocation in tempCaptureLocations:
-            os.remove(fileLocation)
+            if os.path.exists(fileLocation): 
+                os.remove(fileLocation)
         raise
     
     # rename image name to the desired image name
     for camera, tempFile in enumerate(tempCaptureLocations):
         actualCaptureLocation = os.path.join(dir, Template(filenameTemplate).safe_substitute(cameraID=camera))
         try:
-            currentDelay = 0
-            
-            while True:
-                time.sleep(interval)
-                currentDelay = currentDelay + interval
-                
-                if os.path.exists(tempFile):
-                    os.rename(tempFile, actualCaptureLocation)
-                    break
-                if currentDelay == delay:
-                    raise TimeoutError
-                    break
-                
+            if fileCreated(tempFile, delay, interval):
+                os.rename(tempFile, actualCaptureLocation)
         except TimeoutError:
             for fileLocation in tempCaptureLocations[camera:]:
                 if os.path.exists(fileLocation): os.remove(fileLocation)
@@ -280,6 +275,23 @@ def simultaneousCapture(**kwargs):
         
     return actualCaptureLocations
 
+def fileCreated(fileLocation, delay, interval):
+    '''
+    Check if the request file is created during a time frame, defined by "delay". Check the file existence every given interval.
+    Return true if the file is created. Raise a timeout error if the file is NOT created in the time frame.
+    '''
+    currentDelay = 0
+    
+    while True:
+        time.sleep(interval)
+        currentDelay = currentDelay + interval
+        
+        if os.path.exists(fileLocation):
+            return True
+        if currentDelay >= delay:
+            raise TimeoutError
+            break
+    
 def getResolution(port):
     '''
     Calculate and return the camera's resolution by taking a test picture and 
@@ -297,3 +309,21 @@ def getResolution(port):
     os.remove(imageName)
 
     return round((width * height) / 1000000, 1)
+
+def releaseCameras():
+    '''
+    Kill all gphoto2 threads to release all the connected cameras in case they have been prepared for simultaneous captures.
+    '''
+    cmd = [
+        "killall",
+        "gphoto2"
+    ]
+    
+    try:
+        captureInfo = utils.io.invokeCommandSync(cmd,
+                                CaptureError,
+                                "Could not release cameras.")
+    except Exception:
+        return False
+    
+    return True
