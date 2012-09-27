@@ -17,6 +17,7 @@ class MultiCaptureError(Exception): pass
 class Conventional(object):
     
     initialStatus = {"index": 0, "totalCaptures": 0}
+    trackedMultiCaptureFunc = None
     
     def __init__(self, dataDir, captureStatusFile, config):
         self.dataDir = dataDir
@@ -27,10 +28,12 @@ class Conventional(object):
         
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
         
-        self.multiCapture = self.config["multiCapture"]
-        
-        # keep track of the  ports of connected cameras
+        # Keep track of the  ports of connected cameras
         self.cameraPorts = self.cameraController.getPorts()
+        
+        # Release the cameras in case they've been prepared for simultaneous captures
+        if len(self.cameraPorts) > 0:
+            self.cameraController.releaseCameras()
         
         # retrieve the last capture status
         self.fsstore = FSStore(self.captureInfoFilePath)
@@ -39,7 +42,7 @@ class Conventional(object):
         if (self.status is None):
             self.status = Conventional.initialStatus
 
-        # prepare the change applier for saving status
+        # Prepare the change applier for saving status
         self.changeApplier = model.ChangeApplier(self.status)
         self.changeApplier.onModelChanged.addListener("onSaveStatus", self.saveStatus)
         
@@ -85,12 +88,18 @@ class Conventional(object):
     def capture(self):
         fileLocations = []
         
+        if len(self.cameraPorts) == 0:
+            return fileLocations
+        
+        multiCaptureFunc = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
+
         # $cameraID is used by the camera capture filename template
         # TODO: Defining the template into config file
         captureNameTemplate = Template("capture-${captureIndex}_${cameraID}.jpg").safe_substitute(captureIndex=self.status["index"])
         
+        multiCapture = getattr(self.cameraController, multiCaptureFunc)
+        
         try:
-            multiCapture = getattr(self.cameraController, self.multiCapture)
             fileLocations = multiCapture(ports=self.cameraPorts, 
                                          filenameTemplate=captureNameTemplate, 
                                          dir=self.dataDir, 
@@ -98,7 +107,20 @@ class Conventional(object):
                                          interval=self.config["interval"])
         except self.cameraController.TimeoutError as e:
             # TODO: fall back to sequential capture
-            raise MultiCaptureError(e.message)
+            if len(self.cameraPorts) > 0:
+                self.cameraController.releaseCameras()
+            
+            Conventional.trackedMultiCaptureFunc = "sequentialCapture"
+            
+            multiCapture = getattr(self.cameraController, Conventional.trackedMultiCaptureFunc)
+            
+            try:
+                fileLocations = multiCapture(ports=self.cameraPorts, 
+                                             filenameTemplate=captureNameTemplate, 
+                                             dir=self.dataDir)
+            except self.cameraController.CaptureError as e:
+                raise MultiCaptureError(e.message)
+            
         except self.cameraController.CaptureError as e:
             raise MultiCaptureError(e.message)
         

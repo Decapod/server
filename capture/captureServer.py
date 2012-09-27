@@ -109,7 +109,6 @@ class CamerasController(object):
     
     def __init__(self):
         self.cameras = cameras.Cameras(cherrypy.config["app_opts.general"]["testmode"])
-        a = 1
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
