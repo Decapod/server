@@ -133,10 +133,11 @@ class TestConventionalCapture(ServerTestCase):
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalCaptureURL, ["PUT"])
 
-    def test_02_get(self): pass
-#        self.getPage(self.conventionalCaptureURL)
-#        self.assertStatus(200)
-#        self.assertHeader("Content-Type", "application/json", "Should return json content")
+    def test_02_get(self):
+        expectedFiles = []
+        self.getPage(self.conventionalCaptureURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
 
     def test_03_post(self):
         headers = [

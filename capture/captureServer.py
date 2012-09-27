@@ -2,6 +2,7 @@ import cherrypy
 import os
 import sys
 import simplejson as json
+import zipfile
 
 import cameras
 import status
@@ -157,8 +158,11 @@ class ConventionalCaptureController(object):
         
     def GET(self, *args, **kwargs):
         # returns the zipped captured images
-        server.setJSONResponseHeaders(cherrypy, 'capturedImages.zip')
-        cherrypy.response.status = 202
+        server.setJSONResponseHeaders(cherrypy, "capture.json")
+        cherrypy.response.status = 200
+        exportInfo = {"captures": self.conventional.export()}
+        return json.dumps(exportInfo)
+        
 
     def POST(self, *args, **kwargs):
         try:

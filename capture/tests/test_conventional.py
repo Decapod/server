@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import zipfile
 import unittest
 
 sys.path.append(os.path.abspath(os.path.join('..')))
@@ -72,6 +73,24 @@ class TestConventional(unittest.TestCase):
         self.conventional.deleteImagesByIndex("1")
         self.assertListEqual([], self.conventional.getImagesByIndex("1"))
         self.assertEquals(1, self.conventional.status["totalCaptures"])
+        
+    def test_05_export(self):
+        expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        dataDir = self.conventional.dataDir
+        images = utils.image.imageListFromDir(imgDir)
+        
+        for image in images:
+            shutil.copy(image, dataDir)
+        
+        zipPath = self.conventional.export()
+        self.assertTrue(os.path.exists(zipPath))
+        self.assertTrue(zipfile.is_zipfile(zipPath))
+        
+        zip = zipfile.ZipFile(zipPath, "r")
+        self.assertIsNone(zip.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zip.namelist())
+        zip.close()
         
 if __name__ == '__main__':
     unittest.main()
