@@ -155,7 +155,7 @@ class TestConventionalCapture(ServerTestCase):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
         self.getPage(self.conventionalCaptureURL, method="DELETE")
         self.assertStatus(204)
-        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'book' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
+        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
 class ConventionalCaptureImages(ServerTestCase):
     conventionalCaptureImagesURL = "/conventional/capture/images/"

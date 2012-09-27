@@ -31,10 +31,6 @@ class Conventional(object):
         # Keep track of the  ports of connected cameras
         self.cameraPorts = self.cameraController.getPorts()
         
-        # Release the cameras in case they've been prepared for simultaneous captures
-        if len(self.cameraPorts) > 0:
-            self.cameraController.releaseCameras()
-        
         # retrieve the last capture status
         self.fsstore = FSStore(self.captureInfoFilePath)
         self.status = self.fsstore.load()
