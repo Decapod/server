@@ -127,3 +127,6 @@ def getResolution(port):
 
 def releaseCameras():
     return True
+
+def raiseTimeoutError(**kwargs):
+    raise TimeoutError
