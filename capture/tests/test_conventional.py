@@ -14,6 +14,7 @@ import utils
 DATA_DIR = os.path.abspath("data")
 MOCK_DATA_DIR = os.path.abspath("mockData")
 CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
+CONVENTIONAL_CAPTURES_DIR = os.path.join(CONVENTIONAL_DIR, "captures")
 CAPTURE_STATUS_FILENAME = "captureStatus.json"
 MOCK_CONFIG = {"testmode": True, "multiCapture": "simultaneousCapture", "delay": 10, "interval": 1}
 
@@ -32,7 +33,7 @@ class TestConventional(unittest.TestCase):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
 
     def test_02_capture(self):
-        expected = [os.path.abspath(os.path.join(CONVENTIONAL_DIR, "capture-0_0.jpg")), os.path.abspath(os.path.join(CONVENTIONAL_DIR, "capture-0_1.jpg"))]
+        expected = [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpg"))]
         
         self.assertListEqual(self.conventional.capture(), expected)
         self.assertTrue(os.path.exists(self.statusFile))
@@ -60,13 +61,13 @@ class TestConventional(unittest.TestCase):
         
     def test_05_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        dataDir = self.conventional.dataDir
+        captureDir = self.conventional.captureDir
         images = utils.image.imageListFromDir(imgDir)
         for image in images:
-            shutil.copy(image, dataDir)
+            shutil.copy(image, captureDir)
             
-        img1 = os.path.join(dataDir, "capture-0_1.jpg")
-        img2 = os.path.join(dataDir, "capture-0_2.jpg")
+        img1 = os.path.join(captureDir, "capture-0_1.jpg")
+        img2 = os.path.join(captureDir, "capture-0_2.jpg")
         t1 = self.conventional.getImagesByIndex("1")
         t2 = self.conventional.getImagesByIndex("0", filenameTemplate="capture-${captureIndex}_${cameraID}")
         self.assertListEqual([img1], t1)
@@ -74,11 +75,11 @@ class TestConventional(unittest.TestCase):
         
     def test_06_deleteImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        dataDir = self.conventional.dataDir
+        captureDir = self.conventional.captureDir
         images = utils.image.imageListFromDir(imgDir)
-        img1 = os.path.join(dataDir, "capture-0_1.jpg")
+        img1 = os.path.join(captureDir, "capture-0_1.jpg")
         for image in images:
-            shutil.copy(image, dataDir)
+            shutil.copy(image, captureDir)
         self.conventional.status.update("totalCaptures", len(images))
         
         self.conventional.deleteImagesByIndex("1")
@@ -88,11 +89,11 @@ class TestConventional(unittest.TestCase):
     def test_05_export(self):
         expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        dataDir = self.conventional.dataDir
+        captureDir = self.conventional.captureDir
         images = utils.image.imageListFromDir(imgDir)
         
         for image in images:
-            shutil.copy(image, dataDir)
+            shutil.copy(image, captureDir)
         
         zipPath = self.conventional.export()
         self.assertTrue(os.path.exists(zipPath))

@@ -20,10 +20,13 @@ class Conventional(object):
     
     def __init__(self, dataDir, captureStatusFile, config):
         self.dataDir = dataDir
+        self.captureDir = os.path.join(self.dataDir, "captures")
+        self.exportDir = os.path.join(self.dataDir, "export")
+        
         self.config = config
         
-        self.statusFilePath = os.path.join(dataDir, captureStatusFile)
-        self.exportZipFilePath = os.path.join(self.dataDir, "..", "conventional.zip")
+        self.statusFilePath = os.path.join(self.dataDir, captureStatusFile)
+        self.exportZipFilePath = os.path.join(self.exportDir, "conventional.zip")
         
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
         
@@ -34,8 +37,10 @@ class Conventional(object):
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
 #        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
         
-        # Create the data dir if not exists
-        io.makeDirs(dataDir)
+        # Creates the directories if they do not exists
+        io.makeDirs(self.dataDir)
+        io.makeDirs(self.captureDir)
+        io.makeDirs(self.exportDir)
     
     def saveStatus(self, newModel, oldModel, request):
         self.fsstore.save(newModel)
@@ -47,7 +52,7 @@ class Conventional(object):
         except IOError:
             raise OutputPathError("{0} is not a valid path".format(self.exportZipFilePath))
         
-        os.chdir(self.dataDir)
+        os.chdir(self.captureDir)
         
         for file in os.listdir("."):
             zip.write(file)
@@ -58,7 +63,7 @@ class Conventional(object):
     
     def getImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
         regex = re.compile(Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="(?P<index>\d*)"))
-        imagePaths = image.imageListFromDir(self.dataDir)
+        imagePaths = image.imageListFromDir(self.captureDir)
         images = []
         
         for imagePath in imagePaths:
@@ -92,7 +97,7 @@ class Conventional(object):
         try:
             fileLocations = multiCapture(ports=self.cameraPorts, 
                                          filenameTemplate=captureNameTemplate, 
-                                         dir=self.dataDir, 
+                                         dir=self.captureDir, 
                                          delay=self.config["delay"],
                                          interval=self.config["interval"])
         except self.cameraController.TimeoutError as e:
@@ -107,7 +112,7 @@ class Conventional(object):
             try:
                 fileLocations = multiCapture(ports=self.cameraPorts, 
                                              filenameTemplate=captureNameTemplate, 
-                                             dir=self.dataDir)
+                                             dir=self.captureDir)
             except self.cameraController.CaptureError as e:
                 raise MultiCaptureError(e.message)
             
