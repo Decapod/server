@@ -82,6 +82,20 @@ def capture(port, filename, dir="images"):
     else: 
         raise InvalidPortError
     
+def implMultiCapture(ports, filenameTemplate, dir):
+    fileLocations = []
+
+    try:
+        for camera, port in enumerate(ports):
+            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
+            fileLocations.append(capture(port, filename, dir))
+    except Exception:
+        for fileLocation in fileLocations:
+                os.remove(fileLocation)
+        raise
+        
+    return fileLocations
+
 def sequentialCapture(**kwargs):
     
     '''
@@ -96,19 +110,8 @@ def sequentialCapture(**kwargs):
     filenameTemplate = kwargs["filenameTemplate"]
     dir = kwargs["dir"]
     
-    fileLocations = []
-
-    try:
-        for camera, port in enumerate(ports):
-            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
-            fileLocations.append(capture(port, filename, dir))
-    except Exception:
-        for fileLocation in fileLocations:
-                os.remove(fileLocation)
-        raise
-        
-    return fileLocations
-
+    return implMultiCapture(ports, filenameTemplate, dir)
+    
 def simultaneousCapture(**kwargs):
     ports = kwargs["ports"]
     filenameTemplate = kwargs["filenameTemplate"]
@@ -117,18 +120,10 @@ def simultaneousCapture(**kwargs):
     delay = kwargs["delay"] if kwargs["delay"] else DEFAULT_DELAY
     interval = kwargs["interval"] if kwargs.has_key("interval") else DEFAULT_INTERVAL
     
-    fileLocations = []
-
-    try:
-        for camera, port in enumerate(ports):
-            filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
-            fileLocations.append(capture(port, filename, dir))
-    except Exception:
-        for fileLocation in fileLocations:
-                os.remove(fileLocation)
-        raise
-        
-    return fileLocations
-
+    return implMultiCapture(ports, filenameTemplate, dir)
+    
 def getResolution(port):
     return CAMERA_INFO_BY_PORT[port]["resolution"]
+
+def releaseCameras():
+    return True
