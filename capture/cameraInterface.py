@@ -149,7 +149,9 @@ def capture(port, filename, dir='images'):
                                 CaptureError,
                                 "Could not capture an image from port {0}.".format(port))
         
-        return fileLocation
+        actualFileLocation = utils.image.renameWithExtension(fileLocation)
+        
+        return actualFileLocation
     else:
         raise InvalidPortError
 
@@ -172,7 +174,6 @@ def sequentialCapture(**kwargs):
     try:
         for camera, port in enumerate(ports):
             filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
-#            filename = filenameTemplate.format(index)
             fileLocations.append(capture(port, filename, dir))
     except Exception:
         for fileLocation in fileLocations:
@@ -271,6 +272,8 @@ def simultaneousCapture(**kwargs):
                 if os.path.exists(fileLocation): os.remove(fileLocation)
             raise TimeoutError("Could not simultaneously capture images.")
             
+        actualCaptureLocation = utils.image.renameWithExtension(actualCaptureLocation)
+        
         actualCaptureLocations.append(actualCaptureLocation)
         
     return actualCaptureLocations
