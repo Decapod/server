@@ -7,7 +7,7 @@ import re
 import cameraInterface
 import mockCameraInterface
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
-import model
+from status import Status
 from store import FSStore
 from utils import io, image
 
@@ -16,14 +16,13 @@ class MultiCaptureError(Exception): pass
 
 class Conventional(object):
     
-    initialStatus = {"index": 0, "totalCaptures": 0}
     trackedMultiCaptureFunc = None
     
     def __init__(self, dataDir, captureStatusFile, config):
         self.dataDir = dataDir
         self.config = config
         
-        self.captureInfoFilePath = os.path.join(dataDir, captureStatusFile)
+        self.statusFilePath = os.path.join(dataDir, captureStatusFile)
         self.exportZipFilePath = os.path.join(self.dataDir, "..", "conventional.zip")
         
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
@@ -32,15 +31,8 @@ class Conventional(object):
         self.cameraPorts = self.cameraController.getPorts()
         
         # retrieve the last capture status
-        self.fsstore = FSStore(self.captureInfoFilePath)
-        self.status = self.fsstore.load()
-        
-        if (self.status is None):
-            self.status = Conventional.initialStatus
-
-        # Prepare the change applier for saving status
-        self.changeApplier = model.ChangeApplier(self.status)
-        self.changeApplier.onModelChanged.addListener("onSaveStatus", self.saveStatus)
+        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
+#        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
         
         # Create the data dir if not exists
         io.makeDirs(dataDir)
@@ -81,7 +73,7 @@ class Conventional(object):
         for image in images:
             if os.path.exists(image):
                 os.remove(image)
-                self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] - 1)
+                self.status.update("totalCaptures", self.status.model["totalCaptures"] - 1)
     
     def capture(self):
         fileLocations = []
@@ -93,7 +85,7 @@ class Conventional(object):
 
         # $cameraID is used by the camera capture filename template
         # TODO: Defining the template into config file
-        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}.jpg").safe_substitute(captureIndex=self.status["index"])
+        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}.jpg").safe_substitute(captureIndex=self.status.model["index"])
         
         multiCapture = getattr(self.cameraController, multiCaptureFunc)
         
@@ -123,8 +115,8 @@ class Conventional(object):
             raise MultiCaptureError(e.message)
         
         # Increase the total captures and save
-        self.changeApplier.requestUpdate("index", self.status["index"] + 1)
-        self.changeApplier.requestUpdate("totalCaptures", self.status["totalCaptures"] + len(self.cameraPorts))
+        self.status.update("index", self.status.model["index"] + 1)
+        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(self.cameraPorts))
         
         # TODO: Return a list of URLs to captured images
         return fileLocations
@@ -133,5 +125,5 @@ class Conventional(object):
         io.rmTree(self.dataDir)
 
     def getStatus(self):
-        return self.status
+        return self.status.model
 
