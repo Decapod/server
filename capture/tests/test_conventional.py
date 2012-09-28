@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import conventional
 from store import FSStore
-import model
+from status import Status
 import utils
 
 DATA_DIR = os.path.abspath("data")
@@ -24,7 +24,6 @@ class TestConventional(unittest.TestCase):
     def setUp(self):
         self.statusFile = os.path.join(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME)
         self.conventional = conventional.Conventional(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, MOCK_CONFIG)
-        self.changeApplier = model.ChangeApplier({"index": 0, "totalCaptures": 0})
     
     def tearDown(self):
         utils.io.rmTree(CONVENTIONAL_DIR)
@@ -38,8 +37,7 @@ class TestConventional(unittest.TestCase):
         self.assertListEqual(self.conventional.capture(), expected)
         self.assertTrue(os.path.exists(self.statusFile))
         
-        fsstore = FSStore(self.statusFile)
-        status = fsstore.load()
+        status = self.conventional.status.model
         self.assertEqual(status["index"], 1)
         self.assertEqual(status["totalCaptures"], 2)
         
@@ -52,8 +50,7 @@ class TestConventional(unittest.TestCase):
         conventionalObj.capture()
         self.assertEqual(conventionalObj.trackedMultiCaptureFunc, expected)
         
-        fsstore = FSStore(self.statusFile)
-        status = fsstore.load()
+        status = conventionalObj.status.model
         self.assertEqual(status["index"], 1)
         self.assertEqual(status["totalCaptures"], 2)
 
@@ -82,11 +79,11 @@ class TestConventional(unittest.TestCase):
         img1 = os.path.join(dataDir, "capture-0_1.jpg")
         for image in images:
             shutil.copy(image, dataDir)
-        self.changeApplier.requestUpdate("totalCaptures", len(images))
+        self.conventional.status.update("totalCaptures", len(images))
         
         self.conventional.deleteImagesByIndex("1")
         self.assertListEqual([], self.conventional.getImagesByIndex("1"))
-        self.assertEquals(1, self.conventional.status["totalCaptures"])
+        self.assertEquals(1, self.conventional.status.model["totalCaptures"])
         
     def test_05_export(self):
         expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
