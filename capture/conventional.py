@@ -42,9 +42,6 @@ class Conventional(object):
         io.makeDirs(self.captureDir)
         io.makeDirs(self.exportDir)
     
-    def saveStatus(self, newModel, oldModel, request):
-        self.fsstore.save(newModel)
-        
     def export(self):
         isStatusChanged = False;
         for key, val in Conventional.statusAtLastExport.iteritems():

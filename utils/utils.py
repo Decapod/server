@@ -136,6 +136,19 @@ class image:
         id = uuid.uuid4()
         return "{0}{1}.{2}".format(prefix, id.hex, suffix)
     
+    @staticmethod
+    def getImageType(filePath):
+        return imghdr.what(filePath)
+
+    @staticmethod
+    def renameWithExtension(filePath):
+        path, basename = os.path.split(filePath)
+        splittedBasename = basename.split(".")
+        
+        
+        splittedBasename[-1]=(image.getImageType(filePath))
+        return os.path.join(path, ".".join(splittedBasename))
+     
 class translate:
     
     @staticmethod
@@ -174,3 +187,7 @@ class server:
         '''
         cherrypy.response.headers["Content-Type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
+        
+if __name__ == "__main__":
+    image.renameWithExtension('../capture/tests/mockData/images/capture-0_2.jpg')
+    
