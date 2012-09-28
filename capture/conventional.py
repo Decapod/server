@@ -96,7 +96,7 @@ class Conventional(object):
 
         # $cameraID is used by the camera capture filename template
         # TODO: Defining the template into config file
-        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}.jpg").safe_substitute(captureIndex=self.status.model["index"])
+        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}").safe_substitute(captureIndex=self.status.model["index"])
         
         multiCapture = getattr(self.cameraController, multiCaptureFunc)
         

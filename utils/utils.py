@@ -149,7 +149,7 @@ class image:
         if splitBasename:
             splitBasename[-1] = image.getImageType(filePath)
         else:
-            splitBasename[0] = image.getImageType(filePath)
+            splitBasename.append(image.getImageType(filePath))
 
         splitBasename.insert(0, base)
         newName = os.path.join(path, ".".join(splitBasename))

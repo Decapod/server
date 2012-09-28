@@ -260,21 +260,39 @@ class generateImageNameTests(unittest.TestCase):
 class imageTypeTests(unittest.TestCase):
     
     def setUp(self):
+        self.sourceImg = os.path.join(IMG_DIR, "Image_0015.JPEG")
         self.temp = os.path.join(DATA_DIR, "temp")
-        self.img = os.path.join(self.temp, "testImage.tiff")
         utils.io.makeDirs(self.temp)
-        shutil.copyfile(os.path.join(IMG_DIR, "Image_0015.JPEG"), self.img)
         
     def tearDown(self):
         utils.io.rmTree(self.temp)
 
     def test_01_getImageType(self):
-        type = utils.image.getImageType(self.img);
+        type = utils.image.getImageType(self.sourceImg);
         self.assertEquals("jpeg", type)
         
-    def test_02_renameWithExtension(self):
+    def test_02_renameWithExtension_withOrigExtension(self):
+        targetImg = os.path.join(self.temp, "testImage.tiff")
+        shutil.copyfile(self.sourceImg, targetImg)
+        
         expected = os.path.join(self.temp, "testImage.jpeg")
-        utils.image.renameWithExtension(self.img)
+        utils.image.renameWithExtension(targetImg)
+        self.assertTrue(os.path.exists(expected))
+        
+    def test_03_renameWithExtension_withMultiExtension(self):
+        targetImg = os.path.join(self.temp, "testImage.a.b.c.tiff")
+        shutil.copyfile(self.sourceImg, targetImg)
+        
+        expected = os.path.join(self.temp, "testImage.a.b.c.jpeg")
+        utils.image.renameWithExtension(targetImg)
+        self.assertTrue(os.path.exists(expected))
+        
+    def test_04_renameWithExtension_withoutExtension(self):
+        targetImg = os.path.join(self.temp, "testImage")
+        shutil.copyfile(self.sourceImg, targetImg)
+        
+        expected = os.path.join(self.temp, "testImage.jpeg")
+        utils.image.renameWithExtension(targetImg)
         self.assertTrue(os.path.exists(expected))
         
 if __name__ == '__main__':
