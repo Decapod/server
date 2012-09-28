@@ -141,13 +141,20 @@ class image:
         return imghdr.what(filePath)
 
     @staticmethod
-    def renameWithExtension(filePath):
+    def renameWithExtension(filePath, fileName=None):
         path, basename = os.path.split(filePath)
-        splittedBasename = basename.split(".")
+        splitBasename = basename.split(".")
+        base = splitBasename.pop(0)
         
-        
-        splittedBasename[-1]=(image.getImageType(filePath))
-        return os.path.join(path, ".".join(splittedBasename))
+        if splitBasename:
+            splitBasename[-1] = image.getImageType(filePath)
+        else:
+            splitBasename[0] = image.getImageType(filePath)
+
+        splitBasename.insert(0, base)
+        newName = os.path.join(path, ".".join(splitBasename))
+        os.rename(filePath, newName)
+        return newName
      
 class translate:
     
@@ -187,7 +194,4 @@ class server:
         '''
         cherrypy.response.headers["Content-Type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
-        
-if __name__ == "__main__":
-    image.renameWithExtension('../capture/tests/mockData/images/capture-0_2.jpg')
     

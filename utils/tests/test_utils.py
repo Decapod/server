@@ -256,7 +256,26 @@ class generateImageNameTests(unittest.TestCase):
         
         self.assertEquals(len(names), numNames, "The names list should be populated with {0} different names".format(numNames))
         self.assertEquals(len(uuidList),  numNames, "All the generated names should be unique")
-    
 
+class imageTypeTests(unittest.TestCase):
+    
+    def setUp(self):
+        self.temp = os.path.join(DATA_DIR, "temp")
+        self.img = os.path.join(self.temp, "testImage.tiff")
+        utils.io.makeDirs(self.temp)
+        shutil.copyfile(os.path.join(IMG_DIR, "Image_0015.JPEG"), self.img)
+        
+    def tearDown(self):
+        utils.io.rmTree(self.temp)
+
+    def test_01_getImageType(self):
+        type = utils.image.getImageType(self.img);
+        self.assertEquals("jpeg", type)
+        
+    def test_02_renameWithExtension(self):
+        expected = os.path.join(self.temp, "testImage.jpeg")
+        utils.image.renameWithExtension(self.img)
+        self.assertTrue(os.path.exists(expected))
+        
 if __name__ == '__main__':
     unittest.main()
