@@ -88,7 +88,9 @@ def implMultiCapture(ports, filenameTemplate, dir):
     try:
         for camera, port in enumerate(ports):
             filename = Template(filenameTemplate).safe_substitute(cameraID=camera)
-            fileLocations.append(capture(port, filename, dir))
+            capturedFile = capture(port, filename, dir)
+            
+            fileLocations.append(utils.image.renameWithExtension(capturedFile))
     except Exception:
         for fileLocation in fileLocations:
                 os.remove(fileLocation)
