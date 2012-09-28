@@ -17,6 +17,7 @@ class MultiCaptureError(Exception): pass
 class Conventional(object):
     
     trackedMultiCaptureFunc = None
+    statusAtLastExport = {}
     
     def __init__(self, dataDir, captureStatusFile, config):
         self.dataDir = dataDir
@@ -35,7 +36,6 @@ class Conventional(object):
         
         # retrieve the last capture status
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
-#        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
         
         # Creates the directories if they do not exists
         io.makeDirs(self.dataDir)
@@ -46,18 +46,27 @@ class Conventional(object):
         self.fsstore.save(newModel)
         
     def export(self):
-        currentDir = os.getcwd()
-        try:
-            zip = zipfile.ZipFile(self.exportZipFilePath, mode="w")
-        except IOError:
-            raise OutputPathError("{0} is not a valid path".format(self.exportZipFilePath))
+        isStatusChanged = False;
+        for key, val in Conventional.statusAtLastExport.iteritems():
+            if val is not self.status.model.get(key):
+                isStatusChanged = True
+                break
         
-        os.chdir(self.captureDir)
-        
-        for file in os.listdir("."):
-            zip.write(file)
-        zip.close()
-        os.chdir(currentDir)
+        # Only create a new zip if one doesn't exist, or if there have been changes.
+        if not os.path.exists(self.exportZipFilePath) or isStatusChanged:
+            currentDir = os.getcwd()
+            try:
+                zip = zipfile.ZipFile(self.exportZipFilePath, mode="w")
+            except IOError:
+                raise OutputPathError("{0} is not a valid path".format(self.exportZipFilePath))
+            
+            os.chdir(self.captureDir)
+            
+            for file in os.listdir("."):
+                zip.write(file)
+            zip.close()
+            os.chdir(currentDir)
+            Conventional.statusAtLastExport = self.status.model.copy()
         
         return self.exportZipFilePath
     
