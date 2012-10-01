@@ -1,9 +1,11 @@
 import os
+import re
 import imghdr
 import shutil
 import subprocess
 import uuid
 import simplejson as json
+from zipfile import ZipFile
 
 class io:
     
@@ -84,6 +86,25 @@ class io:
         TypeError: from simplejson, if the jsonData is not JSON serializable
         '''
         io.writeToFile(json.dumps(jsonData), jsonFile)
+    
+    @staticmethod    
+    def zip(dirPath, fileName):
+        '''
+        Creates a zipfile with all of the contents in the directory at the end of the path.
+        It will walk down and recursively add in all subdirectories and their contents.
+        
+        Note that the directory structure of the path will also be created. If you do not
+        want this to happen, make sure the function is called in the top most directory 
+        that you want in the zip with the path as "."
+        '''
+        
+        zFile = ZipFile(fileName, mode="w")
+        
+        for path, dirs, files in os.walk(dirPath):
+            for file in files:
+                zFile.write(os.path.join(path, file))
+        
+        zFile.close()
         
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message, waitForRtn=True):
@@ -114,19 +135,37 @@ class image:
         return os.path.isfile(filePath) and imghdr.what(filePath) != None
     
     @staticmethod
-    def imageListFromDir(imageDir, sortKey=None, reverse=False):
+    def findImages(dir, regexPattern=None):
         '''
-        Takes a directory and returns a list of image paths.
-        Can optionally provide sort options (sortKey for the method to sort by, and reverse to specify the direction)
-        By default the list is sorted alphabetically.
+        Finds all of the images that match the regexPattern in the list of dirs.
+        If no regexPattern is provided, it will find all images.
         '''
-        allImages = []
-        for fileName in os.listdir(imageDir):
-            filePath = os.path.join(imageDir, fileName)
-            
-            if image.isImage(filePath): 
-                allImages.append(filePath)
-        return sorted(allImages, key=sortKey, reverse=reverse)
+         
+        imagePaths = []
+        regex = re.compile(regexPattern) if regexPattern else None
+        
+        for path, dirs, files in os.walk(dir):
+            for file in files: 
+                filePath = os.path.join(path, file)
+                fitsPattern = True if not regex else regex.findall(filePath)
+                
+                if image.isImage(filePath) and fitsPattern:
+                    imagePaths.append(filePath)
+                    
+        return imagePaths 
+    
+    @staticmethod
+    def removeImages(dir, regexPattern=None):
+        '''
+        Removes all of the images that match the regexPattern in the list of dirs.
+        If no regexPattern is provided, it will remove all images.
+        '''
+        
+        imagePaths = image.findImages(dir, regexPattern)
+        for imagePath in imagePaths:
+            os.remove(imagePath)
+
+        return imagePaths
     
     @staticmethod
     def generateImageName(prefix="decapod-", suffix="jpeg"):

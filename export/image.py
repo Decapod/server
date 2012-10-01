@@ -181,7 +181,7 @@ class ImageExporter(object):
             raise ExportInProgressError, "Export currently in progress, cannot generated another export until this process has finished"
         else:
             self.setStatus(EXPORT_IN_PROGRESS)
-            self.imagePaths = utils.image.imageListFromDir(self.bookDirPath, sortKey=os.path.getmtime);
+            self.imagePaths = sorted(utils.image.findImages(self.bookDirPath), key=os.path.getmtime)
             if len(self.imagePaths) is 0:
                 self.setStatus(EXPORT_ERROR)
                 raise ImagesNotFoundError("No images found, nothing to export")
