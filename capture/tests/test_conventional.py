@@ -43,6 +43,7 @@ class TestConventional(unittest.TestCase):
         self.assertEqual(status["totalCaptures"], 2)
         
     def test_03_multiCapture_fallback(self):
+        conventional.Conventional.trackedMultiCaptureFunc = None  # reset trackedMultiCaptureFunc for the new config
         config = {"testmode": True, "multiCapture": "raiseTimeoutError", "delay": 10, "interval": 1}
         conventionalObj = conventional.Conventional(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, config)
         

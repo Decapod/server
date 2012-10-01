@@ -5,6 +5,7 @@ import shutil
 import time
 import simplejson as json
 
+import test_utils_helper
 sys.path.append(os.path.abspath('..'))
 import utils
 
@@ -294,6 +295,12 @@ class imageTypeTests(unittest.TestCase):
         expected = os.path.join(self.temp, "testImage.jpeg")
         utils.image.renameWithExtension(targetImg)
         self.assertTrue(os.path.exists(expected))
+
+class conversionTests(unittest.TestCase):
+    def test_01_convertStrToFunc(self):
+        expected = "a test string from a module function"
+        func = utils.conversion.convertStrToFunc(test_utils_helper, "returnTestString")
+        self.assertEqual(func(), expected)
         
 if __name__ == '__main__':
     unittest.main()

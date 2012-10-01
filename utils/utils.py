@@ -194,4 +194,17 @@ class server:
         '''
         cherrypy.response.headers["Content-Type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
+
+class conversion:
     
+    @staticmethod
+    def convertStrToFunc(module, funcName):
+        '''
+        Converts a string of function name in a moduel into a function object
+        @param:
+        module: A module object
+        funcName: string of a function name in the module
+        '''
+        
+        return reduce(getattr, funcName.split("."), module)
+        

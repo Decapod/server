@@ -12,11 +12,14 @@ from store import FSStore
 from utils import io, image
 
 class OutputPathError(Exception): pass
-class MultiCaptureError(Exception): pass
 
 class Conventional(object):
     
+    # keep track of the method for multiple captures, simultaneous or sequential, at the class level
+    # rather than the instance level. This method is fine with current support of one single user at 
+    # a time. It doesn't support the case of having multiple users. Need another solution at then.
     trackedMultiCaptureFunc = None
+    
     statusAtLastExport = {}
     
     def __init__(self, dataDir, captureStatusFile, config):
@@ -92,38 +95,16 @@ class Conventional(object):
         if len(self.cameraPorts) == 0:
             return fileLocations
         
-        multiCaptureFunc = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
+        multiCaptureFuncName = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
 
         # $cameraID is used by the camera capture filename template
-        # TODO: Defining the template into config file
+        # TODO: May want to define the template into config file
         captureNameTemplate = Template("capture-${captureIndex}_${cameraID}").safe_substitute(captureIndex=self.status.model["index"])
         
-        multiCapture = getattr(self.cameraController, multiCaptureFunc)
+        fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, self.cameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
         
-        try:
-            fileLocations = multiCapture(ports=self.cameraPorts, 
-                                         filenameTemplate=captureNameTemplate, 
-                                         dir=self.captureDir, 
-                                         delay=self.config["delay"],
-                                         interval=self.config["interval"])
-        except self.cameraController.TimeoutError as e:
-            # TODO: fall back to sequential capture
-            if len(self.cameraPorts) > 0:
-                self.cameraController.releaseCameras()
-            
-            Conventional.trackedMultiCaptureFunc = "sequentialCapture"
-            
-            multiCapture = getattr(self.cameraController, Conventional.trackedMultiCaptureFunc)
-            
-            try:
-                fileLocations = multiCapture(ports=self.cameraPorts, 
-                                             filenameTemplate=captureNameTemplate, 
-                                             dir=self.captureDir)
-            except self.cameraController.CaptureError as e:
-                raise MultiCaptureError(e.message)
-            
-        except self.cameraController.CaptureError as e:
-            raise MultiCaptureError(e.message)
+        # Keep track of the determined method for multiple capture
+        Conventional.trackedMultiCaptureFunc = method
         
         # Increase the total captures and save
         self.status.update("index", self.status.model["index"] + 1)

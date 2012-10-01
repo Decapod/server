@@ -13,6 +13,7 @@ class InvalidPortError(Exception): pass
 class CaptureError(Exception): pass
 class GetResolutionError(Exception): pass
 class TimeoutError(Exception): pass
+class MultiCaptureError(Exception): pass
 
 DEFAULT_TEMP_DIR = "temp"
 DEFAULT_DELAY = 10
@@ -82,6 +83,38 @@ def capture(port, filename, dir="images"):
     else: 
         raise InvalidPortError
     
+def multiCapture(multiCaptureFuncName, cameraPorts, captureNameTemplate, captureDir, delay, interval):
+    trackedMultiCaptureFunc = multiCaptureFuncName
+    
+    multiCaptureFunc = utils.conversion.convertStrToFunc(sys.modules[__name__], multiCaptureFuncName)
+
+    try:
+        fileLocations = multiCaptureFunc(ports=cameraPorts, 
+                                     filenameTemplate=captureNameTemplate, 
+                                     dir=captureDir, 
+                                     delay=delay,
+                                     interval=interval)
+    except TimeoutError as e:
+        # TODO: fall back to sequential capture
+        if len(cameraPorts) > 0:
+            releaseCameras()
+        
+        trackedMultiCaptureFunc = "sequentialCapture"
+        
+        multiCaptureFunc = utils.conversion.convertStrToFunc(sys.modules[__name__], trackedMultiCaptureFunc)
+        
+        try:
+            fileLocations = multiCaptureFunc(ports=cameraPorts, 
+                                         filenameTemplate=captureNameTemplate, 
+                                         dir=captureDir)
+        except CaptureError as e:
+            raise MultiCaptureError(e.message)
+        
+    except CaptureError as e:
+        raise MultiCaptureError(e.message)
+    
+    return fileLocations, trackedMultiCaptureFunc
+
 def implMultiCapture(ports, filenameTemplate, dir):
     fileLocations = []
 
