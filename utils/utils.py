@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import uuid
 import simplejson as json
+from zipfile import ZipFile
 
 class io:
     
@@ -84,6 +85,25 @@ class io:
         TypeError: from simplejson, if the jsonData is not JSON serializable
         '''
         io.writeToFile(json.dumps(jsonData), jsonFile)
+    
+    @staticmethod    
+    def zip(dirPath, fileName):
+        '''
+        Creates a zipfile with all of the contents in the directory at the end of the path.
+        It will walk down and recursively add in all subdirectories and their contents.
+        
+        Note that the directory structure of the path will also be created. If you do not
+        want this to happen, make sure the function is called in the top most directory 
+        that you want in the zip with the path as "."
+        '''
+        
+        zFile = ZipFile(fileName, mode="w")
+        
+        for path, dirs, files in os.walk(dirPath):
+            for file in files:
+                zFile.write(os.path.join(path, file))
+        
+        zFile.close()
         
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message, waitForRtn=True):
