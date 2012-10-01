@@ -135,6 +135,7 @@ class ConventionalController(object):
         self.conventional = conventional.Conventional(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
         
         self.paths = {
+            "cameras": ConventionalCamerasController(self.conventional),
             "capture": ConventionalCaptureController(self.conventional)
         }
         
@@ -150,6 +151,22 @@ class ConventionalController(object):
         if pathSegment in self.paths:
             return self.paths[pathSegment]
 
+class ConventionalCamerasController(object):
+    '''
+    Parses the positinal arguments starting after /conventional/capture/images
+    If /images/ isn't followed by an index it raises an error.
+    '''
+    
+    exposed = True
+    
+    def __init__(self, conventional):
+        self.conventional = conventional
+    
+    def GET(self, *args):
+        server.setJSONResponseHeaders(cherrypy, "conventionalCameras.json")
+        cherrypy.response.status = 200
+        return json.dumps(self.conventional.getCamerasStatus())
+    
 class ConventionalCaptureController(object):
     '''
     Parses the positional arguments starting after /conventional/capture
@@ -193,7 +210,7 @@ class ConventionalCaptureController(object):
         
         if pathSegment in self.paths:
             return self.paths[pathSegment]
-        
+
 class ConventionalCaptureImagesController(object):
     '''
     Parses the positinal arguments starting after /conventional/capture/images

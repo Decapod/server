@@ -124,6 +124,20 @@ class TestConventional(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
+class TestConventionalCameras(ServerTestCase):
+    conventionalCamerasURL = "/conventional/cameras/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+        
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.conventionalCamerasURL, ["PUT", "POST", "DELETE"])
+
+    def test_02_get(self):
+        self.getPage(self.conventionalCamerasURL)
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
 class TestConventionalCapture(ServerTestCase):
     conventionalCaptureURL = "/conventional/capture/"
     
