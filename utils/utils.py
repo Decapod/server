@@ -1,4 +1,5 @@
 import os
+import re
 import imghdr
 import shutil
 import subprocess
@@ -134,19 +135,37 @@ class image:
         return os.path.isfile(filePath) and imghdr.what(filePath) != None
     
     @staticmethod
-    def imageListFromDir(imageDir, sortKey=None, reverse=False):
+    def findImages(dir, regexPattern=None):
         '''
-        Takes a directory and returns a list of image paths.
-        Can optionally provide sort options (sortKey for the method to sort by, and reverse to specify the direction)
-        By default the list is sorted alphabetically.
+        Finds all of the images that match the regexPattern in the list of dirs.
+        If no regexPattern is provided, it will find all images.
         '''
-        allImages = []
-        for fileName in os.listdir(imageDir):
-            filePath = os.path.join(imageDir, fileName)
-            
-            if image.isImage(filePath): 
-                allImages.append(filePath)
-        return sorted(allImages, key=sortKey, reverse=reverse)
+         
+        imagePaths = []
+        regex = re.compile(regexPattern) if regexPattern else None
+        
+        for path, dirs, files in os.walk(dir):
+            for file in files: 
+                filePath = os.path.join(path, file)
+                fitsPattern = True if not regex else regex.findall(filePath)
+                
+                if image.isImage(filePath) and fitsPattern:
+                    imagePaths.append(filePath)
+                    
+        return imagePaths 
+    
+    @staticmethod
+    def removeImages(dir, regexPattern=None):
+        '''
+        Removes all of the images that match the regexPattern in the list of dirs.
+        If no regexPattern is provided, it will remove all images.
+        '''
+        
+        imagePaths = image.findImages(dir, regexPattern)
+        for imagePath in imagePaths:
+            os.remove(imagePath)
+
+        return imagePaths
     
     @staticmethod
     def generateImageName(prefix="decapod-", suffix="jpeg"):

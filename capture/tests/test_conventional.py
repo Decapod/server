@@ -62,7 +62,7 @@ class TestConventional(unittest.TestCase):
     def test_05_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.conventional.captureDir
-        images = utils.image.imageListFromDir(imgDir)
+        images = utils.image.findImages(imgDir)
         for image in images:
             shutil.copy(image, captureDir)
             
@@ -71,12 +71,12 @@ class TestConventional(unittest.TestCase):
         t1 = self.conventional.getImagesByIndex("1")
         t2 = self.conventional.getImagesByIndex("0", filenameTemplate="capture-${captureIndex}_${cameraID}")
         self.assertListEqual([img1], t1)
-        self.assertListEqual([img1, img2], t2)
+        self.assertListEqual([img2, img1], t2)
         
     def test_06_deleteImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.conventional.captureDir
-        images = utils.image.imageListFromDir(imgDir)
+        images = utils.image.findImages(imgDir)
         img1 = os.path.join(captureDir, "capture-0_1.jpg")
         for image in images:
             shutil.copy(image, captureDir)
@@ -90,7 +90,7 @@ class TestConventional(unittest.TestCase):
         expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.conventional.captureDir
-        images = utils.image.imageListFromDir(imgDir)
+        images = utils.image.findImages(imgDir)
         
         for image in images:
             shutil.copy(image, captureDir)
