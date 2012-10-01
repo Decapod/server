@@ -11,6 +11,8 @@ from status import Status
 from store import FSStore
 from utils import io, image
 
+DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
+
 class OutputPathError(Exception): pass
 
 class Conventional(object):
@@ -62,11 +64,11 @@ class Conventional(object):
         
         return self.exportZipFilePath
     
-    def getImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+    def getImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         return image.findImages(self.captureDir, regexPattern)
     
-    def deleteImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+    def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] - len(removedImages))
@@ -82,7 +84,7 @@ class Conventional(object):
 
         # $cameraID is used by the camera capture filename template
         # TODO: May want to define the template into config file
-        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}").safe_substitute(captureIndex=self.status.model["index"])
+        captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=self.status.model["index"])
         
         fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, self.cameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
         
