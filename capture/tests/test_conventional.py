@@ -69,8 +69,8 @@ class TestConventional(unittest.TestCase):
             
         img1 = os.path.join(captureDir, "capture-0_1.jpg")
         img2 = os.path.join(captureDir, "capture-0_2.jpg")
-        t1 = self.conventional.getImagesByIndex("1")
-        t2 = self.conventional.getImagesByIndex("0", filenameTemplate="capture-${captureIndex}_${cameraID}")
+        t1 = self.conventional.getImagesByIndex("1", filenameTemplate="capture-${cameraID}_${captureIndex}")
+        t2 = self.conventional.getImagesByIndex("0")
         self.assertListEqual([img1], t1)
         self.assertListEqual([img2, img1], t2)
         
@@ -78,12 +78,11 @@ class TestConventional(unittest.TestCase):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.conventional.captureDir
         images = utils.image.findImages(imgDir)
-        img1 = os.path.join(captureDir, "capture-0_1.jpg")
         for image in images:
             shutil.copy(image, captureDir)
         self.conventional.status.update("totalCaptures", len(images))
         
-        self.conventional.deleteImagesByIndex("1")
+        self.conventional.deleteImagesByIndex("1", filenameTemplate="capture-${cameraID}_${captureIndex}")
         self.assertListEqual([], self.conventional.getImagesByIndex("1"))
         self.assertEquals(1, self.conventional.status.model["totalCaptures"])
         
