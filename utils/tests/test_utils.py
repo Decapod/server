@@ -126,50 +126,55 @@ class ValidationTests(unittest.TestCase):
         file = os.path.join(DATA_DIR, "pdf", "Decapod.pdf")
         self.assertFalse(utils.image.isImage(file), "The file at path ({0}) should not be an image".format(file))
 
-class ToListTests(unittest.TestCase):
+class findImageTests(unittest.TestCase):
     
     def setUp(self):
-        utils.io.makeDirs(TEST_DIR)
+        self.imgDir = os.path.join(TEST_DIR, "images")
+        utils.io.makeDirs(self.imgDir)
+        self.img1 = os.path.join(self.imgDir, "Image_0015.JPEG")
+        self.img2 = os.path.join(self.imgDir, "Image_0016.JPEG")
+        shutil.copy(os.path.join(IMG_DIR, "Image_0015.JPEG"), self.img1)
+        shutil.copy(os.path.join(IMG_DIR, "Image_0016.JPEG"), self.img2)
     
     def tearDown(self):
         utils.io.rmTree(TEST_DIR)
         
-    def test_01_imageDirToList(self):
-        imgList = utils.image.imageListFromDir(IMG_DIR)
-        self.assertEquals(2, len(imgList))
-        self.assertListEqual([os.path.join(IMG_DIR, "Image_0015.JPEG"), os.path.join(IMG_DIR, "Image_0016.JPEG")], imgList)
+    def test_01_findImages(self):
+        imgList = utils.image.findImages(self.imgDir)
+        self.assertListEqual([self.img2, self.img1], imgList)
         
-    def test_02_bookPagesToArray_noImages(self):
-        imgList = utils.image.imageListFromDir(FILES_DIR)
-        self.assertEquals(0, len(imgList))
+    def test_02_findImages_parent(self):
+        imgList = utils.image.findImages(TEST_DIR)
+        self.assertListEqual([self.img2, self.img1], imgList)
         
-    def test_03_bookPagesToArray_mixed(self):
-        imgOne = os.path.join(IMG_DIR, "Image_0015.JPEG")
-        imgTwo = os.path.join(IMG_DIR, "Image_0016.JPEG")
-        pdfOne = os.path.join(FILES_DIR, "Decapod.pdf")
-        shutil.copy(imgOne, TEST_DIR)
-        shutil.copy(imgTwo, TEST_DIR)
-        shutil.copy(pdfOne, TEST_DIR)
-        imgList = utils.image.imageListFromDir(TEST_DIR)
-        self.assertEquals(2, len(imgList))
-        self.assertListEqual([os.path.join(TEST_DIR, "Image_0015.JPEG"), os.path.join(TEST_DIR, "Image_0016.JPEG")], imgList)
+    def test_03_findImages_noImages(self):
+        imgList = utils.image.findImages(FILES_DIR)
+        self.assertListEqual([], imgList)
         
-    def test_04_imageDirToList_reversed(self):
-        imgList = utils.image.imageListFromDir(IMG_DIR, reverse=True)
-        self.assertEquals(2, len(imgList))
-        self.assertListEqual([os.path.join(IMG_DIR, "Image_0016.JPEG"), os.path.join(IMG_DIR, "Image_0015.JPEG")], imgList)
+    def test_04_findImages_regex(self):
+        imgList = utils.image.findImages(self.imgDir, "Image_0015")
+        self.assertListEqual([self.img1], imgList)
         
-    def test_05_imageDirToList_customSort(self):
-        imgOne = os.path.join(IMG_DIR, "Image_0016.JPEG")
-        imgTwo = os.path.join(IMG_DIR, "Image_0015.JPEG")
-        shutil.copy(imgOne, TEST_DIR)
-        time.sleep(0.1) # wait 0.1 seconds. Needed because copies happen too quickly
-        shutil.copy(imgTwo, TEST_DIR)
-        imgList = utils.image.imageListFromDir(TEST_DIR, sortKey=os.path.getmtime)
-        self.assertEquals(2, len(imgList))
-        timeImgOne = os.path.getmtime(imgList[0])
-        timeImgTwo = os.path.getmtime(imgList[1])
-        self.assertTrue(timeImgOne < timeImgTwo, "The first page in the array (time: {0}) should have been modified prior to the second (time: {1})".format(timeImgOne, timeImgTwo))
+    def test_05_removeImages(self):
+        imgList = utils.image.removeImages(self.imgDir)
+        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertFalse(os.path.exists(self.img1))
+        self.assertFalse(os.path.exists(self.img2))
+    
+    def test_06_removeImages_parent(self):
+        imgList = utils.image.removeImages(TEST_DIR)
+        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertFalse(os.path.exists(self.img1))
+        self.assertFalse(os.path.exists(self.img2))
+        
+    def test_07_removeImages_noImages(self):
+        imgList = utils.image.removeImages(FILES_DIR)
+        self.assertListEqual([], imgList)
+        
+    def test_08_findImages_regex(self):
+        imgList = utils.image.removeImages(self.imgDir, "Image_0015")
+        self.assertListEqual([self.img1], imgList)
+        self.assertFalse(os.path.exists(self.img1))
         
 class DictTests(unittest.TestCase):
     
