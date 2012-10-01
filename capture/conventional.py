@@ -11,14 +11,19 @@ from status import Status
 from store import FSStore
 from utils import io, image
 
+DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
+
 class OutputPathError(Exception): pass
+class CaptureError(Exception): pass
+class CameraPortsChangedError(Exception): pass
 
 class Conventional(object):
     
-    # keep track of the method for multiple captures, simultaneous or sequential, at the class level
-    # rather than the instance level. This method is fine with current support of one single user at 
-    # a time. It doesn't support the case of having multiple users. Need another solution at then.
+    # keep track of the method and camera ports for multiple captures, simultaneous or sequential, 
+    # at the class level rather than the instance level. This method is fine with current support  
+    # of one single user at a time. It doesn't support the case of having multiple users.
     trackedMultiCaptureFunc = None
+    trackedCameraPorts = None
     
     statusAtLastExport = {}
     
@@ -35,7 +40,7 @@ class Conventional(object):
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
         
         # Keep track of the  ports of connected cameras
-        self.cameraPorts = self.cameraController.getPorts()
+        Conventional.trackedCameraPorts = Conventional.trackedCameraPorts if Conventional.trackedCameraPorts else self.cameraController.getPorts()
         
         # retrieve the last capture status
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
@@ -62,11 +67,11 @@ class Conventional(object):
         
         return self.exportZipFilePath
     
-    def getImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+    def getImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         return image.findImages(self.captureDir, regexPattern)
     
-    def deleteImagesByIndex(self, index, filenameTemplate="capture-${cameraID}_${captureIndex}"):
+    def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] - len(removedImages))
@@ -75,23 +80,29 @@ class Conventional(object):
     def capture(self):
         fileLocations = []
         
-        if len(self.cameraPorts) == 0:
+        if len(Conventional.trackedCameraPorts) == 0:
             return fileLocations
+        
+        if self.cameraController.getPorts() != Conventional.trackedCameraPorts:
+            raise CameraPortsChangedError("Camera ports has been changed.")
         
         multiCaptureFuncName = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
 
         # $cameraID is used by the camera capture filename template
         # TODO: May want to define the template into config file
-        captureNameTemplate = Template("capture-${captureIndex}_${cameraID}").safe_substitute(captureIndex=self.status.model["index"])
+        try:
+            captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=self.status.model["index"])
+        except self.cameraController.MultiCaptureError as e:
+            raise CaptureError(e.message)
         
-        fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, self.cameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
+        fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, Conventional.trackedCameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
         
         # Keep track of the determined method for multiple capture
         Conventional.trackedMultiCaptureFunc = method
         
         # Increase the total captures and save
         self.status.update("index", self.status.model["index"] + 1)
-        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(self.cameraPorts))
+        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(Conventional.trackedCameraPorts))
         
         # TODO: Return a list of URLs to captured images
         return fileLocations

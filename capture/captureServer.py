@@ -174,7 +174,9 @@ class ConventionalCaptureController(object):
     def POST(self, *args, **kwargs):
         try:
             captures = self.conventional.capture()
-        except conventional.MultiCaptureError as e:
+        except conventional.CaptureError as e:
+            raise cherrypy.HTTPError(500, e.message)
+        except conventional.CameraPortsChangedError as e:
             raise cherrypy.HTTPError(500, e.message)
 
         server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
