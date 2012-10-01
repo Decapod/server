@@ -4,6 +4,7 @@ import unittest
 import shutil
 import time
 import simplejson as json
+import zipfile
 
 sys.path.append(os.path.abspath('..'))
 import utils
@@ -294,6 +295,32 @@ class imageTypeTests(unittest.TestCase):
         expected = os.path.join(self.temp, "testImage.jpeg")
         utils.image.renameWithExtension(targetImg)
         self.assertTrue(os.path.exists(expected))
+        
+class zipTests(unittest.TestCase):
+    
+    def setUp(self):
+        self.temp = os.path.join(DATA_DIR, "temp")
+        self.zipPath = os.path.join(self.temp, "test.zip")
+        self.origDir = os.getcwd()
+        utils.io.makeDirs(self.temp)
+        
+    def tearDown(self):
+        os.chdir(self.origDir)
+        utils.io.rmTree(self.temp)
+        
+    def test_01_zip(self):
+        expectedFiles = ["Image_0016.JPEG", "Image_0015.JPEG"]
+        os.chdir(IMG_DIR)
+        
+        utils.io.zip(".", self.zipPath)
+        
+        self.assertTrue(os.path.exists(self.zipPath))
+        self.assertTrue(zipfile.is_zipfile(self.zipPath))
+        
+        zip = zipfile.ZipFile(self.zipPath, "r")
+        self.assertIsNone(zip.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zip.namelist())
+        zip.close()
         
 if __name__ == '__main__':
     unittest.main()

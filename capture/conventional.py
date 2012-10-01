@@ -52,16 +52,8 @@ class Conventional(object):
         # Only create a new zip if one doesn't exist, or if there have been changes.
         if not os.path.exists(self.exportZipFilePath) or isStatusChanged:
             currentDir = os.getcwd()
-            try:
-                zip = zipfile.ZipFile(self.exportZipFilePath, mode="w")
-            except IOError:
-                raise OutputPathError("{0} is not a valid path".format(self.exportZipFilePath))
-            
             os.chdir(self.captureDir)
-            
-            for file in os.listdir("."):
-                zip.write(file)
-            zip.close()
+            io.zip(".", self.exportZipFilePath)
             os.chdir(currentDir)
             Conventional.statusAtLastExport = self.status.model.copy()
         
