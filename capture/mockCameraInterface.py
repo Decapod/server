@@ -4,6 +4,7 @@ import sys
 import shutil
 from string import Template
 
+import cameraInterface
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import utils
@@ -165,3 +166,6 @@ def releaseCameras():
 
 def raiseTimeoutError(**kwargs):
     raise TimeoutError
+
+def generateCameraStatus(statusCode, **kwargs):
+    return cameraInterface.generateCameraStatus(statusCode, **kwargs)

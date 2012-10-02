@@ -6,7 +6,6 @@ import re
 
 import cameraInterface
 import mockCameraInterface
-import captureErrors
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 from status import Status
 from store import FSStore
@@ -53,13 +52,15 @@ class Conventional(object):
     
     def getCamerasStatus(self):
         if len(Conventional.trackedCameraPorts) == 0:
-            return captureErrors.generateErrorInfo("NO_CAMERAS")
+            return self.cameraController.generateCameraStatus("NO_CAMERAS")
         
         if len(Conventional.trackedCameraPorts) > 2:
-            return captureErrors.generateErrorInfo("TOO_MANY_CAMERAS")
+            return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS")
         
         if self.cameraController.getPorts() != Conventional.trackedCameraPorts:
-            return captureErrors.generateErrorInfo("CAMERA_DISCONECTED")
+            return self.cameraController.generateCameraStatus("CAMERA_DISCONECTED")
+        
+        return self.cameraController.generateCameraStatus("READY")
         
     def export(self):
         isStatusChanged = False;
