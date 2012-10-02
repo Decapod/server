@@ -110,7 +110,7 @@ class TestCameras(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-class TestConventional(ServerTestCase):
+class TestCapture(ServerTestCase):
     conventionalURL = "/conventional/"
     
     setup_server = staticmethod(setup_server)
@@ -124,7 +124,7 @@ class TestConventional(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-class TestConventionalCameras(ServerTestCase):
+class TestCamerasStatus(ServerTestCase):
     conventionalCamerasURL = "/conventional/cameras/"
     
     setup_server = staticmethod(setup_server)
@@ -138,7 +138,7 @@ class TestConventionalCameras(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-class TestConventionalCapture(ServerTestCase):
+class TestCameraCapture(ServerTestCase):
     conventionalCaptureURL = "/conventional/capture/"
     
     setup_server = staticmethod(setup_server)
@@ -171,7 +171,7 @@ class TestConventionalCapture(ServerTestCase):
         self.assertStatus(204)
         self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
-class ConventionalCaptureImages(ServerTestCase):
+class CaptureImages(ServerTestCase):
     conventionalCaptureImagesURL = "/conventional/capture/images/"
     conventionalCaptureImagesIndexURL = conventionalCaptureImagesURL + "1/"
     

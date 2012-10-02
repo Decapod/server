@@ -6,7 +6,7 @@ import zipfile
 
 import cameras
 import status
-import conventional
+import capture
 import cameraInterface
 import mockCameraInterface
 
@@ -132,7 +132,7 @@ class ConventionalController(object):
     exposed = True
     
     def __init__(self, conventionalDir):
-        self.conventional = conventional.Conventional(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
+        self.conventional = capture.Capture(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
         
         self.paths = {
             "cameras": ConventionalCamerasController(self.conventional),
@@ -191,10 +191,10 @@ class ConventionalCaptureController(object):
     def POST(self, *args, **kwargs):
         try:
             captures = self.conventional.capture()
-        except conventional.CaptureError as e:
+        except capture.CaptureError as e:
             raise cherrypy.HTTPError(500, e.message)
-        except conventional.CameraPortsChangedError as e:
-            raise cherrypy.HTTPError(500, e.message)
+        except capture.CameraPortsChangedError as e:
+            raise cherrypy.HTTPError(500, json.dumps(e.message))
 
         server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
         cherrypy.response.status = 202

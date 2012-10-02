@@ -17,7 +17,7 @@ class OutputPathError(Exception): pass
 class CaptureError(Exception): pass
 class CameraPortsChangedError(Exception): pass
 
-class Conventional(object):
+class Capture(object):
     
     # keep track of the method and camera ports for multiple captures, simultaneous or sequential, 
     # at the class level rather than the instance level. This method is fine with current support  
@@ -35,12 +35,12 @@ class Conventional(object):
         self.config = config
         
         self.statusFilePath = os.path.join(self.dataDir, captureStatusFile)
-        self.exportZipFilePath = os.path.join(self.exportDir, "conventional.zip")
+        self.exportZipFilePath = os.path.join(self.exportDir, "capture.zip")
         
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
         
         # Keep track of the  ports of connected cameras
-        Conventional.trackedCameraPorts = Conventional.trackedCameraPorts if Conventional.trackedCameraPorts else self.cameraController.getPorts()
+        Capture.trackedCameraPorts = Capture.trackedCameraPorts if Capture.trackedCameraPorts else self.cameraController.getPorts()
         
         # retrieve the last capture status
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
@@ -51,12 +51,12 @@ class Conventional(object):
         io.makeDirs(self.exportDir)
     
     def getCamerasStatus(self):
-        numOfTrackedPorts = len(Conventional.trackedCameraPorts)
+        numOfTrackedPorts = len(Capture.trackedCameraPorts)
         
         if numOfTrackedPorts == 0:
             return self.cameraController.generateCameraStatus("NO_CAMERAS")
         
-        missingPorts = list(set(self.cameraController.getPorts()) - set(Conventional.trackedCameraPorts))
+        missingPorts = list(set(self.cameraController.getPorts()) - set(Capture.trackedCameraPorts))
         if missingPorts:
             return self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED", numCamerasDisconnected=len(missingPorts))
         
@@ -72,7 +72,7 @@ class Conventional(object):
         
     def export(self):
         isStatusChanged = False;
-        for key, val in Conventional.statusAtLastExport.iteritems():
+        for key, val in Capture.statusAtLastExport.iteritems():
             if val is not self.status.model.get(key):
                 isStatusChanged = True
                 break
@@ -83,7 +83,7 @@ class Conventional(object):
             os.chdir(self.captureDir)
             io.zip(".", self.exportZipFilePath)
             os.chdir(currentDir)
-            Conventional.statusAtLastExport = self.status.model.copy()
+            Capture.statusAtLastExport = self.status.model.copy()
         
         return self.exportZipFilePath
     
@@ -100,13 +100,13 @@ class Conventional(object):
     def capture(self):
         fileLocations = []
         
-        if len(Conventional.trackedCameraPorts) == 0:
+        if len(Capture.trackedCameraPorts) == 0:
             return fileLocations
         
-        if self.cameraController.getPorts() != Conventional.trackedCameraPorts:
+        if self.cameraController.getPorts() != Capture.trackedCameraPorts:
             raise CameraPortsChangedError(self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED"))
         
-        multiCaptureFuncName = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
+        multiCaptureFuncName = Capture.trackedMultiCaptureFunc if Capture.trackedMultiCaptureFunc else self.config["multiCapture"]
 
         # $cameraID is used by the camera capture filename template
         # TODO: May want to define the template into config file
@@ -115,14 +115,14 @@ class Conventional(object):
         except self.cameraController.MultiCaptureError as e:
             raise CaptureError(e.message)
         
-        fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, Conventional.trackedCameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
+        fileLocations, method = self.cameraController.multiCapture(multiCaptureFuncName, Capture.trackedCameraPorts, captureNameTemplate, self.captureDir, self.config["delay"], self.config["interval"])
         
         # Keep track of the determined method for multiple capture
-        Conventional.trackedMultiCaptureFunc = method
+        Capture.trackedMultiCaptureFunc = method
         
         # Increase the total captures and save
         self.status.update("index", self.status.model["index"] + 1)
-        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(Conventional.trackedCameraPorts))
+        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(Capture.trackedCameraPorts))
         
         # TODO: Return a list of URLs to captured images
         return fileLocations
