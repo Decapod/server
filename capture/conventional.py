@@ -51,15 +51,23 @@ class Conventional(object):
         io.makeDirs(self.exportDir)
     
     def getCamerasStatus(self):
-        if len(Conventional.trackedCameraPorts) == 0:
+        numOfTrackedPorts = len(Conventional.trackedCameraPorts)
+        
+        if numOfTrackedPorts == 0:
             return self.cameraController.generateCameraStatus("NO_CAMERAS")
         
-        if len(Conventional.trackedCameraPorts) > 2:
-            return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS")
+        missingPorts = list(set(self.cameraController.getPorts()) - set(Conventional.trackedCameraPorts))
+        if missingPorts:
+            return self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED", numCamerasDisconnected=len(missingPorts))
         
-        if self.cameraController.getPorts() != Conventional.trackedCameraPorts:
-            return self.cameraController.generateCameraStatus("CAMERA_DISCONECTED")
+        try:
+            summary = self.cameraController.getAllCamerasSummary()
+        except Exception:
+            return self.cameraController.generateCameraStatus("NO_CAPTURE")
         
+        if numOfTrackedPorts > 2:
+            return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS", cameras=summary)
+    
         return self.cameraController.generateCameraStatus("READY")
         
     def export(self):
@@ -96,7 +104,7 @@ class Conventional(object):
             return fileLocations
         
         if self.cameraController.getPorts() != Conventional.trackedCameraPorts:
-            raise CameraPortsChangedError("Camera ports has been changed.")
+            raise CameraPortsChangedError(self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED"))
         
         multiCaptureFuncName = Conventional.trackedMultiCaptureFunc if Conventional.trackedMultiCaptureFunc else self.config["multiCapture"]
 
