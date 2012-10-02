@@ -21,13 +21,12 @@ DEFAULT_TEMP_DIR = "temp"
 DEFAULT_DELAY = 10
 DEFAULT_INTERVAL = 0.5
 
+# The camera status are check in the listed order
 CAMERA_STATUS = {
     "NO_CAMERAS": "No cameras detected", 
+    "CAMERA_DISCONNECTED": "A Camera has been disconnected",
     "NO_CAPTURE": "Could not capture an image",
-    "CAMERA_RESOLUTION_TOO_LOW": "Camera resolution is too low",
-    "NO_MATCHING_PAIR": "The cameras are not matching",
     "TOO_MANY_CAMERAS": "Too many cameras detected",
-    "CAMERA_DISCONECTED": "A Camera has been disconnected",
     "READY": "Ready"
 }
 
