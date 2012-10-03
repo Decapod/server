@@ -244,7 +244,7 @@ def simultaneousCapture(**kwargs):
     dir = kwargs["dir"]
     tempDir = kwargs.get("tempDir", DEFAULT_TEMP_DIR)
     delay = kwargs.get("delay", DEFAULT_DELAY)
-    interval = kwargs("interval", DEFAULT_INTERVAL)
+    interval = kwargs.get("interval", DEFAULT_INTERVAL)
     
     global multiCamerasPrepared, tempCaptureLocations
     
@@ -296,8 +296,7 @@ def simultaneousCapture(**kwargs):
             # rename
     except Exception:
         for fileLocation in tempCaptureLocations:
-            if os.path.exists(fileLocation): 
-                os.remove(fileLocation)
+            utils.io.rmFile(fileLocation)
         raise
     
     # rename image name to the desired image name
@@ -308,9 +307,9 @@ def simultaneousCapture(**kwargs):
                 os.rename(tempFile, actualCaptureLocation)
         except TimeoutError:
             for fileLocation in tempCaptureLocations[camera:]:
-                if os.path.exists(fileLocation): os.remove(fileLocation)
+                utils.io.rmFile(fileLocation)
             for fileLocation in actualCaptureLocations:
-                if os.path.exists(fileLocation): os.remove(fileLocation)
+                utils.io.rmFile(fileLocation)
             raise TimeoutError("Could not simultaneously capture images.")
             
         actualCaptureLocation = utils.image.renameWithExtension(actualCaptureLocation)
