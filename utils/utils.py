@@ -239,6 +239,13 @@ class server:
         cherrypy.response.headers["Content-Type"] = "application/json"
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
 
+    @staticmethod
+    def getURL(cherrypy, filePath, serverRootPath):
+        '''
+        Converts an absolute path to a physical file to a web-accessible URL
+        '''
+        return filePath.replace(serverRootPath, cherrypy.request.base)
+    
 class conversion:
     
     @staticmethod
