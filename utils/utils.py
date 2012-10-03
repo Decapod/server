@@ -32,7 +32,12 @@ class io:
         '''
         if os.path.exists(path):
             shutil.rmtree(path, ignore_errors, onerror)
-            
+    
+    @staticmethod
+    def rmFile(path):
+        if os.path.exists(path):
+            os.remove(path)
+    
     @staticmethod
     def writeToFile(contents, writePath, writeMode="w"):
         '''

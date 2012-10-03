@@ -116,6 +116,12 @@ class FileOperationTests(unittest.TestCase):
         
         self.assertDictEqual(self.jsonData, loadedJSON)
         
+    def test_05_rmFile(self):
+        filePath = os.path.join(TEST_DIR, "Decapod.pdf")
+        shutil.copyfile(os.path.join(FILES_DIR, "Decapod.pdf"), filePath)
+        utils.io.rmFile(filePath)
+        self.assertFalse(os.path.exists(filePath))
+        
 
 class ValidationTests(unittest.TestCase):
     
