@@ -74,8 +74,7 @@ class ImageImport(object):
         imagePath = os.path.join(self.importDir, name)
         self.writeFile(file, imagePath)
         if not self.isValidType(imagePath):
-            if os.path.exists(imagePath):
-                os.remove(imagePath)
+            utils.io.rmFile(imagePath)
             raise ImportTypeError("The file ({0}) must be a valid 'jpeg', 'png', or 'tiff'".format(name))
         
         return imagePath
