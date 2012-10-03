@@ -200,7 +200,15 @@ class CaptureController(object):
 
         server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
         cherrypy.response.status = 202
-        return json.dumps(captures)
+        
+        # convert the capture file path to URL
+        captureURLs = []
+        
+        for capture in captures:
+            captureURL = server.getURL(cherrypy, capture, CURRENT_DIR)
+            captureURLs.append(captureURL)
+            
+        return json.dumps(captureURLs)
         
     def DELETE(self, *args, **kwargs):
         self.captureType.delete()
