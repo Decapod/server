@@ -97,6 +97,11 @@ class Capture(object):
         self.status.update("totalCaptures", self.status.model["totalCaptures"] - len(removedImages))
         return removedImages
     
+    def deleteImages(self):
+        removedImages = image.removeImages(self.captureDir)
+        self.status.update("index", 0)
+        self.status.update("totalCaptures", 0)
+        
     def capture(self):
         fileLocations = []
         
@@ -129,6 +134,8 @@ class Capture(object):
     
     def delete(self):
         io.rmTree(self.typeDir)
+        self.status.update("index", 0)
+        self.status.update("totalCaptures", 0)
 
     def getStatus(self):
         return self.status.model

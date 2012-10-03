@@ -169,17 +169,29 @@ class TestTypeCameraCapture(ServerTestCase):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
         self.getPage(self.conventionalCaptureURL, method="DELETE")
         self.assertStatus(204)
-        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
+        self.assertListEqual(["captureStatus.json"], os.listdir(CONVENTIONAL_DIR))
+#        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
 class CaptureImages(ServerTestCase):
     conventionalCaptureImagesURL = "/conventional/capture/images/"
-    conventionalCaptureImagesIndexURL = conventionalCaptureImagesURL + "1/"
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
     
     def test_01_unsupportedMethods(self):
-        self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesURL, ["GET", "DELETE", "POST", "PUT"])
+        self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesURL, ["GET", "POST", "PUT"])
+        
+    def test_03_delete(self):
+        self.getPage(self.conventionalCaptureImagesURL, method="DELETE");
+        self.assertStatus(204)
+
+class ImageIndex(ServerTestCase):
+    conventionalCaptureImagesIndexURL = "/conventional/capture/images/1/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+    
+    def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesIndexURL, ["POST", "PUT"])
         
     def test_02_get(self):
