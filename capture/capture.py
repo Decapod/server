@@ -27,14 +27,14 @@ class Capture(object):
     
     statusAtLastExport = {}
     
-    def __init__(self, dataDir, captureStatusFile, config):
-        self.dataDir = dataDir
-        self.captureDir = os.path.join(self.dataDir, "captures")
-        self.exportDir = os.path.join(self.dataDir, "export")
+    def __init__(self, typeDir, captureStatusFile, config):
+        self.typeDir = typeDir
+        self.captureDir = os.path.join(self.typeDir, "captures")
+        self.exportDir = os.path.join(self.typeDir, "export")
         
         self.config = config
         
-        self.statusFilePath = os.path.join(self.dataDir, captureStatusFile)
+        self.statusFilePath = os.path.join(self.typeDir, captureStatusFile)
         self.exportZipFilePath = os.path.join(self.exportDir, "capture.zip")
         
         self.cameraController = cameraInterface if not self.config["testmode"] else mockCameraInterface
@@ -46,7 +46,7 @@ class Capture(object):
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
         
         # Creates the directories if they do not exists
-        io.makeDirs(self.dataDir)
+        io.makeDirs(self.typeDir)
         io.makeDirs(self.captureDir)
         io.makeDirs(self.exportDir)
     
@@ -128,7 +128,7 @@ class Capture(object):
         return fileLocations
     
     def delete(self):
-        io.rmTree(self.dataDir)
+        io.rmTree(self.typeDir)
 
     def getStatus(self):
         return self.status.model
