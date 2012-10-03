@@ -152,9 +152,9 @@ def simultaneousCapture(**kwargs):
     ports = kwargs["ports"]
     filenameTemplate = kwargs["filenameTemplate"]
     dir = kwargs["dir"]
-    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else DEFAULT_TEMP_DIR
-    delay = kwargs["delay"] if kwargs["delay"] else DEFAULT_DELAY
-    interval = kwargs["interval"] if kwargs.has_key("interval") else DEFAULT_INTERVAL
+    tempDir = kwargs.get("tempDir", DEFAULT_TEMP_DIR)
+    delay = kwargs.get("delay", DEFAULT_DELAY)
+    interval = kwargs("interval", DEFAULT_INTERVAL)
     
     return implMultiCapture(ports, filenameTemplate, dir)
     

@@ -42,14 +42,14 @@ class Capture(object):
         # Keep track of the  ports of connected cameras
         Capture.trackedCameraPorts = Capture.trackedCameraPorts if Capture.trackedCameraPorts else self.cameraController.getPorts()
         
-        # retrieve the last capture status
-        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
-        
         # Creates the directories if they do not exists
         io.makeDirs(self.typeDir)
         io.makeDirs(self.captureDir)
         io.makeDirs(self.exportDir)
     
+        # retrieve the last capture status
+        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
+        
     def getCamerasStatus(self):
         numOfTrackedPorts = len(Capture.trackedCameraPorts)
         
@@ -99,8 +99,10 @@ class Capture(object):
     
     def deleteImages(self):
         removedImages = image.removeImages(self.captureDir)
-        self.status.update("index", 0)
-        self.status.update("totalCaptures", 0)
+        
+        if removedImages:
+            self.status.update("index", 0)
+            self.status.update("totalCaptures", 0)
         
     def capture(self):
         fileLocations = []
@@ -113,7 +115,6 @@ class Capture(object):
         
         multiCaptureFuncName = Capture.trackedMultiCaptureFunc if Capture.trackedMultiCaptureFunc else self.config["multiCapture"]
 
-        # $cameraID is used by the camera capture filename template
         # TODO: May want to define the template into config file
         try:
             captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=self.status.model["index"])

@@ -21,7 +21,7 @@ DEFAULT_TEMP_DIR = "temp"
 DEFAULT_DELAY = 10
 DEFAULT_INTERVAL = 0.5
 
-# The camera status are check in the listed order
+# The camera status are checked in the listed order
 CAMERA_STATUS = {
     "NO_CAMERAS": "No cameras detected", 
     "CAMERA_DISCONNECTED": "A Camera has been disconnected",
@@ -177,9 +177,8 @@ def multiCapture(multiCaptureFuncName, cameraPorts, captureNameTemplate, capture
                                      delay=delay,
                                      interval=interval)
     except TimeoutError as e:
-        # TODO: fall back to sequential capture
-        if len(cameraPorts) > 0:
-            releaseCameras()
+        # Fall back to sequential capture
+        releaseCameras()
         
         trackedMultiCaptureFunc = "sequentialCapture"
         
@@ -243,9 +242,9 @@ def simultaneousCapture(**kwargs):
     ports = kwargs["ports"]
     filenameTemplate = kwargs["filenameTemplate"]
     dir = kwargs["dir"]
-    tempDir = kwargs["tempDir"] if kwargs.has_key("tempDir") else DEFAULT_TEMP_DIR
-    delay = kwargs["delay"] if kwargs["delay"] else DEFAULT_DELAY
-    interval = kwargs["interval"] if kwargs.has_key("interval") else DEFAULT_INTERVAL
+    tempDir = kwargs.get("tempDir", DEFAULT_TEMP_DIR)
+    delay = kwargs.get("delay", DEFAULT_DELAY)
+    interval = kwargs("interval", DEFAULT_INTERVAL)
     
     global multiCamerasPrepared, tempCaptureLocations
     
@@ -267,7 +266,7 @@ def simultaneousCapture(**kwargs):
         if not multiCamerasPrepared:
             # Prepare the cameras for the simultaneous capture. Only run once.
             for camera, port in enumerate(ports):
-                tempFileLocation = os.path.join(tempDir, str(camera) + ".jpg")
+                tempFileLocation = os.path.join(tempDir, str(camera))
                 tempCaptureLocations.append(tempFileLocation)
                 
                 cmd = [

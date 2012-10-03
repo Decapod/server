@@ -2,7 +2,6 @@ import cherrypy
 import os
 import sys
 import simplejson as json
-import zipfile
 
 import cameras
 import status
@@ -60,6 +59,9 @@ def startServer():
         cherrypy.engine.block()
 
 def releaseCameras():
+    '''
+    The handler function for cherrypy shutdown listener to release all the cameras that have been prepared for simultaneous capture.
+    '''
     cameraController = cameraInterface if not cherrypy.config["app_opts.general"]["testmode"] else mockCameraInterface
     cameraController.releaseCameras()
     
@@ -91,10 +93,9 @@ class CaptureServer(object):
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
         # converts abstract data directories defined for each type into actual physical dirs
-        self.rs = rs
-        self.conventionalDir = self.rs.path(CONVENTIONAL_DATA_DIR)
-        self.stereoDir = self.rs.path(STEREO_DATA_DIR)
-        self.structuredDir = self.rs.path(STRUCTURED_DATA_DIR)
+        self.conventionalDir = rs.path(CONVENTIONAL_DATA_DIR)
+        self.stereoDir = rs.path(STEREO_DATA_DIR)
+        self.structuredDir = rs.path(STRUCTURED_DATA_DIR)
 
         self.paths = {
             "cameras": CamerasController(),
