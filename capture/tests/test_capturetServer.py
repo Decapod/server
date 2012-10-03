@@ -124,7 +124,7 @@ class TestCapture(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-class TestCamerasStatus(ServerTestCase):
+class TestTypeCamerasStatus(ServerTestCase):
     conventionalCamerasURL = "/conventional/cameras/"
     
     setup_server = staticmethod(setup_server)
@@ -138,7 +138,7 @@ class TestCamerasStatus(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-class TestCameraCapture(ServerTestCase):
+class TestTypeCameraCapture(ServerTestCase):
     conventionalCaptureURL = "/conventional/capture/"
     
     setup_server = staticmethod(setup_server)

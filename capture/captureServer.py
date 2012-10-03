@@ -98,7 +98,8 @@ class CaptureServer(object):
 
         self.paths = {
             "cameras": CamerasController(),
-            "conventional": ConventionalController(self.conventionalDir)
+            "conventional": TypeController(self.conventionalDir),
+            "stereo": TypeController(self.stereoDir)
         }
 
         pathSegment = vpath[0]
@@ -124,7 +125,7 @@ class CamerasController(object):
         server.setJSONResponseHeaders(cherrypy, "camerasSummary.json")
         return json.dumps(self.cameras.getCamerasSummary())
 
-class ConventionalController(object):
+class TypeController(object):
     '''
     Parses the positional arguments starting after /conventional/
     and calls the appropriate handlers for the various resources 
@@ -135,8 +136,8 @@ class ConventionalController(object):
         self.conventional = capture.Capture(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
         
         self.paths = {
-            "cameras": ConventionalCamerasController(self.conventional),
-            "capture": ConventionalCaptureController(self.conventional)
+            "cameras": TypeCamerasController(self.conventional),
+            "capture": CaptureController(self.conventional)
         }
         
     def GET(self, *args, **kwargs):
@@ -151,7 +152,7 @@ class ConventionalController(object):
         if pathSegment in self.paths:
             return self.paths[pathSegment]
 
-class ConventionalCamerasController(object):
+class TypeCamerasController(object):
     '''
     Parses the positinal arguments starting after /conventional/capture/images
     If /images/ isn't followed by an index it raises an error.
@@ -167,7 +168,7 @@ class ConventionalCamerasController(object):
         cherrypy.response.status = 200
         return json.dumps(self.conventional.getCamerasStatus())
     
-class ConventionalCaptureController(object):
+class CaptureController(object):
     '''
     Parses the positional arguments starting after /conventional/capture
     and calls the appropriate handlers for the various resources 
@@ -177,7 +178,7 @@ class ConventionalCaptureController(object):
     def __init__(self, conventional):
         self.conventional = conventional
         self.paths = {
-            "images": ConventionalCaptureImagesController(self.conventional)
+            "images": ImagesController(self.conventional)
         }
         
     def GET(self, *args, **kwargs):
@@ -211,7 +212,7 @@ class ConventionalCaptureController(object):
         if pathSegment in self.paths:
             return self.paths[pathSegment]
 
-class ConventionalCaptureImagesController(object):
+class ImagesController(object):
     '''
     Parses the positinal arguments starting after /conventional/capture/images
     If /images/ isn't followed by an index it raises an error.
