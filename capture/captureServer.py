@@ -127,23 +127,23 @@ class CamerasController(object):
 
 class TypeController(object):
     '''
-    Parses the positional arguments starting after /conventional/
+    Parses the positional arguments starting after /[conventional|stereo]/
     and calls the appropriate handlers for the various resources 
     '''
     exposed = True
     
-    def __init__(self, conventionalDir):
-        self.conventional = capture.Capture(conventionalDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
+    def __init__(self, typeDir):
+        self.captureType = capture.Capture(typeDir, CAPTURE_STATUS_FILENAME, cherrypy.config["app_opts.general"])
         
         self.paths = {
-            "cameras": TypeCamerasController(self.conventional),
-            "capture": CaptureController(self.conventional)
+            "cameras": TypeCamerasController(self.captureType),
+            "capture": CaptureController(self.captureType)
         }
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        server.setJSONResponseHeaders(cherrypy, 'conventionalInfo.json')
-        return self.conventional.getStatus()
+        server.setJSONResponseHeaders(cherrypy, 'captureInfo.json')
+        return self.captureType.getStatus()
 
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
@@ -154,44 +154,44 @@ class TypeController(object):
 
 class TypeCamerasController(object):
     '''
-    Parses the positinal arguments starting after /conventional/capture/images
+    Parses the positinal arguments starting after /[conventional|stereo]/capture/images
     If /images/ isn't followed by an index it raises an error.
     '''
     
     exposed = True
     
-    def __init__(self, conventional):
-        self.conventional = conventional
+    def __init__(self, captureType):
+        self.captureType = captureType
     
     def GET(self, *args):
-        server.setJSONResponseHeaders(cherrypy, "conventionalCameras.json")
+        server.setJSONResponseHeaders(cherrypy, "cameras.json")
         cherrypy.response.status = 200
-        return json.dumps(self.conventional.getCamerasStatus())
+        return json.dumps(self.captureType.getCamerasStatus())
     
 class CaptureController(object):
     '''
-    Parses the positional arguments starting after /conventional/capture
+    Parses the positional arguments starting after /[conventional|stereo]/capture
     and calls the appropriate handlers for the various resources 
     '''
     exposed = True
     
-    def __init__(self, conventional):
-        self.conventional = conventional
+    def __init__(self, captureType):
+        self.captureType = captureType
         self.paths = {
-            "images": ImagesController(self.conventional)
+            "images": ImagesController(self.captureType)
         }
         
     def GET(self, *args, **kwargs):
         # returns the zipped captured images
         server.setJSONResponseHeaders(cherrypy, "capture.json")
         cherrypy.response.status = 200
-        exportInfo = {"captures": self.conventional.export()}
+        exportInfo = {"captures": self.captureType.export()}
         return json.dumps(exportInfo)
         
 
     def POST(self, *args, **kwargs):
         try:
-            captures = self.conventional.capture()
+            captures = self.captureType.capture()
         except capture.CaptureError as e:
             raise cherrypy.HTTPError(500, e.message)
         except capture.CameraPortsChangedError as e:
@@ -202,7 +202,7 @@ class CaptureController(object):
         return json.dumps(captures)
         
     def DELETE(self, *args, **kwargs):
-        self.conventional.delete()
+        self.captureType.delete()
         cherrypy.response.status = 204
         
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
@@ -214,25 +214,45 @@ class CaptureController(object):
 
 class ImagesController(object):
     '''
-    Parses the positinal arguments starting after /conventional/capture/images
+    Parses the positinal arguments starting after /[conventional|stereo]/capture/images
     If /images/ isn't followed by an index it raises an error.
     '''
     
     exposed = True
     
-    def __init__(self, conventional):
-        self.conventional = conventional
+    def __init__(self, captureType):
+        self.captureType = captureType
+    
+    def DELETE(self, *args):
+        self.captureType.deleteImages()
+        cherrypy.response.status = 204
+
+    # Continues cherrypy object traversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        return ImageIndexController(self.captureType, vpath[0])
+
+class ImageIndexController(object):
+    '''
+    Parses the positinal arguments starting after /[conventional|stereo]/capture/images
+    If /images/ isn't followed by an index it raises an error.
+    '''
+    
+    exposed = True
+    
+    def __init__(self, captureType, imageIndex):
+        self.captureType = captureType
+        self.imageIndex = imageIndex
     
     def GET(self, *args):
-        if len(args) and args[0].isdigit():
+        if self.imageIndex.isdigit():
             server.setJSONResponseHeaders(cherrypy, "images.json")
-            return json.dumps({"images": self.conventional.getImagesByIndex(args[0])})
+            return json.dumps({"images": self.captureType.getImagesByIndex(self.imageIndex)})
         else:
             raise cherrypy.HTTPError(405)
     
     def DELETE(self, *args):
-        if len(args) and args[0].isdigit():
-            self.conventional.deleteImagesByIndex(args[0])
+        if self.imageIndex.isdigit():
+            self.captureType.deleteImagesByIndex(self.imageIndex)
             cherrypy.response.status = 204
         else:
             raise cherrypy.HTTPError(405)

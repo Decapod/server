@@ -75,7 +75,7 @@ class TestCapture(unittest.TestCase):
 
     def test_05_delete(self):
         self.capture.delete()
-        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
+        self.assertListEqual(["captureStatus.json"], os.listdir(CONVENTIONAL_DIR))
         
     def test_06_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
@@ -103,7 +103,20 @@ class TestCapture(unittest.TestCase):
         self.assertListEqual([], self.capture.getImagesByIndex("1"))
         self.assertEquals(1, self.capture.status.model["totalCaptures"])
         
-    def test_08_export(self):
+    def test_08_deleteImages(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+        for image in images:
+            shutil.copy(image, captureDir)
+        self.capture.status.update("totalCaptures", len(images))
+        
+        self.capture.deleteImages()
+        self.assertListEqual([], utils.image.findImages(captureDir))
+        self.assertEquals(0, self.capture.status.model["index"])
+        self.assertEquals(0, self.capture.status.model["totalCaptures"])
+        
+    def test_09_export(self):
         expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
