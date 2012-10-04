@@ -240,11 +240,13 @@ class server:
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
 
     @staticmethod
-    def getURL(cherrypy, filePath, serverRootPath):
+    def getURL(cherrypy, filePath, serverRootPath, baseURL=None):
         '''
-        Converts an absolute path to a physical file to a web-accessible URL
+        Converts the absolute path of a physical file to a web-accessible URL
+        The 4th parameter "baseURL" is only needed for unit tests
         '''
-        return filePath.replace(serverRootPath, cherrypy.request.base)
+        base = cherrypy.request.base if baseURL is None else baseURL
+        return filePath.replace(serverRootPath, base)
     
 class conversion:
     

@@ -1,5 +1,6 @@
 import sys
 import os
+import cherrypy
 import unittest
 import shutil
 import time
@@ -339,6 +340,16 @@ class zipTests(unittest.TestCase):
         self.assertIsNone(zip.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zip.namelist())
         zip.close()
+        
+class serverTests(unittest.TestCase):
+    
+    def test_01_getURL(self):
+        baseURL = "http://localhost:8081/"
+        fileLocation = "/home/usr/decapod/capture/data/conventional/captures/capture-1_0.jpg"
+        captureServerRoot = "/home/usr/decapod/capture/"
+        
+        expected = baseURL + "data/conventional/captures/capture-1_0.jpg"
+        self.assertEqual(utils.server.getURL(cherrypy, fileLocation, captureServerRoot, baseURL), expected)
         
 if __name__ == '__main__':
     unittest.main()
