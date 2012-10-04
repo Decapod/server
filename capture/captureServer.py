@@ -82,6 +82,12 @@ def mountApp(config=DECAPOD_CONFIG_FILE):
 
     return root
 
+def convertPathToURL(capture):
+    '''
+    Used by map() function to convert a list of file paths to a list of URLs
+    '''
+    return server.getURL(cherrypy, capture, CURRENT_DIR)
+        
 class CaptureServer(object):
     '''
     Handler for the / resource
@@ -168,7 +174,7 @@ class TypeCamerasController(object):
         server.setJSONResponseHeaders(cherrypy, "cameras.json")
         cherrypy.response.status = 200
         return json.dumps(self.captureType.getCamerasStatus())
-    
+
 class CaptureController(object):
     '''
     Parses the positional arguments starting after /[conventional|stereo]/capture
@@ -186,7 +192,7 @@ class CaptureController(object):
         # returns the zipped captured images
         server.setJSONResponseHeaders(cherrypy, "capture.json")
         cherrypy.response.status = 200
-        exportInfo = {"captures": self.captureType.export()}
+        exportInfo = {"captures": server.getURL(cherrypy, self.captureType.export(), CURRENT_DIR)}
         return json.dumps(exportInfo)
         
 
@@ -197,18 +203,16 @@ class CaptureController(object):
             raise cherrypy.HTTPError(500, e.message)
         except capture.CameraPortsChangedError as e:
             raise cherrypy.HTTPError(500, json.dumps(e.message))
-
+        except Exception as e:
+            raise cherrypy.HTTPError(500, e.message)
+        
+        # convert the capture file path to URL
+        captureURLs = map(convertPathToURL, captures)
+        
         server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
         cherrypy.response.status = 202
         
-        # convert the capture file path to URL
-        captureURLs = []
-        
-        for capture in captures:
-            captureURL = server.getURL(cherrypy, capture, CURRENT_DIR)
-            captureURLs.append(captureURL)
-            
-        return json.dumps(captureURLs)
+        return json.dumps({"captures": captureURLs})
         
     def DELETE(self, *args, **kwargs):
         self.captureType.delete()
@@ -254,8 +258,11 @@ class ImageIndexController(object):
     
     def GET(self, *args):
         if self.imageIndex.isdigit():
+            # Converts the image file paths to URLs
+            imageURLs = map(convertPathToURL, self.captureType.getImagesByIndex(self.imageIndex))
+            
             server.setJSONResponseHeaders(cherrypy, "images.json")
-            return json.dumps({"images": self.captureType.getImagesByIndex(self.imageIndex)})
+            return json.dumps({"images": imageURLs})
         else:
             raise cherrypy.HTTPError(405)
     
