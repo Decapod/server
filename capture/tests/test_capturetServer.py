@@ -4,15 +4,17 @@ import uuid
 import mimetypes
 import os
 import sys
+import re
 import shutil
 import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import captureServer
-from utils import io
+from utils import io, image
 
 DATA_DIR = os.path.abspath("data")
+MOCK_DATA_DIR = os.path.abspath("mockData")
 CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
 
 CONFIG = {
@@ -46,6 +48,7 @@ def setup_server(config=CONFIG):
     
 def teardown_server(dir=CONVENTIONAL_DIR):
     io.rmTree(dir)
+    sys.exit()
 
 class ServerTestCase(helper.CPWebCase):
     '''
@@ -161,10 +164,17 @@ class TestTypeCameraCapture(ServerTestCase):
             ("Cache-Control", "no-cache")
         ]
         
+        expectedCaptures = None
+        
         self.getPage(self.conventionalCaptureURL, headers, "POST", "")
         self.assertStatus(202)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
-
+        
+        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\]}'            
+        regex = re.compile(regexPattern)
+        self.assertTrue(regex.findall(self.body))
+        
+        
     def test_04_delete(self):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
         self.getPage(self.conventionalCaptureURL, method="DELETE")
@@ -186,7 +196,7 @@ class CaptureImages(ServerTestCase):
         self.assertStatus(204)
 
 class ImageIndex(ServerTestCase):
-    conventionalCaptureImagesIndexURL = "/conventional/capture/images/1/"
+    conventionalCaptureImagesIndexURL = "/conventional/capture/images/0/"
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
@@ -194,12 +204,30 @@ class ImageIndex(ServerTestCase):
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesIndexURL, ["POST", "PUT"])
         
-    def test_02_get(self):
+    def test_02_get_none(self):
         expected = {"images": []}
         self.getPage(self.conventionalCaptureImagesIndexURL);
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         self.assertBody(json.dumps(expected))
+        
+    def test_02_get(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = os.path.join(CONVENTIONAL_DIR, "captures")
+        images = image.findImages(imgDir)
+        for one_image in images:
+            shutil.copy(one_image, captureDir)
+            
+        self.getPage(self.conventionalCaptureImagesIndexURL);
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_2.jpg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpg"\]}'
+            
+        regex = re.compile(regexPattern)
+        self.assertTrue(regex.findall(self.body))
+        
+        io.rmTree(CONVENTIONAL_DIR)
         
     def test_03_delete(self):
         self.getPage(self.conventionalCaptureImagesIndexURL, method="DELETE");
