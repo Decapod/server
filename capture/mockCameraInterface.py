@@ -16,10 +16,6 @@ class GetResolutionError(Exception): pass
 class TimeoutError(Exception): pass
 class MultiCaptureError(Exception): pass
 
-DEFAULT_TEMP_DIR = "temp"
-DEFAULT_DELAY = 10
-DEFAULT_INTERVAL = 0.5
-
 CAMERA_INFO_BY_PORT = {
     "usb:001,002": {
         "model": "Canon PowerShot G10",
@@ -65,15 +61,7 @@ def getCameraSummaryByPort(port):
     return summary
 
 def getAllCamerasSummary():
-    allInfo = {}
-    allInfo["cameras"] = []
-    
-    connectedCameras = detectCameras()
-    
-    for camera in connectedCameras:
-        allInfo['cameras'].append(getCameraSummaryByPort(camera.get("port", {})))
-    
-    return allInfo
+    return cameraInterface.getAllCamerasSummary()
 
 def capture(port, filename, dir="images"):
     if (isPortValid(port)):
@@ -149,12 +137,16 @@ def sequentialCapture(**kwargs):
     return implMultiCapture(ports, filenameTemplate, dir)
     
 def simultaneousCapture(**kwargs):
+    '''
+    Take pictures simultaneously
+    The last 3 parameters (tempDir, delay, interval) are not in use. Their interpretation is to keep this function API in sync with the actual cameraInterface module.
+    '''
     ports = kwargs["ports"]
     filenameTemplate = kwargs["filenameTemplate"]
     dir = kwargs["dir"]
-    tempDir = kwargs.get("tempDir", DEFAULT_TEMP_DIR)
-    delay = kwargs.get("delay", DEFAULT_DELAY)
-    interval = kwargs.get("interval", DEFAULT_INTERVAL)
+    tempDir = kwargs.get("tempDir", cameraInterface.DEFAULT_TEMP_DIR)
+    delay = kwargs.get("delay", cameraInterface.DEFAULT_DELAY)
+    interval = kwargs.get("interval", cameraInterface.DEFAULT_INTERVAL)
     
     return implMultiCapture(ports, filenameTemplate, dir)
     
@@ -165,6 +157,9 @@ def releaseCameras():
     return True
 
 def raiseTimeoutError(**kwargs):
+    '''
+    Only used by unit tests to trigger the fallback from simulteneous to sequential. Not implemented in the actual cameraInterface module.
+    '''
     raise TimeoutError
 
 def generateCameraStatus(statusCode, **kwargs):
