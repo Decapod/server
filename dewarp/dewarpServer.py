@@ -3,7 +3,6 @@ import os
 import sys
 import simplejson as json
 
-import status
 import dewarp
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
@@ -22,10 +21,8 @@ IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
 
-# Defines and calculates the data directories of all capture types
-DATA_DIR = os.path.join("${data}", "conventional")
-
-CAPTURE_STATUS_FILENAME = "captureStatus.json"
+# Defines and calculates the data directory
+DATA_DIR = os.path.join("${data}")
 
 def startServer():
     '''
