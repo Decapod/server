@@ -191,7 +191,7 @@ class DictTests(unittest.TestCase):
         keyMap = {"w": "-w", "h": "-h"}
         expected = {"-w": 1, "-h": 2}
         
-        newMap = utils.translate.map(orig, keyMap)
+        newMap = utils.translate.keyRemap(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
     def test_02_rekey_extraMapKeys(self):
@@ -199,7 +199,7 @@ class DictTests(unittest.TestCase):
         keyMap = {"w": "-w", "h": "-h", "width": "-w"}
         expected = {"-w": 1, "-h": 2}
         
-        newMap = utils.translate.map(orig, keyMap)
+        newMap = utils.translate.keyRemap(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
     def test_03_rekey_extraDictKeys(self):
@@ -207,25 +207,17 @@ class DictTests(unittest.TestCase):
         keyMap = {"w": "-w", "h": "-h"}
         expected = {"-w": 1, "-h": 2}
         
-        newMap = utils.translate.map(orig, keyMap)
+        newMap = utils.translate.keyRemap(orig, keyMap)
         self.assertDictEqual(expected, newMap)
         
-    def test_04_rekey_extraDictKeys_preserve(self):
-        orig = {"w": 1, "h": 2, "dpi": 300}
-        keyMap = {"w": "-w", "h": "-h"}
-        expected = {"-w": 1, "-h": 2, "dpi": 300}
-        
-        newMap = utils.translate.map(orig, keyMap, preserve=True)
-        self.assertDictEqual(expected, newMap)
-        
-    def test_05_dictToFlagList(self):
+    def test_04_dictToFlagList(self):
         orig = {"-w": 1, "-h": 2}
         expected = ["-w", 1, "-h", 2]
         
         flagList = utils.translate.weave(orig)
         self.assertListEqual(expected, flagList)
         
-    def test_06_dictToFlagList_emptyDict(self):
+    def test_05_dictToFlagList_emptyDict(self):
         orig = {}
         expected = []
         
