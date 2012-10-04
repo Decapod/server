@@ -132,7 +132,7 @@ def getAllCamerasSummary():
     connectedCameras = detectCameras()
     
     for camera in connectedCameras:
-        allInfo['cameras'].append(getCameraSummaryByPort(camera['port']))
+        allInfo['cameras'].append(getCameraSummaryByPort(camera.get('port')))
     
     return allInfo
 
