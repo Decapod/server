@@ -35,6 +35,14 @@ class io:
     
     @staticmethod
     def rmFile(path):
+        '''
+        Will attempt to remove a single file if it exists.
+        Cannot be used to remove directories.
+        
+        Exceptions
+        ==========
+        OSError: If the file cannot be removed or a directory is passed in.
+        '''
         if os.path.exists(path):
             os.remove(path)
     
@@ -56,6 +64,13 @@ class io:
     
     @staticmethod
     def readFromFile(filePath):
+        '''
+        Read the file content
+
+        Exceptions
+        ==========
+        IOError: if the file cannot be opened
+        '''
         if not os.path.isfile(filePath): return None
         
         f = open(filePath)
@@ -125,7 +140,6 @@ class io:
         if waitForRtn:
             output = proc.communicate()[0]
             if proc.returncode != 0:
-                print(output)
                 raise error, message
             
             return output
@@ -203,19 +217,19 @@ class image:
 class translate:
     
     @staticmethod
-    def map(origDict, keyMap, preserve=False):
+    def keyRemap(origDict, keyMap):
         '''
         Used to map a dictionary.
         The keyMap is a dictionary which maps old key names to the new key name {old: new}.
-        If the preserved option is set to True, for any key that exists in origDict but isn't mapped, the original key will be used.
-        If the preserved option is set to False, for any key that exists in origDict but isn't mapped, it will be omitted from the returned dictionary
         
         Returns a new dictionary containing the new keys.
         '''
-        removeKey = "***NO KEY FOUND - REMOVE***" 
-        newDict = dict([(keyMap.get(key, key if preserve else removeKey), value) for key, value in origDict.iteritems()])
-        if removeKey in newDict:
-            del newDict[removeKey]
+        newDict = {}
+        
+        for key, value in keyMap.items():
+            if key in origDict:
+                newDict[value] = origDict[key]
+        
         return newDict
     
     @staticmethod

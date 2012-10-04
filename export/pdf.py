@@ -163,7 +163,7 @@ class PDFGenerator(object):
                 raise PageImagesNotFoundError("No page images found, cannot generate a pdf")
             try:
                 self.tiffPages = batchConvert(self.pages, "tiff", self.tiffDirPath)
-                self.generatePDFFromPages(utils.translate.map(options, KEY_MAP))
+                self.generatePDFFromPages(utils.translate.keyRemap(options, KEY_MAP))
             except:
                 self.setStatus(EXPORT_ERROR)
                 raise
