@@ -333,6 +333,12 @@ class zipTests(unittest.TestCase):
         self.assertListEqual(expectedFiles, zip.namelist())
         zip.close()
         
+    def test_02_unzip(self):
+        utils.io.unzip(os.path.join(FILES_DIR, "capture.zip"), self.temp)
+        self.assertTrue(os.path.exists(os.path.join(self.temp, "capture-0_1.jpg")))
+        self.assertTrue(os.path.exists(os.path.join(self.temp, "export")))
+        self.assertTrue(os.path.exists(os.path.join(self.temp, "export", "capture.zip")))
+
 class serverTests(unittest.TestCase):
     
     def test_01_getURL(self):
