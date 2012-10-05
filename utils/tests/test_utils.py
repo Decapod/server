@@ -158,31 +158,49 @@ class findImageTests(unittest.TestCase):
     def test_03_findImages_noImages(self):
         imgList = utils.image.findImages(FILES_DIR)
         self.assertListEqual([], imgList)
+    
+    def test_04_findImages_noFormats(self):
+        imgList = utils.image.findImages(self.imgDir, formats=None)
+        self.assertListEqual([self.img2, self.img1], imgList)
         
-    def test_04_findImages_regex(self):
+    def test_05_findImagesd_noImageInFormats(self):
+        imgList = utils.image.findImages(self.imgDir, formats=["png"])
+        self.assertListEqual([], imgList)
+    
+    def test_06_findImages_regex(self):
         imgList = utils.image.findImages(self.imgDir, "Image_0015")
         self.assertListEqual([self.img1], imgList)
         
-    def test_05_removeImages(self):
+    def test_07_removeImages(self):
         imgList = utils.image.removeImages(self.imgDir)
         self.assertListEqual([self.img2, self.img1], imgList)
         self.assertFalse(os.path.exists(self.img1))
         self.assertFalse(os.path.exists(self.img2))
     
-    def test_06_removeImages_parent(self):
+    def test_08_removeImages_parent(self):
         imgList = utils.image.removeImages(TEST_DIR)
         self.assertListEqual([self.img2, self.img1], imgList)
         self.assertFalse(os.path.exists(self.img1))
         self.assertFalse(os.path.exists(self.img2))
         
-    def test_07_removeImages_noImages(self):
+    def test_09_removeImages_noImages(self):
         imgList = utils.image.removeImages(FILES_DIR)
         self.assertListEqual([], imgList)
         
-    def test_08_findImages_regex(self):
+    def test_10_removeImages_regex(self):
         imgList = utils.image.removeImages(self.imgDir, "Image_0015")
         self.assertListEqual([self.img1], imgList)
         self.assertFalse(os.path.exists(self.img1))
+        
+    def test_11_removeImages_noFormats(self):
+        imgList = utils.image.removeImages(self.imgDir, formats=None)
+        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertFalse(os.path.exists(self.img1))
+        self.assertFalse(os.path.exists(self.img2))
+        
+    def test_12_removeImagesd_noImageInFormats(self):
+        imgList = utils.image.removeImages(self.imgDir, formats=["png"])
+        self.assertListEqual([], imgList)
         
 class DictTests(unittest.TestCase):
     

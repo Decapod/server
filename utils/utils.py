@@ -175,7 +175,7 @@ class image:
         return os.path.isfile(filePath) and imghdr.what(filePath) != None
     
     @staticmethod
-    def findImages(dir, regexPattern=None):
+    def findImages(dir, regexPattern=None, formats=["jpeg", "png", "tiff"]):
         '''
         Finds all of the images that match the regexPattern in the list of dirs.
         If no regexPattern is provided, it will find all images.
@@ -188,20 +188,21 @@ class image:
             for file in files: 
                 filePath = os.path.join(path, file)
                 fitsPattern = True if not regex else regex.findall(filePath)
+                isImage = image.getImageType(filePath) in formats if formats else image.isImage(filePath)
                 
-                if image.isImage(filePath) and fitsPattern:
+                if isImage and fitsPattern:     
                     imagePaths.append(filePath)
                     
         return imagePaths 
     
     @staticmethod
-    def removeImages(dir, regexPattern=None):
+    def removeImages(dir, regexPattern=None, formats=["jpeg", "png", "tiff"]):
         '''
         Removes all of the images that match the regexPattern in the list of dirs.
         If no regexPattern is provided, it will remove all images.
         '''
         
-        imagePaths = image.findImages(dir, regexPattern)
+        imagePaths = image.findImages(dir, regexPattern, formats)
         for imagePath in imagePaths:
             os.remove(imagePath)
 
