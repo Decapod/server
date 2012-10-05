@@ -185,7 +185,7 @@ class PDFExportController(object):
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
-        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
+        server.setAttachmentResponseHeaders(cherrypy, "exportStatus.json", "application/json")
         return json.dumps(self.export.getStatus())
         
     def PUT(self, *args, **kwargs):
@@ -205,7 +205,7 @@ class PDFExportController(object):
         options[self.typeKey] = exportType[4:] 
         bgtask.put(self.export.generate, options)
         cherrypy.response.status = 202
-        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
+        server.setAttachmentResponseHeaders(cherrypy, "exportStatus.json", "application/json")
         return json.dumps(self.export.getStatus())
     
     def DELETE(self, *args, **kwargs):
@@ -229,7 +229,7 @@ class ImageExportController(object):
         
     def GET(self, *args, **kwargs):
         #returns the status and, if available, the url to the exported pdf
-        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
+        server.setAttachmentResponseHeaders(cherrypy, "exportStatus.json", "application/json")
         return json.dumps(self.exporter.getStatus())
         
     def PUT(self, *args, **kwargs):
@@ -241,7 +241,7 @@ class ImageExportController(object):
         
         bgtask.put(self.exporter.export, args[0])
         cherrypy.response.status = 202
-        server.setJSONResponseHeaders(cherrypy, "exportStatus.json")
+        server.setAttachmentResponseHeaders(cherrypy, "exportStatus.json", "application/json")
         return json.dumps(self.exporter.getStatus())
     
     def DELETE(self, *args, **kwargs):
