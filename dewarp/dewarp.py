@@ -22,6 +22,7 @@ class Dewarp(object):
         self.dataDir = dataDir
         self.unpacked = os.path.join(self.dataDir, "unpacked")
         self.dewarped = os.path.join(self.dataDir, "dewarped")
+        self.export = os.path.join(self.dataDir, "export.zip")
         self.statusFilePath = statusFile
 
         self.setupExportFileStructure()

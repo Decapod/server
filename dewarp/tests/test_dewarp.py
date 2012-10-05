@@ -36,6 +36,7 @@ class TestDewarp(unittest.TestCase):
         self.assertEquals(STATUS_FILE, self.dewarp.statusFilePath)
         self.assertEquals(os.path.join(DATA_DIR, "unpacked"), self.dewarp.unpacked)
         self.assertEquals(os.path.join(DATA_DIR, "dewarped"), self.dewarp.dewarped)
+        self.assertEquals(os.path.join(DATA_DIR, "export.zip"), self.dewarp.export)
         
         self.assertDictEqual(self.status_ready, self.dewarp.status.model)
             
@@ -66,6 +67,7 @@ class TestDewarp(unittest.TestCase):
         self.assertTrue(os.path.exists(self.dewarp.statusFilePath))
         self.assertFalse(os.path.exists(self.dewarp.unpacked))
         self.assertFalse(os.path.exists(self.dewarp.dewarped))
+        self.assertFalse(os.path.exists(self.dewarp.export))
         self.assertDictEqual(self.status_ready, self.dewarp.status.model)
         self.assertStatusFile(self.status_ready, self.dewarp.statusFilePath)
     
