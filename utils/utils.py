@@ -246,11 +246,11 @@ class translate:
 class server:
     
     @staticmethod
-    def setJSONResponseHeaders(cherrypy, fileName="model.json"):
+    def setAttachmentResponseHeaders(cherrypy, fileName, contentType):
         '''
         Sets the JSON Response headers that will be returned by the server
         '''
-        cherrypy.response.headers["Content-Type"] = "application/json"
+        cherrypy.response.headers["Content-Type"] = contentType 
         cherrypy.response.headers["Content-Disposition"] = "attachment; filename='{0}'".format(fileName)
 
     @staticmethod

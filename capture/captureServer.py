@@ -12,7 +12,7 @@ import mockCameraInterface
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
 import backgroundTaskQueue
-from utils import server
+from utils import server, io
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
@@ -129,7 +129,7 @@ class CamerasController(object):
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        server.setJSONResponseHeaders(cherrypy, "camerasSummary.json")
+        server.setAttachmentResponseHeaders(cherrypy, "camerasSummary.json", "application/json")
         return json.dumps(self.cameras.getCamerasSummary())
 
 class TypeController(object):
@@ -149,7 +149,7 @@ class TypeController(object):
         
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
-        server.setJSONResponseHeaders(cherrypy, 'captureInfo.json')
+        server.setAttachmentResponseHeaders(cherrypy, 'captureInfo.json', "application/json")
         return self.captureType.getStatus()
 
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
@@ -171,7 +171,7 @@ class TypeCamerasController(object):
         self.captureType = captureType
     
     def GET(self, *args):
-        server.setJSONResponseHeaders(cherrypy, "cameras.json")
+        server.setAttachmentResponseHeaders(cherrypy, "cameras.json", "application/json")
         cherrypy.response.status = 200
         return json.dumps(self.captureType.getCamerasStatus())
 
@@ -189,11 +189,13 @@ class CaptureController(object):
         }
         
     def GET(self, *args, **kwargs):
-        # returns the zipped captured images
-        server.setJSONResponseHeaders(cherrypy, "capture.json")
-        cherrypy.response.status = 200
-        exportInfo = {"captures": server.getURL(cherrypy, self.captureType.export(), CURRENT_DIR)}
-        return json.dumps(exportInfo)
+        # returns a zip file of all the captured images, and calibration data if found
+        zipContent = io.readFromFile(self.captureType.export())
+        
+        if zipContent is not None:
+            server.setAttachmentResponseHeaders(cherrypy, "capture.zip", "application/zip")
+            cherrypy.response.status = 200
+            return zipContent
         
 
     def POST(self, *args, **kwargs):
@@ -209,7 +211,7 @@ class CaptureController(object):
         # convert the capture file path to URL
         captureURLs = map(convertPathToURL, captures)
         
-        server.setJSONResponseHeaders(cherrypy, 'imageLocations.json')
+        server.setAttachmentResponseHeaders(cherrypy, 'imageLocations.json', "application/json")
         cherrypy.response.status = 202
         
         return json.dumps({"captures": captureURLs})
@@ -261,7 +263,7 @@ class ImageIndexController(object):
             # Converts the image file paths to URLs
             imageURLs = map(convertPathToURL, self.captureType.getImagesByIndex(self.imageIndex))
             
-            server.setJSONResponseHeaders(cherrypy, "images.json")
+            server.setAttachmentResponseHeaders(cherrypy, "images.json", "application/json")
             return json.dumps({"images": imageURLs})
         else:
             raise cherrypy.HTTPError(405)
