@@ -3,7 +3,6 @@ import os
 import sys
 import simplejson as json
 
-import status
 import dewarp
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
@@ -22,10 +21,9 @@ IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
 bgtask = backgroundTaskQueue.BackgroundTaskQueue(cherrypy.engine)
 bgtask.subscribe()
 
-# Defines and calculates the data directories of all capture types
-DATA_DIR = os.path.join("${data}", "conventional")
-
-CAPTURE_STATUS_FILENAME = "captureStatus.json"
+# Defines and calculates the data directory
+DATA_DIR = os.path.join("${data}")
+STATUS_FILE = os.path.join(DATA_DIR, "status.json")
 
 def startServer():
     '''
@@ -79,8 +77,51 @@ class DewarpServer(object):
     exposed = True
 
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/dewarp/html/dewarp.html    "), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${components}/dewarp/html/dewarp.html"), 301)
     
+   # Continues cherrypy object traversal. Useful for handling dynamic URLs
+    def _cp_dispatch(self, vpath):
+        self.paths = {
+            "dewarpedArchive": DewarpedArchiveController()
+        }
+
+        pathSegment = vpath[0]
+        
+        if pathSegment in self.paths:
+            return self.paths[pathSegment]
+
+#TODO: Define PUT
+class DewarpedArchiveController(object):
+    '''
+    Handler for the /dewarpedArchive resource
+    '''
+    
+    exposed = True
+    
+    def __init__(self):
+        self.dataDir = rs.path(DATA_DIR)
+        self.statusFile = rs.path(STATUS_FILE)
+        self.dewarp = dewarp.Dewarp(self.dataDir, self.statusFile)
+    
+    def GET(self):
+        status = self.dewarp.getStatus()
+        if status.get("status") == "complete":
+            status["url"] = server.getURL(cherrypy, self.dewarp.export, CURRENT_DIR)
+        server.setJSONResponseHeaders(cherrypy, "status.json")
+        return json.dumps(status)
+    
+    def DELETE(self):
+        try:
+            self.dewarp.delete()
+        except dewarp.DewarpInProgressError as e:
+            raise cherrypy.HTTPError(409, json.dumps(e.message))
+        
+        cherrypy.response.status = 204
+        
+    def PUT(self, *args, **kwargs):
+        bgtask.put(self.dewarp.dewarp, kwargs["file"])
+        cherrypy.response.status = 202
+
 if __name__ == "__main__":
     startServer()
     
