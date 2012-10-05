@@ -76,7 +76,7 @@ class DewarpServer(object):
     exposed = True
 
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/dewarp/html/dewarp.html    "), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${components}/dewarp/html/dewarp.html"), 301)
     
 if __name__ == "__main__":
     startServer()
