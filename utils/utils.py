@@ -126,6 +126,27 @@ class io:
         
         zFile.close()
         
+    @staticmethod    
+    def unzip(zipfile, toDirPath):
+        '''
+        Unzips a zip file to a specified directory. Create the directory if it doesn't exist
+
+        Exceptions
+        ==========
+        IOError: if the provided zip file does not exist
+        zipfile.BadZipfile: if the provided zip file is a bad zip file
+        zipfile.LargeZipFile: if a ZIP file would require ZIP64 functionality but that has not been enabled.
+        '''
+        
+        if os.path.exists(toDirPath):
+            io.makeDirs(toDirPath)
+            
+        zFile = ZipFile(zipfile)
+        
+        zFile.extractall(toDirPath)
+        
+        return True
+        
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message, waitForRtn=True):
         '''
