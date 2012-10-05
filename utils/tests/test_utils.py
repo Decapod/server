@@ -139,10 +139,12 @@ class findImageTests(unittest.TestCase):
     def setUp(self):
         self.imgDir = os.path.join(TEST_DIR, "images")
         utils.io.makeDirs(self.imgDir)
-        self.img1 = os.path.join(self.imgDir, "Image_0015.JPEG")
-        self.img2 = os.path.join(self.imgDir, "Image_0016.JPEG")
-        shutil.copy(os.path.join(IMG_DIR, "Image_0015.JPEG"), self.img1)
-        shutil.copy(os.path.join(IMG_DIR, "Image_0016.JPEG"), self.img2)
+        self.imgName1 = "Image_0015.JPEG"
+        self.imgName2 = "Image_0016.JPEG"
+        self.img1 = os.path.join(self.imgDir, self.imgName1)
+        self.img2 = os.path.join(self.imgDir, self.imgName2)
+        shutil.copy(os.path.join(IMG_DIR, self.imgName1), self.img1)
+        shutil.copy(os.path.join(IMG_DIR, self.imgName2), self.img2)
     
     def tearDown(self):
         utils.io.rmTree(TEST_DIR)
@@ -184,6 +186,10 @@ class findImageTests(unittest.TestCase):
         self.assertListEqual([self.img1], imgList)
         self.assertFalse(os.path.exists(self.img1))
         
+    def test_08_findImages_attachPath(self):
+        imgList = utils.image.findImages(self.imgDir, "Image_0015", False)
+        self.assertListEqual([self.imgName1], imgList)
+
 class DictTests(unittest.TestCase):
     
     def test_01_rekey(self):

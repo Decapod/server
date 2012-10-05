@@ -175,7 +175,7 @@ class image:
         return os.path.isfile(filePath) and imghdr.what(filePath) != None
     
     @staticmethod
-    def findImages(dir, regexPattern=None):
+    def findImages(dir, regexPattern=None, attachPath=True):
         '''
         Finds all of the images that match the regexPattern in the list of dirs.
         If no regexPattern is provided, it will find all images.
@@ -190,8 +190,10 @@ class image:
                 fitsPattern = True if not regex else regex.findall(filePath)
                 
                 if image.isImage(filePath) and fitsPattern:
-                    imagePaths.append(filePath)
-                    
+                    if attachPath:
+                        imagePaths.append(filePath)
+                    else: 
+                        imagePaths.append(file)
         return imagePaths 
     
     @staticmethod
