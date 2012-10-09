@@ -4,6 +4,8 @@ import re
 from string import Template
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+import dewarpInterface
+import mockDewarpInterface
 import utils
 from status import Status
 from store import FSStore
@@ -20,16 +22,18 @@ DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
 class DewarpError(Exception): pass
 class DewarpInProgressError(Exception): pass
 class UnpackedDirNotExistError(Exception): pass
+class CalibrationDirNotExistError(Exception): pass
 class UnmatchedPairsError(Exception): pass
 
 class Dewarp(object):
     
-    def __init__(self, dataDir, statusFile):
+    def __init__(self, dataDir, statusFile, testmode=False):
         self.dataDir = dataDir
         self.unpacked = os.path.join(self.dataDir, "unpacked")
         self.dewarped = os.path.join(self.dataDir, "dewarped")
         self.export = os.path.join(self.dataDir, "export.zip")
         self.statusFilePath = statusFile
+        self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
 
         self.setupExportFileStructure()
         self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})  
@@ -89,11 +93,32 @@ class Dewarp(object):
         ==========
         UnpackedDirNotExistError: If the directory for the unpacked dewarping zip does not exist
         UnmatchedPairsError: If there are unmatched pairs in the image set for dewarping
+        CalibrationDirNotExistError: If the calibration directory does not exist
         '''
         
         if not os.path.exists(unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(unpackedDir)
         
+        matched, unmatched = self.findPairs(unpackedDir, filenameTemplate)
+        
+        if unmatched:
+            raise UnmatchedPairsError, ''.join(unmatched)
+        
+        if matched:
+            calibrationDir = os.path.join(unpackedDir, "calibration")
+            
+            if not os.path.exists(calibrationDir):
+                raise CalibrationDirNotExistError, "The calibration directory \"{0}\" does not exist.".format(calibrationDir)
+            
+            if not os.path.exists(dewarpedDir):
+                os.mkdir(dewarpedDir)
+                
+            for img1, img2 in matched:
+                self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
+    
+        return True
+    
+    def findPairs(self, unpackedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         unmatched = []
         matched = []
         
@@ -126,10 +151,5 @@ class Dewarp(object):
                     matched.append((currentImg, pairImg))
                 else:
                     unmatched.append(currentImg)
-    
-        if unmatched:
-            raise UnmatchedPairsError, ''.join(unmatched)
         
-        if matched:
-            # TODO: invoke dewarp command
-            pass
+        return matched, unmatched
