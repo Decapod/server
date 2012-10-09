@@ -88,7 +88,15 @@ class DewarpProcessor(object):
         else:
             # perform dewarp, update status including percentage complete
             self.status.update("status", EXPORT_IN_PROGRESS)
-            self.dewarpImp(self.unpacked, self.dewarped)
+            try:
+                self.dewarpImp(self.unpacked, self.dewarped)
+            except Exception:
+                self.status.update("status", EXPORT_ERROR)
+                self.status.remove("percentage")
+                utils.io.rmTree(self.dewarped)
+                
+                raise DewarpError, "Failed to dewarp the image pair ({0}, {1})".format(img1, img2)
+            
             self.status.update("status", EXPORT_COMPLETE)
     
     def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
@@ -126,12 +134,7 @@ class DewarpProcessor(object):
             numOfMatches = len(matched)
             
             for index, (img1, img2) in enumerate(matched):
-                try:
-                    self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
-                except Exception:
-                    self.status.update("status", EXPORT_ERROR)
-                    raise DewarpError, "Failed to dewarp the image pair ({0}, {1})".format(img1, img2)
-                
+                self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
                 self.status.update("percentage", int((index+1)/numOfMatches*100))
     
         return True
