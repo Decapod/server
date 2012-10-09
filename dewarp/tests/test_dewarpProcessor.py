@@ -119,6 +119,7 @@ class TestDewarpProcessor(unittest.TestCase):
         
         self.assertTrue(self.dewarpProcessor.dewarpImp(unpackedDir, dewarpedDir))
         self.assertTrue(os.path.exists(dewarpedDir))
+        self.assertDictEqual(self.dewarpProcessor.getStatus(), {'percentage': 100, 'status': 'ready'})
 
 if __name__ == '__main__':
     unittest.main()

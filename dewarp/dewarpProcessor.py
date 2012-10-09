@@ -20,6 +20,7 @@ DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
 
 # Exception classes
 class DewarpError(Exception): pass
+class UnzipError(Exception): pass
 class DewarpInProgressError(Exception): pass
 class UnpackedDirNotExistError(Exception): pass
 class CalibrationDirNotExistError(Exception): pass
@@ -76,11 +77,19 @@ class DewarpProcessor(object):
         DewarpInProgressError: if dewarping is currently in progress
         PageImagesNotFoundError: if no page images are provided for the pdf generation
         '''
+        
+        try:
+            utils.io.unzip(file, self.unpacked)
+        except Exception:
+            raise UnzipError, "Cannot unzip \"{0}\"".format(file)
+        
         if self.isInState(EXPORT_IN_PROGRESS):
             raise DewarpInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             # perform dewarp, update status including percentage complete
+            self.status.update("status", EXPORT_IN_PROGRESS)
             self.dewarpImp(self.unpacked, self.dewarped)
+            self.status.update("status", EXPORT_COMPLETE)
     
     def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         '''
@@ -113,8 +122,17 @@ class DewarpProcessor(object):
             if not os.path.exists(dewarpedDir):
                 os.mkdir(dewarpedDir)
                 
-            for img1, img2 in matched:
-                self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
+            self.status.update("percentage", 0)
+            numOfMatches = len(matched)
+            
+            for index, (img1, img2) in enumerate(matched):
+                try:
+                    self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
+                except Exception:
+                    self.status.update("status", EXPORT_ERROR)
+                    raise DewarpError, "Failed to dewarp the image pair ({0}, {1})".format(img1, img2)
+                
+                self.status.update("percentage", int((index+1)/numOfMatches*100))
     
         return True
     
