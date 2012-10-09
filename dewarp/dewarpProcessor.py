@@ -148,29 +148,28 @@ class DewarpProcessor(object):
         
         sortedAllImages = sorted(allImages)
         
-        # find the maxium captureIndex
+        # find the maximum captureIndex
         while len(sortedAllImages) > 0:
             currentImg = sortedAllImages.pop(0)
             
             imgPrefix, theRest = currentImg.split("_")
             
-            if imgPrefix is None or theRest is None:
-                continue
-            
-            imgMatchPattern = "^" + imgPrefix
-            regex = re.compile(imgMatchPattern) if regexPattern else None
-            
-            if regex:
+            if imgPrefix and theRest:
+                imgMatchPattern = "^" + imgPrefix
+                regex = re.compile(imgMatchPattern)
+                
                 numOfImages = len(sortedAllImages)
                 
-                if numOfImages > 0: 
-                    pairImg = sortedAllImages[0] if regex.findall(sortedAllImages[0]) else None
+                if numOfImages > 0 and regex.findall(sortedAllImages[0]):
+                    pairImg = sortedAllImages[0]
                 
-                # Toss out the pair image to prevent the furthur comparison
-                if numOfImages and pairImg is not None:
+                    # Toss out the pair image to prevent the further comparison
                     sortedAllImages.pop(0)
                     matched.append((currentImg, pairImg))
                 else:
                     unmatched.append(currentImg)
-        
+            else:
+                unmatched.append(currentImg)
+                
         return matched, unmatched
+    
