@@ -342,8 +342,8 @@ class zipTests(unittest.TestCase):
     def test_02_unzip(self):
         utils.io.unzip(os.path.join(FILES_DIR, "capture.zip"), self.temp)
         self.assertTrue(os.path.exists(os.path.join(self.temp, "capture-0_1.jpg")))
-        self.assertTrue(os.path.exists(os.path.join(self.temp, "export")))
-        self.assertTrue(os.path.exists(os.path.join(self.temp, "export", "capture.zip")))
+        self.assertTrue(os.path.exists(os.path.join(self.temp, "calibration")))
+        self.assertTrue(os.path.exists(os.path.join(self.temp, "calibration", "calibration.xml")))
 
 class serverTests(unittest.TestCase):
     
