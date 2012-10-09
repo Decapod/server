@@ -145,8 +145,6 @@ class io:
         
         zFile.extractall(toDirPath)
         
-        return True
-        
     @staticmethod
     def invokeCommandSync(cmdArgs, error, message, waitForRtn=True):
         '''
