@@ -7,6 +7,8 @@ import uuid
 import simplejson as json
 from zipfile import ZipFile
 
+SUPPORTED_IMAGE_TYPES = ["jpeg", "png", "tiff"]
+
 class io:
     
     @staticmethod
@@ -173,7 +175,7 @@ class image:
         return os.path.isfile(filePath) and imghdr.what(filePath) != None
     
     @staticmethod
-    def findImages(dir, regexPattern=None, formats=["jpeg", "png", "tiff"]):
+    def findImages(dir, regexPattern=None, formats=SUPPORTED_IMAGE_TYPES):
         '''
         Finds all of the images that match the regexPattern in the list of dirs.
         If no regexPattern is provided, it will find all images.
@@ -194,7 +196,7 @@ class image:
         return imagePaths 
     
     @staticmethod
-    def removeImages(dir, regexPattern=None, formats=["jpeg", "png", "tiff"]):
+    def removeImages(dir, regexPattern=None, formats=SUPPORTED_IMAGE_TYPES):
         '''
         Removes all of the images that match the regexPattern in the list of dirs.
         If no regexPattern is provided, it will remove all images.
