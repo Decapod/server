@@ -8,7 +8,7 @@ import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
-import dewarp
+import dewarpProcessor
 import dewarpServer
 from utils import io, image
 
@@ -114,15 +114,15 @@ class TestDewarpArchive(ServerTestCase):
     def test_02__get(self):
         self.getPage(self.url)
         self.assertStatus(200)
-        self.assertDictEqual({"status": dewarp.EXPORT_READY}, json.loads(self.body))
+        self.assertDictEqual({"status": dewarpProcessor.EXPORT_READY}, json.loads(self.body))
         
     def test_03__get_complete(self):
-        expected = {"status": dewarp.EXPORT_COMPLETE}
+        expected = {"status": dewarpProcessor.EXPORT_COMPLETE}
         io.writeToJSONFile(expected, os.path.join("data", "status.json"));
         self.getPage(self.url)
         self.assertStatus(200)
         body = json.loads(self.body)
-        self.assertEquals(dewarp.EXPORT_COMPLETE, body["status"])
+        self.assertEquals(dewarpProcessor.EXPORT_COMPLETE, body["status"])
         
         regexPattern = "http://127.0.0.1:\d*/data/export.zip"           
         regex = re.compile(regexPattern)
@@ -133,7 +133,7 @@ class TestDewarpArchive(ServerTestCase):
         self.assertStatus(204)
 
     def test_05_delete_error(self):
-        io.writeToJSONFile({"status": dewarp.EXPORT_IN_PROGRESS}, os.path.join("data", "status.json"));
+        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join("data", "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
         

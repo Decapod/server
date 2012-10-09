@@ -3,7 +3,7 @@ import os
 import sys
 import simplejson as json
 
-import dewarp
+import dewarpProcessor
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -101,25 +101,25 @@ class DewarpedArchiveController(object):
     def __init__(self):
         self.dataDir = rs.path(DATA_DIR)
         self.statusFile = rs.path(STATUS_FILE)
-        self.dewarp = dewarp.Dewarp(self.dataDir, self.statusFile)
+        self.dewarpProcessor = dewarpProcessor.DewarpProcessor(self.dataDir, self.statusFile)
     
     def GET(self):
-        status = self.dewarp.getStatus()
+        status = self.dewarpProcessor.getStatus()
         if status.get("status") == "complete":
-            status["url"] = server.getURL(cherrypy, self.dewarp.export, CURRENT_DIR)
+            status["url"] = server.getURL(cherrypy, self.dewarpProcessor.export, CURRENT_DIR)
         server.setAttachmentResponseHeaders(cherrypy, "status.json", "application/json")
         return json.dumps(status)
     
     def DELETE(self):
         try:
-            self.dewarp.delete()
-        except dewarp.DewarpInProgressError as e:
+            self.dewarpProcessor.delete()
+        except dewarpProcessor.DewarpInProgressError as e:
             raise cherrypy.HTTPError(409, json.dumps(e.message))
         
         cherrypy.response.status = 204
         
     def PUT(self, *args, **kwargs):
-        bgtask.put(self.dewarp.dewarp, kwargs["file"])
+        bgtask.put(self.dewarpProcessor.dewarp, kwargs["file"])
         cherrypy.response.status = 202
 
 if __name__ == "__main__":
