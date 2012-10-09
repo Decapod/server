@@ -2,11 +2,13 @@ import cherrypy
 from cherrypy.test import helper
 import os
 import sys
+import re
 import shutil
 import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
+import dewarp
 import dewarpServer
 from utils import io, image
 
@@ -94,7 +96,47 @@ class TestRoot(ServerTestCase):
 #        self.getPage(self.expectedRedirectURL)
 #        self.assertStatus(200)
 
+class TestDewarpArchive(ServerTestCase):
+    url = "/dewarpedArchive/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+    
+    def setUp(self):
+        io.makeDirs("data")
+    
+    def tearDown(self):
+        io.rmTree("data")
+    
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.url, ["POST"])
+        
+    def test_02__get(self):
+        self.getPage(self.url)
+        self.assertStatus(200)
+        self.assertDictEqual({"status": dewarp.EXPORT_READY}, json.loads(self.body))
+        
+    def test_03__get_complete(self):
+        expected = {"status": dewarp.EXPORT_COMPLETE}
+        io.writeToJSONFile(expected, os.path.join("data", "status.json"));
+        self.getPage(self.url)
+        self.assertStatus(200)
+        body = json.loads(self.body)
+        self.assertEquals(dewarp.EXPORT_COMPLETE, body["status"])
+        
+        regexPattern = "http://127.0.0.1:\d*/data/export.zip"           
+        regex = re.compile(regexPattern)
+        self.assertTrue(regex.findall(body["url"]))
+        
+    def test_04_delete(self):
+        self.getPage(self.url, method="DELETE")
+        self.assertStatus(204)
 
+    def test_05_delete_error(self):
+        io.writeToJSONFile({"status": dewarp.EXPORT_IN_PROGRESS}, os.path.join("data", "status.json"));
+        self.getPage(self.url, method="DELETE")
+        self.assertStatus(409)
+        
 if __name__ == '__main__':
     import nose
     nose.runmodule()
