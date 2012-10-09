@@ -74,8 +74,8 @@ class DewarpProcessor(object):
         
         Exceptions
         ==========
+        UnzipError: if cannot unzip the given file
         DewarpInProgressError: if dewarping is currently in progress
-        PageImagesNotFoundError: if no page images are provided for the pdf generation
         '''
         
         try:
@@ -84,7 +84,7 @@ class DewarpProcessor(object):
             raise UnzipError, "Cannot unzip \"{0}\"".format(file)
         
         if self.isInState(EXPORT_IN_PROGRESS):
-            raise DewarpInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
+            raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         else:
             # perform dewarp, update status including percentage complete
             self.status.update("status", EXPORT_IN_PROGRESS)
