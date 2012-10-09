@@ -116,7 +116,6 @@ class TestDewarp(unittest.TestCase):
         calibrationDir = os.path.join(unpackedDir, "calibration")
         io.makeDirs(calibrationDir)
         shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(calibrationDir, "calibration.xml"))
-#        shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration"), unpackedDir)
         
         self.assertTrue(self.dewarp.processDewarp(unpackedDir, dewarpedDir))
         self.assertTrue(os.path.exists(dewarpedDir))
