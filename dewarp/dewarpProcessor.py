@@ -25,7 +25,7 @@ class UnpackedDirNotExistError(Exception): pass
 class CalibrationDirNotExistError(Exception): pass
 class UnmatchedPairsError(Exception): pass
 
-class Dewarp(object):
+class DewarpProcessor(object):
     
     def __init__(self, dataDir, statusFile, testmode=False):
         self.dataDir = dataDir
@@ -80,9 +80,9 @@ class Dewarp(object):
             raise DewarpInProgressError, "Export currently in progress, cannot generated another pdf until this process has finished"
         else:
             # perform dewarp, update status including percentage complete
-            self.processDewarp(self.unpacked, self.dewarped)
+            self.dewarpImp(self.unpacked, self.dewarped)
     
-    def processDewarp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+    def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         '''
         Dewarps the paired images in the from directory "unpackedDir" and output to "dewarpedDir"
         
