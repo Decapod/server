@@ -70,7 +70,7 @@ class TestDewarpProcessor(unittest.TestCase):
         
         status = self.dewarpProcessor.getCapturesStatus()
         self.assertEqual(status["ERROR_CODE"], "UnmatchedPairs")
-        self.assertRegexpMatches(status["msg"], "capture-1_1.jpg")
+        self.assertListEqual(status["msg"], ["capture-1_1.jpg"])
         
         io.rmFile(os.path.join(self.dewarpProcessor.calibrationDir, "capture-1_1.jpg"))
         self.assertDictEqual(self.dewarpProcessor.getCapturesStatus(), {"numOfCaptures": 1})
