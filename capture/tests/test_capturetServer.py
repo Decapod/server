@@ -1,7 +1,5 @@
 import cherrypy
 from cherrypy.test import helper
-import uuid
-import mimetypes
 import os
 import sys
 import re
@@ -12,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import captureServer
 from utils import io, image
+from serverTestCase import ServerTestCase
 
 DATA_DIR = os.path.abspath("data")
 MOCK_DATA_DIR = os.path.abspath("mockData")
@@ -49,20 +48,6 @@ def setup_server(config=CONFIG):
 def teardown_server(dir=CONVENTIONAL_DIR):
     io.rmTree(dir)
     sys.exit()
-
-class ServerTestCase(helper.CPWebCase):
-    '''
-    A subclass of helper.CPWebCase
-    The purpose of this class is to add new common test functions that can be easily shared
-    by various test classes.
-    '''
-    def assertUnsupportedHTTPMethods(self, url, methods):
-        '''
-        Tests that unsuppored http methods return a 405
-        '''     
-        for method in methods:
-            self.getPage(url, method=method)
-            self.assertStatus(405, "Should return a 405 'Method not Allowed' status for '{0}'".format(method))
             
 class TestConfig(helper.CPWebCase):
     # hardcoding due to the fact that setup_server can't take any arguments, not even "self"
