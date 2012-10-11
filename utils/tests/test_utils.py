@@ -134,6 +134,22 @@ class FileOperationTests(unittest.TestCase):
         utils.io.rmFile(filePath)
         self.assertFalse(os.path.exists(filePath))
         
+    def test_06_mimeToSuffix_mimetype(self):
+        suffix = utils.io.mimeToSuffix("image/png")
+        self.assertEquals("png", suffix)
+    
+    def test_07_mimeToSuffix_type(self):
+        suffix = utils.io.mimeToSuffix("png")
+        self.assertEquals("png", suffix)
+        
+    def test_08_getFileType(self):
+        origFilePath = os.path.join(IMG_DIR, "Image_0015.JPEG")
+        testFile = mockClasses.mockFileStream(origFilePath)
+        expectedType = "jpeg"
+        
+        type = utils.io.getFileType(testFile)
+        self.assertEquals(expectedType, type)
+        
 
 class ValidationTests(unittest.TestCase):
     

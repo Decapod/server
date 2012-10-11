@@ -24,20 +24,6 @@ class ImageImport(object):
         # Setup the import location.
         utils.io.makeDirs(self.importDir)
     
-    def mimeToSuffix(self, mimeType):
-        '''
-        Converts a mime type to a file extension
-        '''
-        splitStr = mimeType.split('/')
-        return splitStr[-1]
-    
-    def getFileType(self, file):
-        '''
-        Returns the file type of the given file
-        '''
-        mimeType = file.content_type.value
-        return self.mimeToSuffix(mimeType)
-    
     def isValidType(self, file, validTypes=["jpeg", "png", "tiff"]):
         '''
         Returns a boolean indicating if the file is one of the specified validTypes
@@ -54,7 +40,7 @@ class ImageImport(object):
         ==========
         ImportTypeError: if the file is not of a valid type ["jpeg", "png", "tiff"]
         '''
-        fileType = self.getFileType(file)
+        fileType = utils.io.getFileType(file)
         name = name if name else utils.image.generateImageName(suffix=fileType)
         imagePath = os.path.join(self.importDir, name)
         utils.io.writeStreamToFile(file, imagePath)

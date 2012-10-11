@@ -49,6 +49,22 @@ class io:
             os.remove(path)
     
     @staticmethod
+    def mimeToSuffix(mimeType):
+        '''
+        Converts a mime type to a file extension
+        '''
+        splitStr = mimeType.split('/')
+        return splitStr[-1]
+    
+    @staticmethod
+    def getFileType(file):
+        '''
+        Returns the file type of the given file stream
+        '''
+        mimeType = file.content_type.value
+        return io.mimeToSuffix(mimeType)
+    
+    @staticmethod
     def writeStreamToFile(file, writePath):
         '''
         Writes the file stream to disk at the path specified by writePath

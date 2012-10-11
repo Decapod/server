@@ -28,10 +28,6 @@ class ImportImageTest(unittest.TestCase):
         io.rmTree(BOOK_DIR)
     
     # Convenience test functions   
-    def mimeToSuffixTest(self, iImport, mimetype, expectedSuffix):
-        suffix = iImport.mimeToSuffix(mimetype)
-        self.assertEquals(expectedSuffix, suffix)
-        
     def saveTest(self, iImport, name=None):
         origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         testFile = mockClasses.mockFileStream(origFilePath)
@@ -40,21 +36,7 @@ class ImportImageTest(unittest.TestCase):
         self.assertTrue(os.path.exists(savedfile), "Tests the existence of the file: {0}".format(savedfile))
         self.assertTrue(filecmp.cmp(origFilePath, savedfile), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, savedfile))
     
-    # Tests
-    def test_01_mimeToSuffix_mimetype(self):
-        self.mimeToSuffixTest(self.iImport, "image/png", "png")
-    
-    def test_02_mimeToSuffix_type(self):
-        self.mimeToSuffixTest(self.iImport, "png", "png")
-        
-    def test_03_getFileType(self):
-        origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
-        testFile = mockClasses.mockFileStream(origFilePath)
-        expectedType = "jpeg"
-        
-        type = self.iImport.getFileType(testFile)
-        self.assertEquals(expectedType, type)
-        
+    # Tests       
     def test_04_isValidType_valid(self):
         testFile = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
         valid = self.iImport.isValidType(testFile)
