@@ -271,40 +271,40 @@ class DictTests(unittest.TestCase):
         flagList = utils.translate.weave(orig)
         self.assertListEqual(expected, flagList)
 
-class generateImageNameTests(unittest.TestCase):
+class generateFileNameTests(unittest.TestCase):
     
     # Custom assertions
     def assertNameFormat(self, name, prefix="decapod-", suffix="jpeg"):
         self.assertTrue(name.startswith(prefix), "Tests if '{0}' starts with {1}".format(name, prefix))
         self.assertTrue(name.endswith(suffix), "Tests if '{0}' ends with {1}".format(name, suffix))
         
-    def test_01_generateImageName_default(self):
-        name = utils.image.generateImageName()
+    def test_01_generateFileName_default(self):
+        name = utils.io.generateFileName()
         self.assertNameFormat(name)
         
-    def test_02_generateImageName_prefix(self):
+    def test_02_generateFileName_prefix(self):
         prefix = "decaTest-"
-        name = utils.image.generateImageName(prefix)
+        name = utils.io.generateFileName(prefix)
         self.assertNameFormat(name, prefix)
         
-    def test_03_generateImageName_suffix(self):
+    def test_03_generateFileName_suffix(self):
         suffix = "png"
-        name = utils.image.generateImageName(suffix=suffix)
+        name = utils.io.generateFileName(suffix=suffix)
         self.assertNameFormat(name, suffix=suffix)
         
-    def test_04_generateImageName_custom(self):
+    def test_04_generateFileName_custom(self):
         prefix = "decaTest-"
         suffix = "png"
-        name = utils.image.generateImageName(prefix, suffix)
+        name = utils.io.generateFileName(prefix, suffix)
         self.assertNameFormat(name, prefix, suffix)
         
-    def test_05_generateImageName_UUID(self):
+    def test_05_generateFileName_UUID(self):
         numNames = 10
         names = []
         uuidList = None
         
         for i in range(numNames):
-            names.append(utils.image.generateImageName())
+            names.append(utils.io.generateFileName())
         uuidList = map(None, names)
         
         self.assertEquals(len(names), numNames, "The names list should be populated with {0} different names".format(numNames))

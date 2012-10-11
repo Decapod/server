@@ -41,7 +41,7 @@ class ImageImport(object):
         ImportTypeError: if the file is not of a valid type ["jpeg", "png", "tiff"]
         '''
         fileType = utils.io.getFileType(file)
-        name = name if name else utils.image.generateImageName(suffix=fileType)
+        name = name if name else utils.io.generateFileName(suffix=fileType)
         imagePath = os.path.join(self.importDir, name)
         utils.io.writeStreamToFile(file, imagePath)
         if not self.isValidType(imagePath):

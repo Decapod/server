@@ -98,22 +98,22 @@ class DewarpProcessor(object):
         if self.isInState(EXPORT_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         
-        try:
-            fileType = utils.io.getFileType(file)
-            
-            if fileType != "zip":
-                raise
-            
-            name = file.filename if file.filename else 
-            zipfilePath = os.path.join(self.dataDir, file.filename)
-            utils.io.writeStreamToFile(file, zipfilePath)
-            
-            utils.io.unzip(file, self.unpackedDir)
-        except Exception as e:
-            if zipfilePath:
-                utils.io.rmFile(zipfilePath)
+        fileType = utils.io.getFileType(file)
+        
+        if fileType != "zip":
             return self.constructErrorStatus("BadZip", "A invalid zip file.")
         
+        name = file.filename if file.filename else utils.io.generateFileName(suffix=fileType)
+        zipfilePath = os.path.join(self.dataDir, file.filename)
+        utils.io.writeStreamToFile(file, zipfilePath)
+            
+        try:
+            utils.io.unzip(zipfilePath, self.unpackedDir)
+        except Exception:
+            utils.io.rmFile(zipfilePath)
+            return self.constructErrorStatus("BadZip", "A invalid zip file.")
+        
+        utils.io.rmFile(zipfilePath)
         return self.getArchiveStatus(filenameTemplate)
         
     def dewarp(self):

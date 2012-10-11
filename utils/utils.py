@@ -141,6 +141,14 @@ class io:
         '''
         io.writeToFile(json.dumps(jsonData), jsonFile)
     
+    @staticmethod
+    def generateFileName(prefix="decapod-", suffix="jpeg"):
+        '''
+        Creates a unique name for the image file using the passed in prefix, suffix, and a generated uuid
+        '''
+        id = uuid.uuid4()
+        return "{0}{1}.{2}".format(prefix, id.hex, suffix)
+    
     @staticmethod    
     def zip(dirPath, fileName):
         '''
@@ -239,14 +247,6 @@ class image:
             os.remove(imagePath)
 
         return imagePaths
-    
-    @staticmethod
-    def generateImageName(prefix="decapod-", suffix="jpeg"):
-        '''
-        Creates a unique name for the image file using the passed in prefix, suffix, and a generated uuid
-        '''
-        id = uuid.uuid4()
-        return "{0}{1}.{2}".format(prefix, id.hex, suffix)
     
     @staticmethod
     def getImageType(filePath):

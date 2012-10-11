@@ -339,7 +339,7 @@ def getResolution(port):
     '''
     Calculate and return the camera's resolution by taking a test picture and 
     '''
-    imageName = utils.image.generateImageName()
+    imageName = utils.io.generateFileName()
     
     try:
         capture(port, imageName, '')
