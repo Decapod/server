@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
 import dewarpProcessor
 from utils import io
+import mockClasses
 
 DATA_DIR = os.path.abspath("data/")
 STATUS_FILE = os.path.join(DATA_DIR, "status.json")
@@ -115,8 +116,10 @@ class TestDewarpProcessor(unittest.TestCase):
         
     def test_12_unzip_badZip(self):
         io.makeDirs(self.dewarpProcessor.unpackedDir)
-        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), os.path.join(self.dewarpProcessor.unpackedDir, "capture-0_1.jpg"))
-        status = self.dewarpProcessor.unzip(os.path.join(self.dewarpProcessor.unpackedDir, "capture-0_1.jpg"))
+        origFilePath = os.path.join(self.dewarpProcessor.dataDir, "capture-0_1.jpg")
+        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), origFilePath)
+        testFile = mockClasses.mockFileStream(origFilePath)
+        status = self.dewarpProcessor.unzip(os.path.join(testFile))
         self.assertEqual(status["ERROR_CODE"], "BadZip")
 
     def test_13_findPairs(self):
