@@ -107,7 +107,7 @@ class CapturesController(object):
         
     def GET(self):
         try:
-            status = self.dewarpProcessor.getArchiveStatus()
+            status = self.dewarpProcessor.getCapturesStatus()
         except dewarpProcessor.UnpackedDirNotExistError as e:
             raise cherrypy.HTTPError(404)
         
