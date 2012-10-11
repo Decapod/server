@@ -150,7 +150,7 @@ class TestCaptures(ServerTestCase):
         io.makeDirs(os.path.join(DATA_DIR, "unpacked"))
         self.getPage(self.url)
         self.assertStatus(500)
-        self.assertDictEqual({"ERROR_CODE": "CalibrationDirNotExist", "msg": "The calibration directory \"{0}\" does not exist.".format(os.path.join(DATA_DIR, "unpacked", "calibration"))}, json.loads(self.body))
+        self.assertDictEqual({"ERROR_CODE": "CalibrationDirNotExist", "msg": "The calibration directory does not exist."}, json.loads(self.body))
         
     def tests_05_delete(self):
         unpackedDir = os.path.join(DATA_DIR, "unpacked")

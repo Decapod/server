@@ -48,12 +48,12 @@ class DewarpProcessor(object):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(self.unpackedDir)
         
         if not os.path.exists(self.calibrationDir):
-            return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory \"{0}\" does not exist.".format(self.calibrationDir))
+            return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory does not exist.")
 
         matched, unmatched = self.findPairs(self.unpackedDir, filenameTemplate)
         
         if unmatched:
-            return self.constructErrorStatus("UnmatchedPairs", ''.join(unmatched))
+            return self.constructErrorStatus("UnmatchedPairs", map(os.path.basename, unmatched))
         
         return self.constructSucessStatus(len(matched))
     
@@ -92,7 +92,6 @@ class DewarpProcessor(object):
         Exceptions
         ==========
         DewarpInProgressError: if dewarping is currently in progress
-        Exception: if the uploaded is not a zip file
         '''
         
         if self.isInState(EXPORT_IN_PROGRESS):
@@ -101,7 +100,7 @@ class DewarpProcessor(object):
         fileType = utils.io.getFileType(file)
         
         if fileType != "zip":
-            return self.constructErrorStatus("BadZip", "A invalid zip file.")
+            return self.constructErrorStatus("BadZip", "The zip file is invalid.")
         
         name = file.filename if file.filename else utils.io.generateFileName(suffix=fileType)
         zipfilePath = os.path.join(self.dataDir, file.filename)
@@ -111,7 +110,7 @@ class DewarpProcessor(object):
             utils.io.unzip(zipfilePath, self.unpackedDir)
         except Exception:
             utils.io.rmFile(zipfilePath)
-            return self.constructErrorStatus("BadZip", "A invalid zip file.")
+            return self.constructErrorStatus("BadZip", "The zip file is invalid.")
         
         utils.io.rmFile(zipfilePath)
         return self.getCapturesStatus(filenameTemplate)
