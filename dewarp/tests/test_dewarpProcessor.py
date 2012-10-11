@@ -55,11 +55,11 @@ class TestDewarpProcessor(unittest.TestCase):
         self.assertDictEqual(status, self.dewarpProcessor.status.model)
         self.assertDictEqual(status, self.status_ready)
         
-    def test_04_getArchiveStatus(self):
-        self.assertRaises(dewarpProcessor.UnpackedDirNotExistError, self.dewarpProcessor.getArchiveStatus)
+    def test_04_getCapturesStatus(self):
+        self.assertRaises(dewarpProcessor.UnpackedDirNotExistError, self.dewarpProcessor.getCapturesStatus)
 
         io.makeDirs(self.dewarpProcessor.unpackedDir)
-        status = self.dewarpProcessor.getArchiveStatus()
+        status = self.dewarpProcessor.getCapturesStatus()
         self.assertEqual(status["ERROR_CODE"], "CalibrationDirNotExist")
         
         io.makeDirs(self.dewarpProcessor.calibrationDir)
@@ -68,12 +68,12 @@ class TestDewarpProcessor(unittest.TestCase):
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_2.jpg"), os.path.join(self.dewarpProcessor.calibrationDir, "capture-0_2.jpg"))
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), os.path.join(self.dewarpProcessor.calibrationDir, "capture-1_1.jpg"))
         
-        status = self.dewarpProcessor.getArchiveStatus()
+        status = self.dewarpProcessor.getCapturesStatus()
         self.assertEqual(status["ERROR_CODE"], "UnmatchedPairs")
         self.assertRegexpMatches(status["msg"], "capture-1_1.jpg")
         
         io.rmFile(os.path.join(self.dewarpProcessor.calibrationDir, "capture-1_1.jpg"))
-        self.assertDictEqual(self.dewarpProcessor.getArchiveStatus(), {"numOfCaptures": 1})
+        self.assertDictEqual(self.dewarpProcessor.getCapturesStatus(), {"numOfCaptures": 1})
         
     def test_05_isInState(self):
         states = ["complete", "in progress", "ready"]
