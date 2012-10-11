@@ -115,14 +115,17 @@ class CapturesController(object):
             cherrypy.response.status = 500
         else:
             cherrypy.response.status = 200
+            
+        server.setAttachmentResponseHeaders(cherrypy, "captures.json", "application/json")
         return json.dumps(status)
     
     def PUT(self, *args, **kwargs):
         try:
             status = self.dewarpProcessor.unzip(kwargs["file"])
         except dewarpProcessor.DewarpInProgressError as e:
-            raise cherrypy.HTTPError(409, json.dumps(e.message))
+            raise cherrypy.HTTPError(409, e.message)
         
+        server.setAttachmentResponseHeaders(cherrypy, "captures.json", "application/json")
         cherrypy.response.status = 200
         return json.dumps(status)
 
@@ -130,7 +133,7 @@ class CapturesController(object):
         try:
             self.dewarpProcessor.deleteUpload()
         except dewarpProcessor.DewarpInProgressError as e:
-            raise cherrypy.HTTPError(409, json.dumps(e.message))
+            raise cherrypy.HTTPError(409, e.message)
         
         cherrypy.response.status = 204
         
@@ -155,7 +158,7 @@ class DewarpedArchiveController(object):
         try:
             self.dewarpProcessor.delete()
         except dewarpProcessor.DewarpInProgressError as e:
-            raise cherrypy.HTTPError(409, json.dumps(e.message))
+            raise cherrypy.HTTPError(409, e.message)
         
         cherrypy.response.status = 204
         
