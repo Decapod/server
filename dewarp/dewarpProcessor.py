@@ -20,18 +20,16 @@ DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
 
 # Exception classes
 class DewarpError(Exception): pass
-class UnzipError(Exception): pass
 class DewarpInProgressError(Exception): pass
 class UnpackedDirNotExistError(Exception): pass
-class CalibrationDirNotExistError(Exception): pass
-class UnmatchedPairsError(Exception): pass
 
 class DewarpProcessor(object):
     
     def __init__(self, dataDir, statusFile, testmode=False):
         self.dataDir = dataDir
-        self.unpacked = os.path.join(self.dataDir, "unpacked")
-        self.dewarped = os.path.join(self.dataDir, "dewarped")
+        self.unpackedDir = os.path.join(self.dataDir, "unpacked")
+        self.dewarpedDir = os.path.join(self.dataDir, "dewarped")
+        self.calibrationDir = os.path.join(self.unpackedDir, "calibration")
         self.export = os.path.join(self.dataDir, "export.zip")
         self.statusFilePath = statusFile
         self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
@@ -51,6 +49,20 @@ class DewarpProcessor(object):
     def getStatus(self):        
         return self.status.model
     
+    def getArchiveStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+        if not os.path.exists(self.unpackedDir):
+            return self.constructSucessStatus(0)
+        
+        if not os.path.exists(self.calibrationDir):
+            return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory \"{0}\" does not exist.".format(self.calibrationDir))
+
+        matched, unmatched = self.findPairs(self.unpackedDir, filenameTemplate)
+        
+        if unmatched:
+            return self.constructErrorStatus("UnmatchedPairs", ''.join(unmatched))
+        
+        return self.constructSucessStatus(len(matched))
+    
     def delete(self):
         '''
         Removes the export artifacts.
@@ -67,6 +79,38 @@ class DewarpProcessor(object):
             self.status.update("status", EXPORT_READY)
             self.status.remove("percentage")
 
+    def deleteUpload(self):
+        '''
+        Removes the export artifacts.
+        
+        Exceptions
+        ==========
+        DewarpInProgressError: if dewarping is currently in progress
+        '''
+        if self.isInState(EXPORT_IN_PROGRESS):
+            raise DewarpInProgressError, "Dewarping in progress, cannot delete until this process has finished"
+        else:
+            utils.io.rmTree(self.unpackedDir)
+
+    def unzip(self, file, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+        '''
+        Unzips the uploaded archive and returns a dict of status.
+        
+        Exceptions
+        ==========
+        DewarpInProgressError: if dewarping is currently in progress
+        '''
+        
+        if self.isInState(EXPORT_IN_PROGRESS):
+            raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
+
+        try:
+            utils.io.unzip(file, self.unpackedDir)
+        except Exception:
+            return self.constructErrorStatus("BadZip", "Cannot unzip \"{0}\"".format(file))
+        
+        return self.getArchiveStatus(filenameTemplate)
+        
     def dewarp(self, file):
         '''
         Generates the pdf export.
@@ -74,14 +118,9 @@ class DewarpProcessor(object):
         
         Exceptions
         ==========
-        UnzipError: if cannot unzip the given file
         DewarpInProgressError: if dewarping is currently in progress
+        DewarpError: if unable to complete dewarping 
         '''
-        
-        try:
-            utils.io.unzip(file, self.unpacked)
-        except Exception:
-            raise UnzipError, "Cannot unzip \"{0}\"".format(file)
         
         if self.isInState(EXPORT_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
@@ -89,11 +128,11 @@ class DewarpProcessor(object):
             # perform dewarp, update status including percentage complete
             self.status.update("status", EXPORT_IN_PROGRESS)
             try:
-                self.dewarpImp(self.unpacked, self.dewarped)
+                self.dewarpImp(self.unpackedDir, self.dewarpedDir)
             except Exception:
                 self.status.update("status", EXPORT_ERROR)
                 self.status.remove("percentage")
-                utils.io.rmTree(self.dewarped)
+                utils.io.rmTree(self.dewarpedDir)
                 
                 raise DewarpError, "Failed to dewarp the image pair ({0}, {1})".format(img1, img2)
             
@@ -109,8 +148,6 @@ class DewarpProcessor(object):
         Exceptions:
         ==========
         UnpackedDirNotExistError: If the directory for the unpacked dewarping zip does not exist
-        UnmatchedPairsError: If there are unmatched pairs in the image set for dewarping
-        CalibrationDirNotExistError: If the calibration directory does not exist
         '''
         
         if not os.path.exists(unpackedDir):
@@ -118,15 +155,7 @@ class DewarpProcessor(object):
         
         matched, unmatched = self.findPairs(unpackedDir, filenameTemplate)
         
-        if unmatched:
-            raise UnmatchedPairsError, ''.join(unmatched)
-        
         if matched:
-            calibrationDir = os.path.join(unpackedDir, "calibration")
-            
-            if not os.path.exists(calibrationDir):
-                raise CalibrationDirNotExistError, "The calibration directory \"{0}\" does not exist.".format(calibrationDir)
-            
             if not os.path.exists(dewarpedDir):
                 os.mkdir(dewarpedDir)
                 
@@ -134,7 +163,7 @@ class DewarpProcessor(object):
             numOfMatches = len(matched)
             
             for index, (img1, img2) in enumerate(matched):
-                self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
+                self.dewarpController.dewarpPair(self.calibrationDir, dewarpedDir, img1, img2)
                 self.status.update("percentage", int((index+1)/numOfMatches*100))
     
         return True
@@ -172,4 +201,10 @@ class DewarpProcessor(object):
                 unmatched.append(currentImg)
                 
         return matched, unmatched
+    
+    def constructErrorStatus(self, errorCode, msg):
+        return {"ERROR_CODE": errorCode, "msg": msg}
+
+    def constructSucessStatus(self, numOfCaptures):
+        return {"numOfCaptures": numOfCaptures}
     
