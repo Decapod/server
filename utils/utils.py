@@ -49,6 +49,22 @@ class io:
             os.remove(path)
     
     @staticmethod
+    def writeStreamToFile(file, writePath):
+        '''
+        Writes the file stream to disk at the path specified by writePath
+        '''
+        file.file.seek(0,0)
+        fileData = file.file.read(8192)
+        
+        while fileData:
+            saveFile = open(writePath, 'ab')
+            saveFile.write(fileData)
+            saveFile.close()
+            fileData = file.file.read(8192)
+        
+        return writePath
+    
+    @staticmethod
     def writeToFile(contents, writePath, writeMode="w"):
         '''
         Writes the supplied 'contents' to the file at the specified 'writePath'

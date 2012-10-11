@@ -27,11 +27,6 @@ class ImportImageTest(unittest.TestCase):
     def tearDown(self):
         io.rmTree(BOOK_DIR)
     
-    # Custom assertions
-    def assertFileWritten(self, origFilePath, writePath):
-        self.assertTrue(os.path.exists(writePath), "Tests the existence of the file: {0}".format(writePath))
-        self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, writePath))
-    
     # Convenience test functions   
     def mimeToSuffixTest(self, iImport, mimetype, expectedSuffix):
         suffix = iImport.mimeToSuffix(mimetype)
@@ -42,7 +37,8 @@ class ImportImageTest(unittest.TestCase):
         testFile = mockClasses.mockFileStream(origFilePath)
         
         savedfile = iImport.save(testFile, name)
-        self.assertFileWritten(origFilePath, savedfile)
+        self.assertTrue(os.path.exists(savedfile), "Tests the existence of the file: {0}".format(savedfile))
+        self.assertTrue(filecmp.cmp(origFilePath, savedfile), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, savedfile))
     
     # Tests
     def test_01_mimeToSuffix_mimetype(self):
@@ -69,21 +65,13 @@ class ImportImageTest(unittest.TestCase):
         valid = self.iImport.isValidType(testFile)
         self.assertFalse(valid, "The file at path ({0}) should not have been a valid file type".format(testFile))
         
-    def test_06_writeFile(self):
-        writePath = os.path.join(self.iImport.importDir, "Image_0015.JPEG")
-        origFilePath = os.path.join(IMAGES_DIR, "Image_0015.JPEG")
-        testFile = mockClasses.mockFileStream(origFilePath)
-
-        self.iImport.writeFile(testFile, writePath)
-        self.assertFileWritten(origFilePath, writePath)
-        
-    def test_07_save_default(self):
+    def test_06_save_default(self):
         self.saveTest(self.iImport)
         
-    def test_08_save_name(self):
+    def test_07_save_name(self):
         self.saveTest(self.iImport, "testName.jpeg")
         
-    def test_09_save_invalid(self):
+    def test_08_save_invalid(self):
         testPath = os.path.join(DATA_DIR, "pdf/Decapod.pdf")
         testFile = mockClasses.mockFileStream(testPath)
         self.assertRaises(imageImport.ImportTypeError, self.iImport.save, testFile)

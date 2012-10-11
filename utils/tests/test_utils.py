@@ -6,10 +6,12 @@ import shutil
 import time
 import simplejson as json
 import zipfile
+import filecmp
 
 import test_utils_helper
 sys.path.append(os.path.abspath('..'))
 import utils
+import mockClasses
 
 DATA_DIR = os.path.abspath("data/")
 IMG_DIR = os.path.join(DATA_DIR, "images")
@@ -79,6 +81,15 @@ class FileOperationTests(unittest.TestCase):
         
     def tearDown(self):
         utils.io.rmTree(TEST_DIR)
+        
+    def test_01_writeStreamToFile(self):
+        writePath = os.path.join(TEST_DIR, "Image_0015.JPEG")
+        origFilePath = os.path.join(IMG_DIR, "Image_0015.JPEG")
+        testFile = mockClasses.mockFileStream(origFilePath)
+
+        utils.io.writeStreamToFile(testFile, writePath)
+        self.assertTrue(os.path.exists(writePath), "Tests the existence of the file: {0}".format(writePath))
+        self.assertTrue(filecmp.cmp(origFilePath, writePath), "Tests if two files are equivalent\noriginal: {0}\nnew: {1}".format(origFilePath, writePath))
         
     def test_01_writeToFile(self):
         filePath = os.path.join(TEST_DIR, "testFile.txt")
