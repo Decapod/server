@@ -81,8 +81,13 @@ class DewarpServer(object):
     
    # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
+        self.dataDir = rs.path(DATA_DIR)
+        self.statusFile = rs.path(STATUS_FILE)
+        self.dewarpProcessor = dewarpProcessor.DewarpProcessor(self.dataDir, self.statusFile)
+
         self.paths = {
-            "dewarpedArchive": DewarpedArchiveController()
+            "captures": CapturesController(self.dewarpProcessor),
+            "dewarpedArchive": DewarpedArchiveController(self.dewarpProcessor)
         }
 
         pathSegment = vpath[0]
@@ -90,7 +95,41 @@ class DewarpServer(object):
         if pathSegment in self.paths:
             return self.paths[pathSegment]
 
-#TODO: Define PUT
+class CapturesController(object):
+    '''
+    Handler for the /dewarpedArchive resource
+    '''
+    
+    exposed = True
+    
+    def __init__(self, dewarpProcessor):
+        self.dewarpProcessor = dewarpProcessor
+        
+    def GET(self):
+        status = self.dewarpProcessor.getArchiveStatus()
+        if status["error_code"]:
+            cherrypy.response.status = 500
+        else:
+            cherrypy.response.status = 200
+        return json.dumps(status)
+    
+    def PUT(self, *args, **kwargs):
+        try:
+            status = self.dewarpProcessor.upload(kwargs["file"])
+        except dewarpProcessor.DewarpInProgressError as e:
+            raise cherrypy.HTTPError(409, json.dumps(e.message))
+        
+        cherrypy.response.status = 200
+        return json.dumps(status)
+
+    def DELETE(self):
+        try:
+            self.dewarpProcessor.deleteUpload()
+        except dewarpProcessor.DewarpInProgressError as e:
+            raise cherrypy.HTTPError(409, json.dumps(e.message))
+        
+        cherrypy.response.status = 204
+        
 class DewarpedArchiveController(object):
     '''
     Handler for the /dewarpedArchive resource
@@ -98,11 +137,9 @@ class DewarpedArchiveController(object):
     
     exposed = True
     
-    def __init__(self):
-        self.dataDir = rs.path(DATA_DIR)
-        self.statusFile = rs.path(STATUS_FILE)
-        self.dewarpProcessor = dewarpProcessor.DewarpProcessor(self.dataDir, self.statusFile)
-    
+    def __init__(self, dewarpProcessor):
+        self.dewarpProcessor = dewarpProcessor
+        
     def GET(self):
         status = self.dewarpProcessor.getStatus()
         if status.get("status") == "complete":
