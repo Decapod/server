@@ -45,21 +45,6 @@ class ImageImport(object):
         realType = imghdr.what(file)
         return realType in validTypes
     
-    def writeFile(self, file, writePath):
-        '''
-        Writes the file stream to disk at the path specified by writePath
-        '''
-        file.file.seek(0,0)
-        fileData = file.file.read(8192)
-        
-        while fileData:
-            saveFile = open(writePath, 'ab')
-            saveFile.write(fileData)
-            saveFile.close()
-            fileData = file.file.read(8192)
-        
-        return writePath
-    
     def save(self, file, name=None):
         ''' 
         Saves the file with the given name. 
@@ -72,7 +57,7 @@ class ImageImport(object):
         fileType = self.getFileType(file)
         name = name if name else utils.image.generateImageName(suffix=fileType)
         imagePath = os.path.join(self.importDir, name)
-        self.writeFile(file, imagePath)
+        utils.io.writeStreamToFile(file, imagePath)
         if not self.isValidType(imagePath):
             utils.io.rmFile(imagePath)
             raise ImportTypeError("The file ({0}) must be a valid 'jpeg', 'png', or 'tiff'".format(name))
