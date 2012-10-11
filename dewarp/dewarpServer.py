@@ -97,7 +97,7 @@ class DewarpServer(object):
 
 class CapturesController(object):
     '''
-    Handler for the /dewarpedArchive resource
+    Handler for the /captures resource
     '''
     
     exposed = True
@@ -111,7 +111,7 @@ class CapturesController(object):
         except dewarpProcessor.UnpackedDirNotExistError as e:
             raise cherrypy.HTTPError(404)
         
-        if status["error_code"]:
+        if status.get("ERROR_CODE"):
             cherrypy.response.status = 500
         else:
             cherrypy.response.status = 200

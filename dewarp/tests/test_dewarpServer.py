@@ -103,10 +103,10 @@ class TestDewarpArchive(ServerTestCase):
     teardown_server = staticmethod(teardown_server)
     
     def setUp(self):
-        io.makeDirs("data")
+        io.makeDirs(DATA_DIR)
     
     def tearDown(self):
-        io.rmTree("data")
+        io.rmTree(DATA_DIR)
     
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.url, ["POST"])
@@ -118,7 +118,7 @@ class TestDewarpArchive(ServerTestCase):
         
     def test_03__get_complete(self):
         expected = {"status": dewarpProcessor.EXPORT_COMPLETE}
-        io.writeToJSONFile(expected, os.path.join("data", "status.json"));
+        io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url)
         self.assertStatus(200)
         body = json.loads(self.body)
@@ -136,7 +136,35 @@ class TestDewarpArchive(ServerTestCase):
         io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join("data", "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
+
+class TestCaptures(ServerTestCase):
+    url = "/captures/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+    
+    def setUp(self):
+        io.makeDirs(DATA_DIR)
+    
+    def tearDown(self):
+        io.rmTree(DATA_DIR)
         
+    def tests_02_get(self):
+        io.makeDirs(os.path.join(DATA_DIR, "unpacked", "calibration"))
+        self.getPage(self.url)
+        self.assertStatus(200)
+        self.assertDictEqual({"numOfCaptures": 0}, json.loads(self.body))
+        
+    def tests_03_get_none(self):
+        self.getPage(self.url)
+        self.assertStatus(404)
+        
+    def tests_04_get_noCalibration(self):
+        io.makeDirs(os.path.join(DATA_DIR, "unpacked"))
+        self.getPage(self.url)
+        self.assertStatus(500)
+        self.assertDictEqual({"ERROR_CODE": "CalibrationDirNotExist", "msg": "The calibration directory \"{0}\" does not exist.".format(os.path.join(DATA_DIR, "unpacked", "calibration"))}, json.loads(self.body))
+
 if __name__ == '__main__':
     import nose
     nose.runmodule()
