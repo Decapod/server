@@ -4,6 +4,8 @@ import os
 import sys
 import re
 import shutil
+import uuid
+import mimetypes
 import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
@@ -59,6 +61,37 @@ class ServerTestCase(helper.CPWebCase):
         for method in methods:
             self.getPage(url, method=method)
             self.assertStatus(405, "Should return a 405 'Method not Allowed' status for '{0}'".format(method))
+    
+    def fileUploadParams(self, path):
+        '''
+        Generates the headers and body needed to POST a file upload, for the file at 'path'
+        '''
+        CRLF = "\r\n"
+        fileName = os.path.split(path)[1]
+        fileType = mimetypes.guess_type(path)[0]
+        id = uuid.uuid4()
+        boundary = "---------------------------" + id.hex
+        
+        f = open(path)
+        read = f.read()
+        f.close()
+        
+        body = '--{0}{1}Content-Disposition: form-data; name="file"; filename="{2}"{1}Content-Type: {3}{1}{1}{4}{1}--{0}--{1}'.format(boundary, CRLF, fileName, fileType, read)
+        headers = [
+            ("Content-Length", len(body)),
+            ("Content-Type", "multipart/form-data; boundary=" + boundary),
+            ("Pragma", "no-cache"),
+            ("Cache-Control", "no-cache")
+        ]
+        
+        return headers, body
+    
+    def uploadFile(self, url, path):
+        '''
+        Uploads the file at 'path' to the resource at 'url'
+        '''
+        headers, body = self.fileUploadParams(path)
+        self.getPage(url, headers, "PUT", body)
             
 class TestConfig(helper.CPWebCase):
     # hardcoding due to the fact that setup_server can't take any arguments, not even "self"
@@ -133,7 +166,7 @@ class TestDewarpArchive(ServerTestCase):
         self.assertStatus(204)
 
     def test_05_delete_error(self):
-        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join("data", "status.json"));
+        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
 
@@ -164,6 +197,41 @@ class TestCaptures(ServerTestCase):
         self.getPage(self.url)
         self.assertStatus(500)
         self.assertDictEqual({"ERROR_CODE": "CalibrationDirNotExist", "msg": "The calibration directory \"{0}\" does not exist.".format(os.path.join(DATA_DIR, "unpacked", "calibration"))}, json.loads(self.body))
+        
+    def tests_05_delete(self):
+        unpackedDir = os.path.join(DATA_DIR, "unpacked")
+        calibrationDir = os.path.join(unpackedDir, "calibration")
+        io.makeDirs(calibrationDir)
+        self.getPage(self.url, method="DELETE")
+        self.assertStatus(204)
+        self.assertFalse(os.path.exists(unpackedDir))
+        self.assertFalse(os.path.exists(calibrationDir))
+        
+    def tests_06_delete_inProgress(self):
+        unpackedDir = os.path.join(DATA_DIR, "unpacked")
+        calibrationDir = os.path.join(unpackedDir, "calibration")
+        io.makeDirs(calibrationDir)
+        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
+        self.getPage(self.url, method="DELETE")
+        self.assertStatus(409)
+        self.assertInBody("Dewarping in progress, cannot delete until this process has finished")
+        self.assertTrue(os.path.exists(unpackedDir))
+        self.assertTrue(os.path.exists(calibrationDir))
+        
+    def tests_07_put(self):
+        self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"))
+        self.assertStatus(200)
+        self.assertDictEqual({"numOfCaptures": 0}, json.loads(self.body))
+        
+    def tests_08_put_inProgress(self):
+        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
+        self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"))
+        self.assertStatus(409)
+        self.assertInBody("Dewarping currently in progress, cannot accept another zip until this process has finished")
+        
+    def tests_09_put_badZip(self):
+        self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"))
+        self.assertStatus(500)
 
 if __name__ == '__main__':
     import nose

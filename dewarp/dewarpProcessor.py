@@ -96,11 +96,8 @@ class DewarpProcessor(object):
         
         if self.isInState(EXPORT_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
-
-        try:
-            utils.io.unzip(file, self.unpackedDir)
-        except Exception:
-            return self.constructErrorStatus("BadZip", "Cannot unzip \"{0}\"".format(file))
+        
+        utils.io.unzip(file, self.unpackedDir)
         
         return self.getArchiveStatus(filenameTemplate)
         
