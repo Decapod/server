@@ -106,7 +106,11 @@ class CapturesController(object):
         self.dewarpProcessor = dewarpProcessor
         
     def GET(self):
-        status = self.dewarpProcessor.getArchiveStatus()
+        try:
+            status = self.dewarpProcessor.getArchiveStatus()
+        except dewarpProcessor.UnpackedDirNotExistError as e:
+            raise cherrypy.HTTPError(404)
+        
         if status["error_code"]:
             cherrypy.response.status = 500
         else:
@@ -115,7 +119,7 @@ class CapturesController(object):
     
     def PUT(self, *args, **kwargs):
         try:
-            status = self.dewarpProcessor.upload(kwargs["file"])
+            status = self.dewarpProcessor.unzip(kwargs["file"])
         except dewarpProcessor.DewarpInProgressError as e:
             raise cherrypy.HTTPError(409, json.dumps(e.message))
         
@@ -156,7 +160,7 @@ class DewarpedArchiveController(object):
         cherrypy.response.status = 204
         
     def PUT(self, *args, **kwargs):
-        bgtask.put(self.dewarpProcessor.dewarp, kwargs["file"])
+        bgtask.put(self.dewarpProcessor.dewarp)
         cherrypy.response.status = 202
 
 if __name__ == "__main__":

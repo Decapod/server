@@ -34,14 +34,8 @@ class DewarpProcessor(object):
         self.statusFilePath = statusFile
         self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
 
-        self.setupExportFileStructure()
-        self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})  
-
-    def setupExportFileStructure(self):
-        '''
-        Sets up the directory structure and initializes the status
-        '''
         utils.io.makeDirs(self.dataDir)
+        self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})  
 
     def isInState(self, state):
         return self.status.model["status"] == state
@@ -51,7 +45,7 @@ class DewarpProcessor(object):
     
     def getArchiveStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         if not os.path.exists(self.unpackedDir):
-            return self.constructSucessStatus(0)
+            raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(self.unpackedDir)
         
         if not os.path.exists(self.calibrationDir):
             return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory \"{0}\" does not exist.".format(self.calibrationDir))
@@ -74,8 +68,7 @@ class DewarpProcessor(object):
         if self.isInState(EXPORT_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping in progress, cannot delete until this process has finished"
         else:
-            utils.io.rmTree(self.dataDir)
-            self.setupExportFileStructure()
+            utils.io.rmTree(self.dewarpedDir)
             self.status.update("status", EXPORT_READY)
             self.status.remove("percentage")
 
@@ -111,7 +104,7 @@ class DewarpProcessor(object):
         
         return self.getArchiveStatus(filenameTemplate)
         
-    def dewarp(self, file):
+    def dewarp(self):
         '''
         Generates the pdf export.
         If an exception is raised from the genPDF subprocess the status will be set to EXPORT_ERROR
@@ -129,12 +122,12 @@ class DewarpProcessor(object):
             self.status.update("status", EXPORT_IN_PROGRESS)
             try:
                 self.dewarpImp(self.unpackedDir, self.dewarpedDir)
-            except Exception:
+            except Exception as e:
                 self.status.update("status", EXPORT_ERROR)
                 self.status.remove("percentage")
                 utils.io.rmTree(self.dewarpedDir)
                 
-                raise DewarpError, "Failed to dewarp the image pair ({0}, {1})".format(img1, img2)
+                raise DewarpError, e.message
             
             self.status.update("status", EXPORT_COMPLETE)
     
