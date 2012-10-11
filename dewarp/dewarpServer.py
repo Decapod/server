@@ -113,8 +113,6 @@ class CapturesController(object):
         
         if status.get("ERROR_CODE"):
             cherrypy.response.status = 500
-        else:
-            cherrypy.response.status = 200
             
         server.setAttachmentResponseHeaders(cherrypy, "captures.json", "application/json")
         return json.dumps(status)
@@ -125,8 +123,10 @@ class CapturesController(object):
         except dewarpProcessor.DewarpInProgressError as e:
             raise cherrypy.HTTPError(409, e.message)
         
+        if status.get("ERROR_CODE"):
+            cherrypy.response.status = 500
+            
         server.setAttachmentResponseHeaders(cherrypy, "captures.json", "application/json")
-        cherrypy.response.status = 200
         return json.dumps(status)
 
     def DELETE(self):
