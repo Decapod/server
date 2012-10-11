@@ -43,7 +43,7 @@ class DewarpProcessor(object):
     def getStatus(self):        
         return self.status.model
     
-    def getArchiveStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+    def getCapturesStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         if not os.path.exists(self.unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(self.unpackedDir)
         
@@ -114,7 +114,7 @@ class DewarpProcessor(object):
             return self.constructErrorStatus("BadZip", "A invalid zip file.")
         
         utils.io.rmFile(zipfilePath)
-        return self.getArchiveStatus(filenameTemplate)
+        return self.getCapturesStatus(filenameTemplate)
         
     def dewarp(self):
         '''
