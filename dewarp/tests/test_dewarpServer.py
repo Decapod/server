@@ -26,13 +26,13 @@ CONFIG = {
         "tools.staticdir.on": True,
         "tools.staticdir.dir": "../../../decapod-ui/lib"
     },
-    "/components": {
+    "/export": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../../decapod-ui/components"
+        "tools.staticdir.dir": "../../../decapod-ui/export"
     },
-    "/shared": {
+    "/core": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../../decapod-ui/shared"
+        "tools.staticdir.dir": "../../../decapod-ui/core"
     },
     "/data": {
         "tools.staticdir.on": True,
