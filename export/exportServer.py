@@ -78,7 +78,7 @@ class ExportServer(object):
     book = []
         
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/exporter/html/exporter.html"), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${export}/components/exporter/html/exporter.html"), 301)
     
 # Library Controller
 # TODO: Support GET requests to return the Library model

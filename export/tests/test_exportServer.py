@@ -23,13 +23,13 @@ CONFIG = {
         "tools.staticdir.on": True,
         "tools.staticdir.dir": "../../../decapod-ui/lib"
     },
-    "/components": {
+    "/export": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../../decapod-ui/components"
+        "tools.staticdir.dir": "../../../decapod-ui/export"
     },
-    "/shared": {
+    "/core": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../../decapod-ui/shared"
+        "tools.staticdir.dir": "../../../decapod-ui/core"
     },
     "/library": {
         "tools.staticdir.on": True,
@@ -60,7 +60,7 @@ class TestConfig(helper.CPWebCase):
 
 class TestRoot(ServerTestCase):
     rootURL = "/"
-    expectedRedirectURL = "/components/exporter/html/exporter.html"
+    expectedRedirectURL = "/export/components/exporter/html/exporter.html"
     
     setup_server = staticmethod(setup_server)
     tearDown = staticmethod(teardown_server)
