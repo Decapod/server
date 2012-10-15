@@ -50,9 +50,9 @@ class TestCapture(unittest.TestCase):
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
         
     def test_03_capture(self):
-        expected = [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpeg"))]
+        expected = (1, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpeg"))])
         
-        self.assertListEqual(self.capture.capture(), expected)
+        self.assertEqual(self.capture.capture(), expected)
         self.assertTrue(os.path.exists(self.statusFile))
         
         status = self.capture.status.model
