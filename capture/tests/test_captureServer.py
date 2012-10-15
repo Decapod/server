@@ -155,7 +155,7 @@ class TestTypeCameraCapture(ServerTestCase):
         self.assertStatus(202)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         
-        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\]}'            
+        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\], "captureIndex": 1}'            
         regex = re.compile(regexPattern)
         self.assertTrue(regex.findall(self.body))
         

@@ -108,7 +108,7 @@ class Capture(object):
         fileLocations = []
         
         if len(Capture.trackedCameraPorts) == 0:
-            return fileLocations
+            return self.status.model["index"], fileLocations
         
         if self.cameraController.getPorts() != Capture.trackedCameraPorts:
             raise CameraPortsChangedError(self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED"))
@@ -131,7 +131,7 @@ class Capture(object):
         self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(Capture.trackedCameraPorts))
         
         # TODO: Return a list of URLs to captured images
-        return fileLocations
+        return self.status.model["index"], fileLocations
     
     def delete(self):
         io.rmTree(self.typeDir)
