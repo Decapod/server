@@ -28,9 +28,9 @@ CONFIG = {
         "tools.staticdir.on": True,
         "tools.staticdir.dir": "../../../decapod-ui/lib"
     },
-    "/export": {
+    "/capture": {
         "tools.staticdir.on": True,
-        "tools.staticdir.dir": "../../../decapod-ui/export"
+        "tools.staticdir.dir": "../../../decapod-ui/capture"
     },
     "/core": {
         "tools.staticdir.on": True,
@@ -66,7 +66,7 @@ class TestConfig(helper.CPWebCase):
 
 class TestRoot(ServerTestCase):
     rootURL = "/"
-    expectedRedirectURL = "/components/cameras/html/cameras.html"
+    expectedRedirectURL = "/capture/html/capture.html"
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
@@ -79,10 +79,9 @@ class TestRoot(ServerTestCase):
     def test_02_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.rootURL, ["PUT", "POST", "DELETE"])
         
-    # Known failure since the rediction has NOT been implemented.
-#    def test_03_redirectURL(self):
-#        self.getPage(self.expectedRedirectURL)
-#        self.assertStatus(200)
+    def test_03_redirectURL(self):
+        self.getPage(self.expectedRedirectURL)
+        self.assertStatus(200)
 
 class TestCameras(ServerTestCase):
     camerasURL = "/cameras/"
