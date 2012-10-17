@@ -115,7 +115,7 @@ class CaptureServer(object):
             return self.paths[pathSegment]
 
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/cameras/html/cameras.html    "), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${capture}/html/capture.html"), 301)
     
 class CamerasController(object):
     '''
