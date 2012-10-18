@@ -130,6 +130,9 @@ class TestTypeCameraCapture(ServerTestCase):
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
+    
+    def tearDown(self):
+        io.rmFile(os.path.join(CONVENTIONAL_DIR, "captureStatus.json"))
         
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalCaptureURL, ["PUT"])
@@ -154,17 +157,15 @@ class TestTypeCameraCapture(ServerTestCase):
         self.assertStatus(202)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         
-        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\], "captureIndex": 1}'            
+        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\], "totalCaptures": 1, "captureIndex": 1}'            
         regex = re.compile(regexPattern)
-        self.assertTrue(regex.findall(self.body))
-        
+        self.assertTrue(regex.findall(self.body))        
         
     def test_04_delete(self):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
         self.getPage(self.conventionalCaptureURL, method="DELETE")
         self.assertStatus(204)
         self.assertListEqual(["captureStatus.json"], os.listdir(CONVENTIONAL_DIR))
-#        self.assertFalse(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should have been removed".format(CONVENTIONAL_DIR))
         
 class CaptureImages(ServerTestCase):
     conventionalCaptureImagesURL = "/conventional/capture/images/"

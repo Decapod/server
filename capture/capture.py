@@ -94,7 +94,7 @@ class Capture(object):
     def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
-        self.status.update("totalCaptures", self.status.model["totalCaptures"] - len(removedImages))
+        self.status.update("totalCaptures", self.status.model["totalCaptures"] - 1)
         return removedImages
     
     def deleteImages(self):
@@ -128,10 +128,10 @@ class Capture(object):
         
         # Increase the total captures and save
         self.status.update("index", self.status.model["index"] + 1)
-        self.status.update("totalCaptures", self.status.model["totalCaptures"] + len(Capture.trackedCameraPorts))
+        self.status.update("totalCaptures", self.status.model["totalCaptures"] + 1)
         
         # TODO: Return a list of URLs to captured images
-        return self.status.model["index"], fileLocations
+        return self.status.model, fileLocations
     
     def delete(self):
         io.rmTree(self.typeDir)

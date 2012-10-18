@@ -200,7 +200,7 @@ class CaptureController(object):
 
     def POST(self, *args, **kwargs):
         try:
-            captureIndex, captures = self.captureType.capture()
+            captureStatus, captures = self.captureType.capture()
         except capture.CaptureError as e:
             raise cherrypy.HTTPError(500, e.message)
         except capture.CameraPortsChangedError as e:
@@ -214,7 +214,7 @@ class CaptureController(object):
         server.setAttachmentResponseHeaders(cherrypy, 'imageLocations.json', "application/json")
         cherrypy.response.status = 202
         
-        return json.dumps({"captureIndex": captureIndex, "captures": captureURLs})
+        return json.dumps({"captureIndex": captureStatus["index"], "totalCaptures": captureStatus["totalCaptures"], "captures": captureURLs})
         
     def DELETE(self, *args, **kwargs):
         self.captureType.delete()

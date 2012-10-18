@@ -50,14 +50,16 @@ class TestCapture(unittest.TestCase):
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
         
     def test_03_capture(self):
-        expected = (1, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpeg"))])
+        expected = ({"index": 1, "totalCaptures": 1}, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpeg"))])
         
-        self.assertEqual(self.capture.capture(), expected)
+        captureResult = self.capture.capture()
+        self.assertDictEqual(expected[0], captureResult[0])
+        self.assertEqual(expected[1], captureResult[1])
         self.assertTrue(os.path.exists(self.statusFile))
         
         status = self.capture.status.model
         self.assertEqual(status["index"], 1)
-        self.assertEqual(status["totalCaptures"], 2)
+        self.assertEqual(status["totalCaptures"], 1)
         
     def test_04_multiCapture_fallback(self):
         capture.Capture.trackedMultiCaptureFunc = None  # reset trackedMultiCaptureFunc for the new config
@@ -71,7 +73,7 @@ class TestCapture(unittest.TestCase):
         
         status = captureObj.status.model
         self.assertEqual(status["index"], 1)
-        self.assertEqual(status["totalCaptures"], 2)
+        self.assertEqual(status["totalCaptures"], 1)
 
     def test_05_delete(self):
         self.capture.delete()
