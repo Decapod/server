@@ -118,8 +118,36 @@ class TestCapture(unittest.TestCase):
         self.assertEquals(0, self.capture.status.model["index"])
         self.assertEquals(0, self.capture.status.model["totalCaptures"])
         
-    def test_09_export(self):
-        expectedFiles = ["capture-0_2.jpg", "capture-0_1.jpg"]
+    def test_09_indices(self):
+        expected = (19, 1)
+        results = self.capture.indices("capture-{0}_{1}.jpeg".format(expected[0], expected[1]));
+        self.assertTupleEqual(expected, results)
+        
+    def test_10_sort(self):
+        expectedFiles = [os.path.join(self.capture.captureDir, "capture-0_1.jpg"), os.path.join(self.capture.captureDir, "capture-0_2.jpg")]
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+        
+        for image in images:
+            shutil.copy(image, captureDir)
+        
+        self.assertListEqual(expectedFiles, self.capture.sort())
+        
+    def test_11_sort_nonContinuous(self):
+        captureFiles = ["capture-0_1.jpg", "capture-1_1.jpg", "capture-1_2.jpg", "capture-3_1.jpg", "capture-10_1.jpg"]
+        expectedFiles = map(lambda fileName: os.path.join(self.capture.captureDir, fileName), captureFiles)
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+        
+        for path in expectedFiles:
+            shutil.copy(images[0], path)
+        
+        self.assertListEqual(expectedFiles, self.capture.sort())
+        
+    def test_12_export(self):
+        expectedFiles = ["capture-0_1.jpg", "capture-0_2.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
@@ -135,6 +163,24 @@ class TestCapture(unittest.TestCase):
         self.assertIsNone(zip.testzip()) # testzip returns None if no errors are found in the zip file
         self.assertListEqual(expectedFiles, zip.namelist())
         zip.close()
+
+    def test_13_export_nonContinuousCaptures(self):
+        expectedFiles = ["capture-0_1.jpg", "capture-1_1.jpg"]
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
         
+        shutil.copy(images[0], os.path.join(captureDir, "capture-0_1.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-3_1.jpg"))
+        
+        zipPath = self.capture.export()
+        self.assertTrue(os.path.exists(zipPath))
+        self.assertTrue(zipfile.is_zipfile(zipPath))
+        
+        zip = zipfile.ZipFile(zipPath, "r")
+        self.assertIsNone(zip.testzip()) # testzip returns None if no errors are found in the zip file
+        self.assertListEqual(expectedFiles, zip.namelist())
+        zip.close()        
+
 if __name__ == '__main__':
     unittest.main()

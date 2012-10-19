@@ -1,7 +1,7 @@
 import os
 import sys
 from string import Template
-import zipfile
+from zipfile import ZipFile
 import re
 
 import cameraInterface
@@ -69,7 +69,18 @@ class Capture(object):
             return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS", cameras=summary)
     
         return self.cameraController.generateCameraStatus("READY")
-        
+    
+    def indices(self, fileName):
+        pattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex="(?P<captureIndex>\d+?)", cameraID="(?P<cameraID>\d+?)")
+        regex = re.compile(pattern)
+        r = regex.search(fileName)
+        group = r.groupdict()   
+        return int(group.get("captureIndex", 0)), int(group.get("cameraID", 0))
+    
+    def sort(self):
+        regexPattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(cameraID="\d*", captureIndex="\d*")
+        return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices)
+    
     def export(self):
         isStatusChanged = False;
         for key, val in Capture.statusAtLastExport.iteritems():
@@ -79,9 +90,27 @@ class Capture(object):
         
         # Only create a new zip if one doesn't exist, or if there have been changes.
         if not os.path.exists(self.exportZipFilePath) or isStatusChanged:
+            position = 0;
+            currentCaptureIndex = 0;
             currentDir = os.getcwd()
             os.chdir(self.captureDir)
-            io.zip(".", self.exportZipFilePath)
+            
+            zFile = ZipFile(self.exportZipFilePath, mode="w")
+        
+            for imagePath in self.sort():
+                fileName = os.path.basename(imagePath)
+                captureIndex, cameraID = self.indices(fileName)
+                
+                if currentCaptureIndex is not captureIndex:
+                    currentCaptuerIndex = captureIndex
+                    position = position + 1
+                    
+                arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=position, cameraID=cameraID) + os.path.splitext(fileName)[1]
+                zFile.write(fileName, arcName)
+
+            
+            zFile.close()
+            
             os.chdir(currentDir)
             Capture.statusAtLastExport = self.status.model.copy()
         
