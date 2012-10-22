@@ -75,7 +75,7 @@ class DewarpServer(object):
     exposed = True
 
     def GET(self):
-        raise cherrypy.HTTPRedirect(rs.url("${components}/dewarp/html/dewarp.html"), 301)
+        raise cherrypy.HTTPRedirect(rs.url("${dewarp}/html/dewarper.html"), 301)
     
    # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
