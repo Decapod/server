@@ -146,7 +146,8 @@ class Capture(object):
 
         # TODO: May want to define the template into config file
         try:
-            captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=self.status.model["index"])
+            nextIndex = self.status.model["index"] + 1
+            captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=nextIndex)
         except self.cameraController.MultiCaptureError as e:
             raise CaptureError(e.message)
         
@@ -156,7 +157,7 @@ class Capture(object):
         Capture.trackedMultiCaptureFunc = method
         
         # Increase the total captures and save
-        self.status.update("index", self.status.model["index"] + 1)
+        self.status.update("index", nextIndex)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] + 1)
         
         # TODO: Return a list of URLs to captured images

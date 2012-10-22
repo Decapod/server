@@ -157,9 +157,9 @@ class TestTypeCameraCapture(ServerTestCase):
         self.assertStatus(202)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
         
-        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpeg"\], "totalCaptures": 1, "captureIndex": 1}'            
+        regexPattern ='{"captures": \["http://127.0.0.1:\d*/data/conventional/captures/capture-1_0.jpeg", "http://127.0.0.1:\d*/data/conventional/captures/capture-1_1.jpeg"\], "totalCaptures": 1, "captureIndex": 1}'            
         regex = re.compile(regexPattern)
-        self.assertTrue(regex.findall(self.body))        
+        self.assertTrue(regex.findall(self.body))
         
     def test_04_delete(self):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
