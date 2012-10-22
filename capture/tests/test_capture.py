@@ -50,7 +50,7 @@ class TestCapture(unittest.TestCase):
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
         
     def test_03_capture(self):
-        expected = ({"index": 1, "totalCaptures": 1}, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-0_1.jpeg"))])
+        expected = ({"index": 1, "totalCaptures": 1}, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_1.jpeg"))])
         
         captureResult = self.capture.capture()
         self.assertDictEqual(expected[0], captureResult[0])
