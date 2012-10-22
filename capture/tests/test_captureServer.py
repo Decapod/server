@@ -141,7 +141,7 @@ class TestTypeCameraCapture(ServerTestCase):
         expectedFiles = []
         self.getPage(self.conventionalCaptureURL)
         self.assertStatus(200)
-        self.assertHeader("Content-Type", "application/zip", "Should return zip content")
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
 
     def test_03_post(self):
         headers = [
