@@ -150,7 +150,7 @@ class TypeController(object):
     def GET(self, *args, **kwargs):
         #returns the info of the detected cameras
         server.setAttachmentResponseHeaders(cherrypy, 'captureInfo.json', "application/json")
-        return self.captureType.getStatus()
+        return json.dumps(self.captureType.getStatus())
 
     # Continues cherrypy object traversal. Useful for handling dynamic URLs
     def _cp_dispatch(self, vpath):
