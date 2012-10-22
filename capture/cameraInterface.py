@@ -363,13 +363,14 @@ def releaseCameras():
     ]
     
     try:
+        global multiCamerasPrepared
+        multiCamerasPrepared = False
+        
         captureInfo = utils.io.invokeCommandSync(cmd,
                                 CaptureError,
                                 "Could not release cameras.")
     except Exception:
         return False
-    
-    multiCamerasPrepared = False
 
     return True
 
