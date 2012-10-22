@@ -190,13 +190,8 @@ class CaptureController(object):
         
     def GET(self, *args, **kwargs):
         # returns a zip file of all the captured images, and calibration data if found
-        zipContent = io.readFromFile(self.captureType.export())
-        
-        if zipContent is not None:
-            server.setAttachmentResponseHeaders(cherrypy, "capture.zip", "application/zip")
-            cherrypy.response.status = 200
-            return zipContent
-        
+        server.setAttachmentResponseHeaders(cherrypy, 'captureZip.json', "application/json")
+        return json.dumps({"url": convertPathToURL(self.captureType.export())})
 
     def POST(self, *args, **kwargs):
         try:
