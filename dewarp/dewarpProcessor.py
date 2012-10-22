@@ -71,6 +71,7 @@ class DewarpProcessor(object):
             utils.io.rmTree(self.dewarpedDir)
             self.status.update("status", EXPORT_READY)
             self.status.remove("percentage")
+            self.status.remove("currentCapture")
 
     def deleteUpload(self):
         '''
@@ -136,6 +137,7 @@ class DewarpProcessor(object):
             except Exception as e:
                 self.status.update("status", EXPORT_ERROR)
                 self.status.remove("percentage")
+                self.status.remove("currentCapture")
                 utils.io.rmTree(self.dewarpedDir)
                 
                 raise DewarpError, e.message
@@ -164,11 +166,14 @@ class DewarpProcessor(object):
                 os.mkdir(dewarpedDir)
                 
             self.status.update("percentage", 0)
+            self.status.update("currentCapture", 0)
             numOfMatches = len(matched)
             
             for index, (img1, img2) in enumerate(matched):
+                captureIndex = index + 1
                 self.dewarpController.dewarpPair(self.calibrationDir, dewarpedDir, img1, img2)
-                self.status.update("percentage", int((index+1)/numOfMatches*100))
+                self.status.update("percentage", int(captureIndex/numOfMatches*100))
+                self.status.update("currentCapture", captureIndex)
     
         return True
     

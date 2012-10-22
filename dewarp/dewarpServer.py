@@ -12,7 +12,7 @@ from utils import server
 
 # Setup for Decapod's cherrypy configuration file.
 CURRENT_DIR = os.getcwd()
-DECAPOD_CONFIG_FILE = os.path.abspath(os.path.join("config", "captureServer.conf"))
+DECAPOD_CONFIG_FILE = os.path.abspath(os.path.join("config", "dewarpServer.conf"))
 
 # Determine if the server is running under an SCGI-WSGI interface
 IS_SCGIWSGI = (sys.argv[0] == 'scgi-wsgi')
@@ -41,8 +41,6 @@ def startServer():
     # used for quitting the app via command line on windows   
     if hasattr(cherrypy.engine, "console_control_handler"): 
         cherrypy.engine.console_control_handler.subscribe() 
-    
-    cherrypy.engine.subscribe('stop', releaseCameras)
     
     # start the server
     cherrypy.engine.start()
