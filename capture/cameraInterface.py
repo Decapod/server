@@ -369,6 +369,8 @@ def releaseCameras():
     except Exception:
         return False
     
+    multiCamerasPrepared = False
+
     return True
 
 def generateCameraStatus(statusCode, **kwargs):
