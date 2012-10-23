@@ -48,7 +48,7 @@ class Capture(object):
         io.makeDirs(self.exportDir)
     
         # retrieve the last capture status
-        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
+        self.status = Status(FSStore(self.statusFilePath), {"index": 0, "firstCaptureIndex": 0, "lastCaptureIndex": 0, "totalCaptures": 0})  
         
     def getCamerasStatus(self):
         numOfTrackedPorts = len(self.cameraController.getPorts())
@@ -119,6 +119,16 @@ class Capture(object):
         
         return self.exportZipFilePath
     
+    def updateCaptureIndices(self):
+        images = self.sort()
+        
+        if len(images):
+            self.status.update("firstCaptureIndex", self.indices(images[0])[0])
+            self.status.update("lastCaptureIndex", self.indices(images[-1])[0])
+        else:
+            self.status.update("firstCaptureIndex", 0)
+            self.status.update("lastCaptureIndex", 0)
+    
     def getImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", index=index)
         return image.findImages(self.captureDir, regexPattern)
@@ -127,6 +137,7 @@ class Capture(object):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", index=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] - 1)
+        self.updateCaptureIndices()
         return removedImages
     
     def deleteImages(self):
@@ -134,6 +145,8 @@ class Capture(object):
         
         if removedImages:
             self.status.update("index", 0)
+            self.status.update("firstCaptureIndex", 0)
+            self.status.update("lastCaptureIndex", 0)
             self.status.update("totalCaptures", 0)
         
     def capture(self):
@@ -160,6 +173,10 @@ class Capture(object):
         Capture.trackedMultiCaptureFunc = method
         
         # Increase the total captures and save
+        if not self.status.model["firstCaptureIndex"]:
+            self.status.update("firstCaptureIndex", nextIndex)
+            
+        self.status.update("lastCaptureIndex", nextIndex)
         self.status.update("index", nextIndex)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] + 1)
         
@@ -169,6 +186,8 @@ class Capture(object):
     def delete(self):
         io.rmTree(self.typeDir)
         self.status.update("index", 0)
+        self.status.update("firstCaptureIndex", 0)
+        self.status.update("lastCaptureIndex", 0)
         self.status.update("totalCaptures", 0)
         Capture.trackedCameraPorts = self.cameraController.getPorts()
 

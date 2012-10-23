@@ -48,9 +48,29 @@ class TestCapture(unittest.TestCase):
         eCode = "CAMERA_DISCONNECTED"
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode], "numCamerasDisconnected": 1}
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
+    
+    def test_03_updateCaptureIndices(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-2_0.jpg"))
         
-    def test_03_capture(self):
-        expected = ({"index": 1, "totalCaptures": 1}, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_1.jpeg"))])
+        self.capture.updateCaptureIndices()
+        self.assertEquals(self.capture.status.model["firstCaptureIndex"], 1)
+        self.assertEquals(self.capture.status.model["lastCaptureIndex"], 2)
+        
+    def test_04_updateCaptureIndices_noImages(self):
+        self.capture.status.model["firstCaptureIndex"] = 2
+        self.capture.status.model["lastCaptureIndex"] = 10
+        
+        self.capture.updateCaptureIndices()
+        self.assertEquals(self.capture.status.model["firstCaptureIndex"], 0)
+        self.assertEquals(self.capture.status.model["lastCaptureIndex"], 0)
+    
+    def test_05_capture(self):
+        expected = ({"index": 1, "firstCaptureIndex": 1, "lastCaptureIndex": 1, "totalCaptures": 1}, [os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_0.jpeg")), os.path.abspath(os.path.join(CONVENTIONAL_CAPTURES_DIR, "capture-1_1.jpeg"))])
         
         captureResult = self.capture.capture()
         self.assertDictEqual(expected[0], captureResult[0])
@@ -61,7 +81,7 @@ class TestCapture(unittest.TestCase):
         self.assertEqual(status["index"], 1)
         self.assertEqual(status["totalCaptures"], 1)
         
-    def test_04_multiCapture_fallback(self):
+    def test_06_multiCapture_fallback(self):
         capture.Capture.trackedMultiCaptureFunc = None  # reset trackedMultiCaptureFunc for the new config
         config = {"testmode": True, "multiCapture": "raiseTimeoutError", "delay": 10, "interval": 1}
         captureObj = capture.Capture(CONVENTIONAL_DIR, CAPTURE_STATUS_FILENAME, config)
@@ -75,11 +95,12 @@ class TestCapture(unittest.TestCase):
         self.assertEqual(status["index"], 1)
         self.assertEqual(status["totalCaptures"], 1)
 
-    def test_05_delete(self):
+    def test_07_delete(self):
         self.capture.delete()
+        self.assertDictEqual({"index": 0, "firstCaptureIndex": 0, "lastCaptureIndex": 0, "totalCaptures": 0}, self.capture.status.model)
         self.assertListEqual(["captureStatus.json"], os.listdir(CONVENTIONAL_DIR))
-        
-    def test_06_getImagesByIndex(self):
+    
+    def test_08_getImagesByIndex(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
@@ -93,19 +114,62 @@ class TestCapture(unittest.TestCase):
         self.assertListEqual([img1], t1)
         self.assertListEqual([img2, img1], t2)
         
-    def test_07_deleteImagesByIndex(self):
+    def test_09_deleteImagesByIndex_last(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
-        for image in images:
-            shutil.copy(image, captureDir)
-        self.capture.status.update("totalCaptures", len(images))
+
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_1.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-2_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-2_1.jpg"))
+
+        self.capture.status.update("index", 2)
+        self.capture.status.update("totalCaptures", 2)
+        self.capture.status.update("lastCaptureIndex", 2)
+        self.capture.status.update("firstCaptureIndex", 1)
         
-        self.capture.deleteImagesByIndex("1", filenameTemplate="capture-${cameraID}_${index}")
+        self.capture.deleteImagesByIndex("2")
+        self.assertListEqual([], self.capture.getImagesByIndex("2"))
+        self.assertDictEqual({"index": 2, "firstCaptureIndex": 1, "lastCaptureIndex": 1, "totalCaptures": 1}, self.capture.status.model)
+        
+    def test_10_deleteImagesByIndex_first(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_1.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-2_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-2_1.jpg"))
+
+        self.capture.status.update("index", 2)
+        self.capture.status.update("totalCaptures", 2)
+        self.capture.status.update("lastCaptureIndex", 2)
+        self.capture.status.update("firstCaptureIndex", 1)
+        
+        self.capture.deleteImagesByIndex("1")
         self.assertListEqual([], self.capture.getImagesByIndex("1"))
-        self.assertEquals(1, self.capture.status.model["totalCaptures"])
+        self.assertDictEqual({"index": 2, "firstCaptureIndex": 2, "lastCaptureIndex": 2, "totalCaptures": 1}, self.capture.status.model)
         
-    def test_08_deleteImages(self):
+    def test_11_deleteImagesByIndex_all(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_0.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-1_1.jpg"))
+
+        self.capture.status.update("index", 1)
+        self.capture.status.update("totalCaptures", 1)
+        self.capture.status.update("lastCaptureIndex", 1)
+        self.capture.status.update("firstCaptureIndex", 1)
+        
+        self.capture.deleteImagesByIndex("1")
+        self.assertListEqual([], self.capture.getImagesByIndex("1"))
+        self.assertDictEqual({"index": 1, "firstCaptureIndex": 0, "lastCaptureIndex": 0, "totalCaptures": 0}, self.capture.status.model)
+        
+    def test_12_deleteImages(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
@@ -115,15 +179,14 @@ class TestCapture(unittest.TestCase):
         
         self.capture.deleteImages()
         self.assertListEqual([], utils.image.findImages(captureDir))
-        self.assertEquals(0, self.capture.status.model["index"])
-        self.assertEquals(0, self.capture.status.model["totalCaptures"])
+        self.assertDictEqual({"index": 0, "firstCaptureIndex": 0, "lastCaptureIndex": 0, "totalCaptures": 0}, self.capture.status.model)
         
-    def test_09_indices(self):
+    def test_13_indices(self):
         expected = (19, 1)
         results = self.capture.indices("capture-{0}_{1}.jpeg".format(expected[0], expected[1]));
         self.assertTupleEqual(expected, results)
         
-    def test_10_sort(self):
+    def test_14_sort(self):
         expectedFiles = [os.path.join(self.capture.captureDir, "capture-0_1.jpg"), os.path.join(self.capture.captureDir, "capture-0_2.jpg")]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
@@ -134,7 +197,7 @@ class TestCapture(unittest.TestCase):
         
         self.assertListEqual(expectedFiles, self.capture.sort())
         
-    def test_11_sort_reversed(self):
+    def test_15_sort_reversed(self):
         expectedFiles = [os.path.join(self.capture.captureDir, "capture-0_2.jpg"), os.path.join(self.capture.captureDir, "capture-0_1.jpg")]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
@@ -145,7 +208,7 @@ class TestCapture(unittest.TestCase):
         
         self.assertListEqual(expectedFiles, self.capture.sort(reverse=True))
         
-    def test_12_sort_nonContinuous(self):
+    def test_16_sort_nonContinuous(self):
         captureFiles = ["capture-0_1.jpg", "capture-1_1.jpg", "capture-1_2.jpg", "capture-3_1.jpg", "capture-10_1.jpg"]
         expectedFiles = map(lambda fileName: os.path.join(self.capture.captureDir, fileName), captureFiles)
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
@@ -157,7 +220,7 @@ class TestCapture(unittest.TestCase):
         
         self.assertListEqual(expectedFiles, self.capture.sort())
         
-    def test_13_export(self):
+    def test_17_export(self):
         expectedFiles = ["capture-0_1.jpg", "capture-0_2.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
@@ -175,7 +238,7 @@ class TestCapture(unittest.TestCase):
         self.assertListEqual(expectedFiles, zip.namelist())
         zip.close()
 
-    def test_14_export_nonContinuousCaptures(self):
+    def test_18_export_nonContinuousCaptures(self):
         expectedFiles = ["capture-0_0.jpg", "capture-0_1.jpg", "capture-1_0.jpg", "capture-1_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
