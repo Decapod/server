@@ -88,7 +88,7 @@ class TestCapture(unittest.TestCase):
             
         img1 = os.path.join(captureDir, "capture-0_1.jpg")
         img2 = os.path.join(captureDir, "capture-0_2.jpg")
-        t1 = self.capture.getImagesByIndex("1", filenameTemplate="capture-${cameraID}_${captureIndex}")
+        t1 = self.capture.getImagesByIndex("1", filenameTemplate="capture-${cameraID}_${index}")
         t2 = self.capture.getImagesByIndex("0")
         self.assertListEqual([img1], t1)
         self.assertListEqual([img2, img1], t2)
@@ -101,7 +101,7 @@ class TestCapture(unittest.TestCase):
             shutil.copy(image, captureDir)
         self.capture.status.update("totalCaptures", len(images))
         
-        self.capture.deleteImagesByIndex("1", filenameTemplate="capture-${cameraID}_${captureIndex}")
+        self.capture.deleteImagesByIndex("1", filenameTemplate="capture-${cameraID}_${index}")
         self.assertListEqual([], self.capture.getImagesByIndex("1"))
         self.assertEquals(1, self.capture.status.model["totalCaptures"])
         
