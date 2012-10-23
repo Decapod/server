@@ -257,10 +257,6 @@ class ImageIndexController(object):
         images = []
         if self.imageIndex.isdigit():
             images = self.captureType.getImagesByIndex(self.imageIndex)
-        elif self.imageIndex == "first":
-            images = self.captureType.getFirstImages()
-        elif self.imageIndex == "last": 
-            images = self.captureType.getFirstImages(reverse=True)
         else:
             raise cherrypy.HTTPError(404)
         
