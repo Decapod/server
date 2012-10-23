@@ -134,7 +134,18 @@ class TestCapture(unittest.TestCase):
         
         self.assertListEqual(expectedFiles, self.capture.sort())
         
-    def test_11_sort_nonContinuous(self):
+    def test_11_sort_reversed(self):
+        expectedFiles = [os.path.join(self.capture.captureDir, "capture-0_2.jpg"), os.path.join(self.capture.captureDir, "capture-0_1.jpg")]
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        captureDir = self.capture.captureDir
+        images = utils.image.findImages(imgDir)
+        
+        for image in images:
+            shutil.copy(image, captureDir)
+        
+        self.assertListEqual(expectedFiles, self.capture.sort(reverse=True))
+        
+    def test_12_sort_nonContinuous(self):
         captureFiles = ["capture-0_1.jpg", "capture-1_1.jpg", "capture-1_2.jpg", "capture-3_1.jpg", "capture-10_1.jpg"]
         expectedFiles = map(lambda fileName: os.path.join(self.capture.captureDir, fileName), captureFiles)
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
@@ -146,7 +157,7 @@ class TestCapture(unittest.TestCase):
         
         self.assertListEqual(expectedFiles, self.capture.sort())
         
-    def test_12_export(self):
+    def test_13_export(self):
         expectedFiles = ["capture-0_1.jpg", "capture-0_2.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
@@ -164,7 +175,7 @@ class TestCapture(unittest.TestCase):
         self.assertListEqual(expectedFiles, zip.namelist())
         zip.close()
 
-    def test_13_export_nonContinuousCaptures(self):
+    def test_14_export_nonContinuousCaptures(self):
         expectedFiles = ["capture-0_0.jpg", "capture-0_1.jpg", "capture-1_0.jpg", "capture-1_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
