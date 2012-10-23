@@ -185,6 +185,7 @@ class ImageIndex(ServerTestCase):
     conventionalCaptureImagesIndexURL = "/conventional/capture/images/0/"
     conventionalCaptureImagesFirstURL = "/conventional/capture/images/first/"
     conventionalCaptureImagesLastURL = "/conventional/capture/images/last/"
+    conventionalCaptureImagesErrorURL = "/conventional/capture/images/error/"
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
@@ -258,7 +259,11 @@ class ImageIndex(ServerTestCase):
         
         io.rmTree(CONVENTIONAL_DIR)
         
-    def test_05_delete(self):
+    def test_05_get_error(self):
+        self.getPage(self.conventionalCaptureImagesErrorURL)
+        self.assertStatus(404)
+        
+    def test_06_delete(self):
         self.getPage(self.conventionalCaptureImagesIndexURL, method="DELETE");
         self.assertStatus(204)
 
