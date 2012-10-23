@@ -15,6 +15,7 @@ from serverTestCase import ServerTestCase
 DATA_DIR = os.path.abspath("data")
 MOCK_DATA_DIR = os.path.abspath("mockData")
 CONVENTIONAL_DIR = os.path.join(DATA_DIR, "conventional")
+CAPTURES_DIR = os.path.join(CONVENTIONAL_DIR, "captures")
 
 CONFIG = {
     "global": {
@@ -182,9 +183,17 @@ class CaptureImages(ServerTestCase):
 
 class ImageIndex(ServerTestCase):
     conventionalCaptureImagesIndexURL = "/conventional/capture/images/0/"
+    conventionalCaptureImagesFirstURL = "/conventional/capture/images/first/"
+    conventionalCaptureImagesLastURL = "/conventional/capture/images/last/"
     
     setup_server = staticmethod(setup_server)
     teardown_server = staticmethod(teardown_server)
+    
+    def setUp(self):
+        io.makeDirs(CAPTURES_DIR)
+        
+    def tearDown(self):
+        io.rmTree(CAPTURES_DIR)
     
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.conventionalCaptureImagesIndexURL, ["POST", "PUT"])
@@ -198,10 +207,9 @@ class ImageIndex(ServerTestCase):
         
     def test_02_get(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        captureDir = os.path.join(CONVENTIONAL_DIR, "captures")
         images = image.findImages(imgDir)
         for one_image in images:
-            shutil.copy(one_image, captureDir)
+            shutil.copy(one_image, CAPTURES_DIR)
             
         self.getPage(self.conventionalCaptureImagesIndexURL);
         self.assertStatus(200)
@@ -214,7 +222,43 @@ class ImageIndex(ServerTestCase):
         
         io.rmTree(CONVENTIONAL_DIR)
         
-    def test_03_delete(self):
+    def test_03_get_first(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        images = image.findImages(imgDir)
+        
+        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-0_0.jpg"))
+        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-1_0.jpg"))
+            
+        self.getPage(self.conventionalCaptureImagesFirstURL);
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpg"\]}'
+            
+        regex = re.compile(regexPattern)
+        self.assertTrue(regex.findall(self.body))
+        
+        io.rmTree(CONVENTIONAL_DIR)
+        
+    def test_04_get_last(self):
+        imgDir = os.path.join(MOCK_DATA_DIR, "images")
+        images = image.findImages(imgDir)
+        
+        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-0_0.jpg"))
+        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-1_0.jpg"))
+            
+        self.getPage(self.conventionalCaptureImagesLastURL);
+        self.assertStatus(200)
+        self.assertHeader("Content-Type", "application/json", "Should return json content")
+
+        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-1_0.jpg"\]}'
+            
+        regex = re.compile(regexPattern)
+        self.assertTrue(regex.findall(self.body))
+        
+        io.rmTree(CONVENTIONAL_DIR)
+        
+    def test_05_delete(self):
         self.getPage(self.conventionalCaptureImagesIndexURL, method="DELETE");
         self.assertStatus(204)
 

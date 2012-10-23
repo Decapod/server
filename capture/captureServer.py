@@ -254,14 +254,21 @@ class ImageIndexController(object):
         self.imageIndex = imageIndex
     
     def GET(self, *args):
+        images = []
         if self.imageIndex.isdigit():
-            # Converts the image file paths to URLs
-            imageURLs = map(convertPathToURL, self.captureType.getImagesByIndex(self.imageIndex))
-            
-            server.setAttachmentResponseHeaders(cherrypy, "images.json", "application/json")
-            return json.dumps({"images": imageURLs})
+            images = self.captureType.getImagesByIndex(self.imageIndex)
+        elif self.imageIndex == "first":
+            images = self.captureType.getFirstImages()
+        elif self.imageIndex == "last": 
+            images = self.captureType.getFirstImages(reverse=True)
         else:
-            raise cherrypy.HTTPError(405)
+            raise cherrypy.HTTPError(404)
+        
+        # Converts the image file paths to URLs
+        imageURLs = map(convertPathToURL, images)
+        
+        server.setAttachmentResponseHeaders(cherrypy, "images.json", "application/json")
+        return json.dumps({"images": imageURLs})
     
     def DELETE(self, *args):
         if self.imageIndex.isdigit():

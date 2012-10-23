@@ -204,7 +204,7 @@ class TestCapture(unittest.TestCase):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
-        
+
         shutil.copy(images[0], os.path.join(captureDir, "capture-0_0.jpg"))
         shutil.copy(images[0], os.path.join(captureDir, "capture-0_1.jpg"))
         shutil.copy(images[0], os.path.join(captureDir, "capture-3_0.jpg"))
