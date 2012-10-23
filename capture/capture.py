@@ -51,15 +51,18 @@ class Capture(object):
         self.status = Status(FSStore(self.statusFilePath), {"index": 0, "totalCaptures": 0})  
         
     def getCamerasStatus(self):
-        numOfTrackedPorts = len(Capture.trackedCameraPorts)
+        numOfTrackedPorts = len(self.cameraController.getPorts())
         
         if numOfTrackedPorts == 0:
             return self.cameraController.generateCameraStatus("NO_CAMERAS")
         
-        missingPorts = list(set(self.cameraController.getPorts()) - set(Capture.trackedCameraPorts))
+        missingPorts = list(set(Capture.trackedCameraPorts) - set(self.cameraController.getPorts()))
         if missingPorts:
             return self.cameraController.generateCameraStatus("CAMERA_DISCONNECTED", numCamerasDisconnected=len(missingPorts))
-        
+        elif Capture.trackedCameraPorts != self.cameraController.getPorts():
+            # More cameras are connected, retrack
+            Capture.trackedCameraPorts = self.cameraController.getPorts()
+            
         try:
             summary = self.cameraController.getAllCamerasSummary()
         except Exception:
