@@ -102,7 +102,7 @@ class Capture(object):
                 captureIndex, cameraID = self.indices(fileName)
                 
                 if currentCaptureIndex is not captureIndex:
-                    currentCaptuerIndex = captureIndex
+                    currentCaptureIndex = captureIndex
                     position = position + 1
                     
                 arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=position, cameraID=cameraID) + os.path.splitext(fileName)[1]
