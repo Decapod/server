@@ -165,12 +165,14 @@ class TestCapture(unittest.TestCase):
         zip.close()
 
     def test_13_export_nonContinuousCaptures(self):
-        expectedFiles = ["capture-0_1.jpg", "capture-1_1.jpg"]
+        expectedFiles = ["capture-0_0.jpg", "capture-0_1.jpg", "capture-1_0.jpg", "capture-1_1.jpg"]
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
         captureDir = self.capture.captureDir
         images = utils.image.findImages(imgDir)
         
+        shutil.copy(images[0], os.path.join(captureDir, "capture-0_0.jpg"))
         shutil.copy(images[0], os.path.join(captureDir, "capture-0_1.jpg"))
+        shutil.copy(images[0], os.path.join(captureDir, "capture-3_0.jpg"))
         shutil.copy(images[0], os.path.join(captureDir, "capture-3_1.jpg"))
         
         zipPath = self.capture.export()
