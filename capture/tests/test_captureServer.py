@@ -223,47 +223,11 @@ class ImageIndex(ServerTestCase):
         
         io.rmTree(CONVENTIONAL_DIR)
         
-    def test_03_get_first(self):
-        imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        images = image.findImages(imgDir)
-        
-        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-0_0.jpg"))
-        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-1_0.jpg"))
-            
-        self.getPage(self.conventionalCaptureImagesFirstURL);
-        self.assertStatus(200)
-        self.assertHeader("Content-Type", "application/json", "Should return json content")
-
-        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_0.jpg"\]}'
-            
-        regex = re.compile(regexPattern)
-        self.assertTrue(regex.findall(self.body))
-        
-        io.rmTree(CONVENTIONAL_DIR)
-        
-    def test_04_get_last(self):
-        imgDir = os.path.join(MOCK_DATA_DIR, "images")
-        images = image.findImages(imgDir)
-        
-        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-0_0.jpg"))
-        shutil.copy(images[0], os.path.join(CAPTURES_DIR, "capture-1_0.jpg"))
-            
-        self.getPage(self.conventionalCaptureImagesLastURL);
-        self.assertStatus(200)
-        self.assertHeader("Content-Type", "application/json", "Should return json content")
-
-        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-1_0.jpg"\]}'
-            
-        regex = re.compile(regexPattern)
-        self.assertTrue(regex.findall(self.body))
-        
-        io.rmTree(CONVENTIONAL_DIR)
-        
-    def test_05_get_error(self):
+    def test_03_get_error(self):
         self.getPage(self.conventionalCaptureImagesErrorURL)
         self.assertStatus(404)
         
-    def test_06_delete(self):
+    def test_04_delete(self):
         self.getPage(self.conventionalCaptureImagesIndexURL, method="DELETE");
         self.assertStatus(204)
 

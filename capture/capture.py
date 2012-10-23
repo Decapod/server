@@ -123,21 +123,6 @@ class Capture(object):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         return image.findImages(self.captureDir, regexPattern)
     
-    def getFirstImages(self, reverse=False):
-        allImages = self.sort(reverse)
-        images = []
-        
-        if len(allImages):
-            index = self.indices(allImages[0])[0]
-            for imagePath in allImages:
-                imageIndex = self.indices(imagePath)[0]
-                if index == imageIndex:
-                    images.append(imagePath)
-                else:
-                    break
-
-        return images
-    
     def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
