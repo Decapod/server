@@ -11,7 +11,7 @@ from status import Status
 from store import FSStore
 from utils import io, image
 
-DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
+DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${index}_${cameraID}"
 
 class OutputPathError(Exception): pass
 class CaptureError(Exception): pass
@@ -74,14 +74,14 @@ class Capture(object):
         return self.cameraController.generateCameraStatus("READY")
     
     def indices(self, fileName):
-        pattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex="(?P<captureIndex>\d+?)", cameraID="(?P<cameraID>\d+?)")
+        pattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index="(?P<index>\d+?)", cameraID="(?P<cameraID>\d+?)")
         regex = re.compile(pattern)
         r = regex.search(fileName)
         group = r.groupdict()   
-        return int(group.get("captureIndex", 0)), int(group.get("cameraID", 0))
+        return int(group.get("index", 0)), int(group.get("cameraID", 0))
     
     def sort(self, reverse=False):
-        regexPattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(cameraID="\d*", captureIndex="\d*")
+        regexPattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(cameraID="\d*", index="\d*")
         return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices, reverse=reverse)
     
     def export(self):
@@ -94,7 +94,7 @@ class Capture(object):
         # Only create a new zip if one doesn't exist, or if there have been changes.
         if not os.path.exists(self.exportZipFilePath) or isStatusChanged:
             position = 0;
-            currentCaptureIndex = 0;
+            currentIndex = 0;
             currentDir = os.getcwd()
             os.chdir(self.captureDir)
             
@@ -102,13 +102,13 @@ class Capture(object):
         
             for imagePath in self.sort():
                 fileName = os.path.basename(imagePath)
-                captureIndex, cameraID = self.indices(fileName)
+                index, cameraID = self.indices(fileName)
                 
-                if currentCaptureIndex is not captureIndex:
-                    currentCaptureIndex = captureIndex
+                if currentIndex is not index:
+                    currentIndex = index
                     position = position + 1
                     
-                arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=position, cameraID=cameraID) + os.path.splitext(fileName)[1]
+                arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index=position, cameraID=cameraID) + os.path.splitext(fileName)[1]
                 zFile.write(fileName, arcName)
 
             
@@ -120,11 +120,11 @@ class Capture(object):
         return self.exportZipFilePath
     
     def getImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
-        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
+        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", index=index)
         return image.findImages(self.captureDir, regexPattern)
     
     def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
-        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
+        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", index=index)
         removedImages = image.removeImages(self.captureDir, regexPattern)
         self.status.update("totalCaptures", self.status.model["totalCaptures"] - 1)
         return removedImages
@@ -150,7 +150,7 @@ class Capture(object):
         # TODO: May want to define the template into config file
         try:
             nextIndex = self.status.model["index"] + 1
-            captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(captureIndex=nextIndex)
+            captureNameTemplate = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index=nextIndex)
         except self.cameraController.MultiCaptureError as e:
             raise CaptureError(e.message)
         

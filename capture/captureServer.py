@@ -209,7 +209,7 @@ class CaptureController(object):
         server.setAttachmentResponseHeaders(cherrypy, 'imageLocations.json', "application/json")
         cherrypy.response.status = 202
         
-        return json.dumps({"captureIndex": captureStatus["index"], "totalCaptures": captureStatus["totalCaptures"], "captures": captureURLs})
+        return json.dumps({"index": captureStatus["index"], "totalCaptures": captureStatus["totalCaptures"], "captures": captureURLs})
         
     def DELETE(self, *args, **kwargs):
         self.captureType.delete()
