@@ -167,6 +167,7 @@ class Capture(object):
         io.rmTree(self.typeDir)
         self.status.update("index", 0)
         self.status.update("totalCaptures", 0)
+        Capture.trackedCameraPorts = self.cameraController.getPorts()
 
     def getStatus(self):
         return self.status.model
