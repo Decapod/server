@@ -80,9 +80,9 @@ class Capture(object):
         group = r.groupdict()   
         return int(group.get("captureIndex", 0)), int(group.get("cameraID", 0))
     
-    def sort(self):
+    def sort(self, reverse=False):
         regexPattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(cameraID="\d*", captureIndex="\d*")
-        return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices)
+        return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices, reverse=reverse)
     
     def export(self):
         isStatusChanged = False;
@@ -122,6 +122,21 @@ class Capture(object):
     def getImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
         return image.findImages(self.captureDir, regexPattern)
+    
+    def getFirstImages(self, reverse=False):
+        allImages = self.sort(reverse)
+        images = []
+        
+        if len(allImages):
+            index = self.indices(allImages[0])[0]
+            for imagePath in allImages:
+                imageIndex = self.indices(imagePath)[0]
+                if index == imageIndex:
+                    images.append(imagePath)
+                else:
+                    break
+
+        return images
     
     def deleteImagesByIndex(self, index, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex=index)
