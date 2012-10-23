@@ -39,12 +39,12 @@ class TestCapture(unittest.TestCase):
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode]}
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
 
-        capture.Capture.trackedCameraPorts = []
-        eCode = "NO_CAMERAS"
+        capture.Capture.trackedCameraPorts = ["usb:001,002"]
+        eCode = "READY"
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode]}
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
         
-        capture.Capture.trackedCameraPorts = ["usb:001,002"]
+        capture.Capture.trackedCameraPorts = ["usb:001,002", "usb:001,003", "usb:001,004"]
         eCode = "CAMERA_DISCONNECTED"
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode], "numCamerasDisconnected": 1}
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
