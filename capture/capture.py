@@ -77,9 +77,9 @@ class Capture(object):
         group = r.groupdict()   
         return int(group.get("captureIndex", 0)), int(group.get("cameraID", 0))
     
-    def sort(self):
+    def sort(self, reverse=False):
         regexPattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(cameraID="\d*", captureIndex="\d*")
-        return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices)
+        return sorted(image.findImages(self.captureDir, regexPattern), key=self.indices, reverse=reverse)
     
     def export(self):
         isStatusChanged = False;
