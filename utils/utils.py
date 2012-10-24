@@ -233,7 +233,7 @@ class image:
                 if isImage and fitsPattern:     
                     imagePaths.append(filePath)
                     
-        return imagePaths 
+        return sorted(imagePaths)
     
     @staticmethod
     def removeImages(dir, regexPattern=None, formats=SUPPORTED_IMAGE_TYPES):

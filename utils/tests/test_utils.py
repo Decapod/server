@@ -178,11 +178,11 @@ class findImageTests(unittest.TestCase):
         
     def test_01_findImages(self):
         imgList = utils.image.findImages(self.imgDir)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         
     def test_02_findImages_parent(self):
         imgList = utils.image.findImages(TEST_DIR)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         
     def test_03_findImages_noImages(self):
         imgList = utils.image.findImages(FILES_DIR)
@@ -190,7 +190,7 @@ class findImageTests(unittest.TestCase):
     
     def test_04_findImages_noFormats(self):
         imgList = utils.image.findImages(self.imgDir, formats=None)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         
     def test_05_findImagesd_noImageInFormats(self):
         imgList = utils.image.findImages(self.imgDir, formats=["png"])
@@ -202,13 +202,13 @@ class findImageTests(unittest.TestCase):
         
     def test_07_removeImages(self):
         imgList = utils.image.removeImages(self.imgDir)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         self.assertFalse(os.path.exists(self.img1))
         self.assertFalse(os.path.exists(self.img2))
     
     def test_08_removeImages_parent(self):
         imgList = utils.image.removeImages(TEST_DIR)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         self.assertFalse(os.path.exists(self.img1))
         self.assertFalse(os.path.exists(self.img2))
         
@@ -223,7 +223,7 @@ class findImageTests(unittest.TestCase):
         
     def test_11_removeImages_noFormats(self):
         imgList = utils.image.removeImages(self.imgDir, formats=None)
-        self.assertListEqual([self.img2, self.img1], imgList)
+        self.assertListEqual([self.img1, self.img2], imgList)
         self.assertFalse(os.path.exists(self.img1))
         self.assertFalse(os.path.exists(self.img2))
         
