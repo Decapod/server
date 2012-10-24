@@ -216,7 +216,7 @@ class ImageIndex(ServerTestCase):
         self.assertStatus(200)
         self.assertHeader("Content-Type", "application/json", "Should return json content")
 
-        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_2.jpg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpg"\]}'
+        regexPattern = '{"images": \["http://127.0.0.1:\d*/data/conventional/captures/capture-0_1.jpg", "http://127.0.0.1:\d*/data/conventional/captures/capture-0_2.jpg"\]}'
             
         regex = re.compile(regexPattern)
         self.assertTrue(regex.findall(self.body))

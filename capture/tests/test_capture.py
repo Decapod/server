@@ -112,7 +112,7 @@ class TestCapture(unittest.TestCase):
         t1 = self.capture.getImagesByIndex("1", filenameTemplate="capture-${cameraID}_${index}")
         t2 = self.capture.getImagesByIndex("0")
         self.assertListEqual([img1], t1)
-        self.assertListEqual([img2, img1], t2)
+        self.assertListEqual([img1, img2], t2)
         
     def test_09_deleteImagesByIndex_last(self):
         imgDir = os.path.join(MOCK_DATA_DIR, "images")
