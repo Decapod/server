@@ -72,8 +72,10 @@ class Capture(object):
             return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS", cameras=summary)
     
         if numOfTrackedPorts == 2:
-            del(summary["cameras"][0]["port"])
-            del(summary["cameras"][1]["port"])
+            key_to_ignore = "port"
+            for one_summary in summary["cameras"]:
+                if key_to_ignore in one_summary:
+                    del(one_summary[key_to_ignore]) 
             
             if summary["cameras"][0] == summary["cameras"][1]:
                 return self.cameraController.generateCameraStatus("READY_FOR_STEREO")
