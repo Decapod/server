@@ -35,15 +35,10 @@ class TestCapture(unittest.TestCase):
         self.assertTrue(os.path.exists(CONVENTIONAL_DIR), "The 'conventional' directory (at path: {0}) should currently exist".format(CONVENTIONAL_DIR))
 
     def test_02_getCamerasStatus(self):
-        eCode = "READY"
+        eCode = "READY_FOR_STEREO"
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode]}
         self.assertDictEqual(self.capture.getCamerasStatus(), expected)
 
-        capture.Capture.trackedCameraPorts = ["usb:001,002"]
-        eCode = "READY"
-        expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode]}
-        self.assertDictEqual(self.capture.getCamerasStatus(), expected)
-        
         capture.Capture.trackedCameraPorts = ["usb:001,002", "usb:001,003", "usb:001,004"]
         eCode = "CAMERA_DISCONNECTED"
         expected = {"statusCode": eCode, "message": cameraInterface.CAMERA_STATUS[eCode], "numCamerasDisconnected": 1}

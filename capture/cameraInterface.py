@@ -27,7 +27,8 @@ CAMERA_STATUS = {
     "CAMERA_DISCONNECTED": "A Camera has been disconnected",
     "NO_CAPTURE": "Could not capture an image",
     "TOO_MANY_CAMERAS": "Too many cameras detected",
-    "READY": "Ready"
+    "READY_FOR_CONVENTIONAL": "Ready for conventional captures",
+    "READY_FOR_STEREO": "Ready for stereo captures"
 }
 
 '''

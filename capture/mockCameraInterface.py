@@ -61,7 +61,15 @@ def getCameraSummaryByPort(port):
     return summary
 
 def getAllCamerasSummary():
-    return cameraInterface.getAllCamerasSummary()
+    allInfo = {}
+    allInfo['cameras'] = []
+    
+    connectedCameras = detectCameras()
+    
+    for camera in connectedCameras:
+        allInfo['cameras'].append(getCameraSummaryByPort(camera.get('port')))
+    
+    return allInfo
 
 def capture(port, filename, dir="images"):
     if (isPortValid(port)):
