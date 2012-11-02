@@ -71,7 +71,14 @@ class Capture(object):
         if numOfTrackedPorts > 2:
             return self.cameraController.generateCameraStatus("TOO_MANY_CAMERAS", cameras=summary)
     
-        return self.cameraController.generateCameraStatus("READY")
+        if numOfTrackedPorts == 2:
+            del(summary["cameras"][0]["port"])
+            del(summary["cameras"][1]["port"])
+            
+            if summary["cameras"][0] == summary["cameras"][1]:
+                return self.cameraController.generateCameraStatus("READY_FOR_STEREO")
+        
+        return self.cameraController.generateCameraStatus("READY_FOR_CONVENTIONAL")
     
     def indices(self, fileName):
         pattern = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index="(?P<index>\d+?)", cameraID="(?P<cameraID>\d+?)")
