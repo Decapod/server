@@ -1,6 +1,5 @@
 import os
 import sys
-import re
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import dewarpInterface
