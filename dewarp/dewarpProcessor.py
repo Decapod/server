@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-from string import Template
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import dewarpInterface
@@ -50,7 +49,7 @@ class DewarpProcessor(object):
         if not os.path.exists(self.calibrationDir):
             return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory does not exist.")
 
-        matched, unmatched = self.findPairs(self.unpackedDir, filenameTemplate)
+        matched, unmatched = utils.image.findImagePairs(self.unpackedDir, filenameTemplate)
         
         if unmatched:
             return self.constructErrorStatus("UnmatchedPairs", map(os.path.basename, unmatched))
@@ -159,7 +158,7 @@ class DewarpProcessor(object):
         if not os.path.exists(unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(unpackedDir)
         
-        matched, unmatched = self.findPairs(unpackedDir, filenameTemplate)
+        matched, unmatched = utils.image.findImagePairs(unpackedDir, filenameTemplate)
         
         if matched:
             if not os.path.exists(dewarpedDir):
@@ -176,40 +175,6 @@ class DewarpProcessor(object):
                 self.status.update("currentCapture", captureIndex)
     
         return True
-    
-    def findPairs(self, unpackedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
-        unmatched = []
-        matched = []
-        
-        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="\d*")
-        allImages = utils.image.findImages(unpackedDir, regexPattern, False)
-        
-        sortedAllImages = sorted(allImages)
-        
-        # find the maximum captureIndex
-        while len(sortedAllImages) > 0:
-            currentImg = sortedAllImages.pop(0)
-            
-            imgPrefix, theRest = currentImg.split("_")
-            
-            if imgPrefix and theRest:
-                imgMatchPattern = "^" + imgPrefix
-                regex = re.compile(imgMatchPattern)
-                
-                numOfImages = len(sortedAllImages)
-                
-                if numOfImages > 0 and regex.findall(sortedAllImages[0]):
-                    pairImg = sortedAllImages[0]
-                
-                    # Toss out the pair image to prevent the further comparison
-                    sortedAllImages.pop(0)
-                    matched.append((currentImg, pairImg))
-                else:
-                    unmatched.append(currentImg)
-            else:
-                unmatched.append(currentImg)
-                
-        return matched, unmatched
     
     def constructErrorStatus(self, errorCode, msg):
         return {"ERROR_CODE": errorCode, "msg": msg}
