@@ -99,7 +99,7 @@ class DewarpProcessor(object):
         fileType = utils.io.getFileType(file)
         
         if fileType != "zip":
-            return self.constructErrorStatus("BadZip", "The zip file is invalid.")
+            return self.constructErrorStatus("BAD_ZIP", "The zip file is invalid.")
         
         name = file.filename if file.filename else utils.io.generateFileName(suffix=fileType)
         zipfilePath = os.path.join(self.dataDir, file.filename)
@@ -109,7 +109,7 @@ class DewarpProcessor(object):
             utils.io.unzip(zipfilePath, self.unpackedDir)
         except Exception:
             utils.io.rmFile(zipfilePath)
-            return self.constructErrorStatus("BadZip", "The zip file is invalid.")
+            return self.constructErrorStatus("BAD_ZIP", "The zip file is invalid.")
         
         utils.io.rmFile(zipfilePath)
         return self.getCapturesStatus(filenameTemplate)

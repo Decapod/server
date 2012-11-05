@@ -120,7 +120,7 @@ class TestDewarpProcessor(unittest.TestCase):
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), origFilePath)
         testFile = mockClasses.mockFileStream(origFilePath)
         status = self.dewarpProcessor.unzip(os.path.join(testFile))
-        self.assertEqual(status["ERROR_CODE"], "BadZip")
+        self.assertEqual(status["ERROR_CODE"], "BAD_ZIP")
 
     def prepareDewarp(self):
         io.makeDirs(self.dewarpProcessor.unpackedDir)
