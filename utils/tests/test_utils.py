@@ -231,6 +231,15 @@ class findImageTests(unittest.TestCase):
         imgList = utils.image.removeImages(self.imgDir, formats=["png"])
         self.assertListEqual([], imgList)
         
+    def test_13_findImagePairs(self):
+        shutil.copy(os.path.join(IMG_DIR, self.imgName1), os.path.join(self.imgDir, "capture-0_1.jpg"))
+        shutil.copy(os.path.join(IMG_DIR, self.imgName2), os.path.join(self.imgDir, "capture-0_2.jpg"))
+        shutil.copy(os.path.join(IMG_DIR, self.imgName1), os.path.join(self.imgDir, "capture-1_1.jpg"))
+
+        matched, unmatched = utils.image.findImagePairs(self.imgDir, "capture-${captureIndex}_${cameraID}")
+        self.assertEqual(matched, [(os.path.join(self.imgDir, "capture-0_1.jpg"), os.path.join(self.imgDir, "capture-0_2.jpg"))])
+        self.assertEqual(unmatched, [os.path.join(self.imgDir, "capture-1_1.jpg")])
+
 class DictTests(unittest.TestCase):
     
     def test_01_rekey(self):

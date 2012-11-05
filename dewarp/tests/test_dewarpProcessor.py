@@ -122,16 +122,6 @@ class TestDewarpProcessor(unittest.TestCase):
         status = self.dewarpProcessor.unzip(os.path.join(testFile))
         self.assertEqual(status["ERROR_CODE"], "BadZip")
 
-    def test_13_findPairs(self):
-        # Test unmatched paris error
-        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), os.path.join(DATA_DIR, "capture-0_1.jpg"))
-        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_2.jpg"), os.path.join(DATA_DIR, "capture-0_2.jpg"))
-        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), os.path.join(DATA_DIR, "capture-1_1.jpg"))
-        
-        matched, unmatched = self.dewarpProcessor.findPairs(DATA_DIR)
-        self.assertEqual(matched, [(os.path.join(DATA_DIR, "capture-0_1.jpg"), os.path.join(DATA_DIR, "capture-0_2.jpg"))])
-        self.assertEqual(unmatched, [os.path.join(DATA_DIR, "capture-1_1.jpg")])
-
     def prepareDewarp(self):
         io.makeDirs(self.dewarpProcessor.unpackedDir)
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), os.path.join(self.dewarpProcessor.unpackedDir, "capture-0_1.jpg"))
@@ -140,25 +130,25 @@ class TestDewarpProcessor(unittest.TestCase):
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
         
-    def test_14_dewarpImp_exceptions(self):
+    def test_13_dewarpImp_exceptions(self):
         self.assertRaises(dewarpProcessor.UnpackedDirNotExistError, self.dewarpProcessor.dewarpImp, "mock1", "mock2")
 
-    def test_15_dewarpImp(self):
+    def test_14_dewarpImp(self):
         self.prepareDewarp()
         self.assertTrue(self.dewarpProcessor.dewarpImp(self.dewarpProcessor.unpackedDir, self.dewarpProcessor.dewarpedDir))
         self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))
         self.assertDictEqual(self.dewarpProcessor.getStatus(), {'currentCapture': 1, 'percentage': 100, 'status': 'ready'})
 
-    def test_16_dewarp_inProgress(self):
+    def test_15_dewarp_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.dewarp)
 
-    def test_17_dewarp_exception(self):
+    def test_16_dewarp_exception(self):
         self.assertRaises(dewarpProcessor.DewarpError, self.dewarpProcessor.dewarp)
         self.assertFalse(os.path.exists(self.dewarpProcessor.dewarpedDir))
         self.assertDictEqual(self.status_error, self.dewarpProcessor.status.model)
 
-    def test_18_dewarp(self):
+    def test_17_dewarp(self):
         self.prepareDewarp()
         self.dewarpProcessor.dewarp()
         self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))

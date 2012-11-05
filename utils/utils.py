@@ -1,5 +1,6 @@
 import os
 import re
+from string import Template
 import imghdr
 import shutil
 import subprocess
@@ -268,6 +269,46 @@ class image:
         os.rename(filePath, newName)
         return newName
      
+    @staticmethod
+    def findImagePairs(unpackedDir, filenameTemplate):
+        '''
+        Finds the image pairs in the given directory by using the provided file name template.
+        Returns 2 lists. One contains all the matched pairs and the other one contains all the images
+        that have no match.
+        '''
+        unmatched = []
+        matched = []
+        
+        regexPattern = Template(filenameTemplate).safe_substitute(cameraID="\d*", captureIndex="\d*")
+        allImages = image.findImages(unpackedDir, regexPattern, False)
+        
+        sortedAllImages = sorted(allImages)
+        
+        # find the maximum captureIndex
+        while len(sortedAllImages) > 0:
+            currentImg = sortedAllImages.pop(0)
+            
+            imgPrefix, theRest = currentImg.split("_")
+            
+            if imgPrefix and theRest:
+                imgMatchPattern = "^" + imgPrefix
+                regex = re.compile(imgMatchPattern)
+                
+                numOfImages = len(sortedAllImages)
+                
+                if numOfImages > 0 and regex.findall(sortedAllImages[0]):
+                    pairImg = sortedAllImages[0]
+                
+                    # Toss out the pair image to prevent the further comparison
+                    sortedAllImages.pop(0)
+                    matched.append((currentImg, pairImg))
+                else:
+                    unmatched.append(currentImg)
+            else:
+                unmatched.append(currentImg)
+                
+        return matched, unmatched
+    
 class translate:
     
     @staticmethod
