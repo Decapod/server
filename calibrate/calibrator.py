@@ -71,6 +71,7 @@ class Calibrator(object):
             raise CalibrateInProgressError, "Calibration in progress, cannot delete until this process has finished"
         else:
             utils.io.rmTree(self.calibrationDir)
+            utils.io.rmFile(self.export)
             self.status.update("status", CALIBRATE_READY)
 
     def deleteUpload(self):
