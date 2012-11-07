@@ -100,15 +100,15 @@ class TestDewarpArchive(ServerTestCase):
     def test_02__get(self):
         self.getPage(self.url)
         self.assertStatus(200)
-        self.assertDictEqual({"status": dewarpProcessor.EXPORT_READY}, json.loads(self.body))
+        self.assertDictEqual({"status": dewarpProcessor.DEWARP_READY}, json.loads(self.body))
         
     def test_03__get_complete(self):
-        expected = {"status": dewarpProcessor.EXPORT_COMPLETE}
+        expected = {"status": dewarpProcessor.DEWARP_COMPLETE}
         io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url)
         self.assertStatus(200)
         body = json.loads(self.body)
-        self.assertEquals(dewarpProcessor.EXPORT_COMPLETE, body["status"])
+        self.assertEquals(dewarpProcessor.DEWARP_COMPLETE, body["status"])
         
         regexPattern = "http://127.0.0.1:\d*/data/export.zip"           
         regex = re.compile(regexPattern)
@@ -119,7 +119,7 @@ class TestDewarpArchive(ServerTestCase):
         self.assertStatus(204)
 
     def test_05_delete_error(self):
-        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
+        io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
 
@@ -164,7 +164,7 @@ class TestCaptures(ServerTestCase):
         unpackedDir = os.path.join(DATA_DIR, "unpacked")
         calibrationDir = os.path.join(unpackedDir, "calibration")
         io.makeDirs(calibrationDir)
-        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
+        io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
         self.assertInBody("Dewarping in progress, cannot delete until this process has finished")
@@ -177,7 +177,7 @@ class TestCaptures(ServerTestCase):
         self.assertDictEqual({"numOfCaptures": 0}, json.loads(self.body))
         
     def tests_08_put_inProgress(self):
-        io.writeToJSONFile({"status": dewarpProcessor.EXPORT_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
+        io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"), method="PUT")
         self.assertStatus(409)
         self.assertInBody("Dewarping currently in progress, cannot accept another zip until this process has finished")
