@@ -85,11 +85,16 @@ class TestDewarpProcessor(unittest.TestCase):
         self.assertFalse(self.dewarpProcessor.isInState("test"))
     
     def test_07_delete(self):
+        io.makeDirs(self.dewarpProcessor.dewarpedDir)
+        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), self.dewarpProcessor.export)
         self.dewarpProcessor.status.update("status", "complete")
+
+        self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))
+        self.assertTrue(os.path.exists(self.dewarpProcessor.export))
+
         self.dewarpProcessor.delete()
         self.assertTrue(os.path.exists(self.dewarpProcessor.dataDir))
         self.assertTrue(os.path.exists(self.dewarpProcessor.statusFilePath))
-        self.assertFalse(os.path.exists(self.dewarpProcessor.unpackedDir))
         self.assertFalse(os.path.exists(self.dewarpProcessor.dewarpedDir))
         self.assertFalse(os.path.exists(self.dewarpProcessor.export))
         self.assertDictEqual(self.status_ready, self.dewarpProcessor.status.model)

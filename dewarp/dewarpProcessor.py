@@ -9,10 +9,10 @@ from status import Status
 from store import FSStore
 
 #constants for statuses
-EXPORT_IN_PROGRESS = "in progress"
-EXPORT_COMPLETE = "complete"
-EXPORT_READY = "ready"
-EXPORT_ERROR = "error"
+DEWARP_IN_PROGRESS = "in progress"
+DEWARP_COMPLETE = "complete"
+DEWARP_READY = "ready"
+DEWARP_ERROR = "error"
 
 DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
 
@@ -33,12 +33,12 @@ class DewarpProcessor(object):
         self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
 
         utils.io.makeDirs(self.dataDir)
-        self.status = Status(FSStore(self.statusFilePath), {"status": EXPORT_READY})  
+        self.status = Status(FSStore(self.statusFilePath), {"status": DEWARP_READY})  
 
     def isInState(self, state):
         return self.status.model["status"] == state
 
-    def getStatus(self):        
+    def getStatus(self):
         return self.status.model
     
     def getCapturesStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
@@ -63,11 +63,12 @@ class DewarpProcessor(object):
         ==========
         DewarpInProgressError: if dewarping is currently in progress
         '''
-        if self.isInState(EXPORT_IN_PROGRESS):
+        if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping in progress, cannot delete until this process has finished"
         else:
             utils.io.rmTree(self.dewarpedDir)
-            self.status.update("status", EXPORT_READY)
+            utils.io.rmFile(self.export)
+            self.status.update("status", DEWARP_READY)
             self.status.remove("percentage")
             self.status.remove("currentCapture")
 
@@ -79,7 +80,7 @@ class DewarpProcessor(object):
         ==========
         DewarpInProgressError: if dewarping is currently in progress
         '''
-        if self.isInState(EXPORT_IN_PROGRESS):
+        if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping in progress, cannot delete until this process has finished"
         else:
             utils.io.rmTree(self.unpackedDir)
@@ -93,7 +94,7 @@ class DewarpProcessor(object):
         DewarpInProgressError: if dewarping is currently in progress
         '''
         
-        if self.isInState(EXPORT_IN_PROGRESS):
+        if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         
         fileType = utils.io.getFileType(file)
@@ -116,8 +117,8 @@ class DewarpProcessor(object):
         
     def dewarp(self):
         '''
-        Generates the pdf export.
-        If an exception is raised from the genPDF subprocess the status will be set to EXPORT_ERROR
+        Dewarps and Generates the export of the dewarped images.
+        If an exception is raised from the dewarp process the status will be set to DEWARP_ERROR
         
         Exceptions
         ==========
@@ -125,22 +126,28 @@ class DewarpProcessor(object):
         DewarpError: if unable to complete dewarping 
         '''
         
-        if self.isInState(EXPORT_IN_PROGRESS):
+        if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         else:
             # perform dewarp, update status including percentage complete
-            self.status.update("status", EXPORT_IN_PROGRESS)
+            self.status.update("status", DEWARP_IN_PROGRESS)
             try:
                 self.dewarpImp(self.unpackedDir, self.dewarpedDir)
             except Exception as e:
-                self.status.update("status", EXPORT_ERROR)
+                self.status.update("status", DEWARP_ERROR)
                 self.status.remove("percentage")
                 self.status.remove("currentCapture")
                 utils.io.rmTree(self.dewarpedDir)
                 
                 raise DewarpError, e.message
             
-            self.status.update("status", EXPORT_COMPLETE)
+            currentDir = os.getcwd()
+            os.chdir(self.dewarpedDir)
+            
+            utils.io.zip(".", self.export)
+            os.chdir(currentDir)
+            
+            self.status.update("status", DEWARP_COMPLETE)
     
     def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         '''
