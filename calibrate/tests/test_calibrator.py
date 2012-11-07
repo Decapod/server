@@ -95,11 +95,16 @@ class TestCalibrateProcessor(unittest.TestCase):
         self.assertFalse(self.calibrator.isInState("test"))
     
     def test_07_delete(self):
+        shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), self.calibrator.export)
+        io.makeDirs(self.calibrator.calibrationDir)
         self.calibrator.status.update("status", "complete")
+        
+        self.assertTrue(os.path.exists(self.calibrator.calibrationDir))
+        self.assertTrue(os.path.exists(self.calibrator.export))
+
         self.calibrator.delete()
         self.assertTrue(os.path.exists(self.calibrator.dataDir))
         self.assertTrue(os.path.exists(self.calibrator.statusFilePath))
-        self.assertFalse(os.path.exists(self.calibrator.unpackedDir))
         self.assertFalse(os.path.exists(self.calibrator.calibrationDir))
         self.assertFalse(os.path.exists(self.calibrator.export))
         self.assertDictEqual(self.status_ready, self.calibrator.status.model)
