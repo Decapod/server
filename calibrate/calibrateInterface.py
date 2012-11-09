@@ -17,7 +17,7 @@ def calibrate(imagePath, calibratePath):
     
     # Invokes the calibration command
     # TODO: Need to update the path when the location of calibrate.py is determined
-    executable = os.path.join("..", "..", "..", "..", "..", "decapod-dewarping", "calibrate.py")
+    executable = os.path.join("..", "..", "..", "..", "decapod-dewarping", "calibrate.py")
     cmd = [executable, imagePath, CHESSBOARD_WIDTH, CHESSBOARD_HEIGHT, calibratePath]
     utils.io.invokeCommandSync(cmd, None, None, False)
     
