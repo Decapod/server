@@ -16,7 +16,7 @@ MOCK_DATA_DIR = os.path.abspath("mockData/")
 
 class TestDewarpProcessor(unittest.TestCase):
 
-    status_complete = {"status": "complete", "percentage": 100, "currentCapture": 1}
+    status_complete = {"status": "complete"}
     status_inProgress = {"status": "in progress", "percentage": 0, "currentCapture": 0}
     status_ready = {"status": "ready"}
     status_error = {"status": "error"}
@@ -142,7 +142,7 @@ class TestDewarpProcessor(unittest.TestCase):
         self.prepareDewarp()
         self.assertTrue(self.dewarpProcessor.dewarpImp(self.dewarpProcessor.unpackedDir, self.dewarpProcessor.dewarpedDir))
         self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))
-        self.assertDictEqual(self.dewarpProcessor.getStatus(), {'currentCapture': 1, 'percentage': 100, 'status': 'ready'})
+        self.assertDictEqual(self.dewarpProcessor.getStatus(), {'currentCapture': 1, 'numOfCaptures': 1, 'status': 'ready'})
 
     def test_15_dewarp_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
