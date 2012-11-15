@@ -4,8 +4,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import utils
 
-CHESSBOARD_WIDTH = 9
-CHESSBOARD_HEIGHT = 6
+CHESSBOARD_WIDTH = "9"
+CHESSBOARD_HEIGHT = "6"
 
 # Exception classes
 class CalibrateError(Exception): pass
@@ -19,6 +19,6 @@ def calibrate(imagePath, calibratePath):
     # TODO: Need to update the path when the location of calibrate.py is determined
     executable = os.path.join("..", "..", "..", "..", "decapod-dewarping", "calibrate.py")
     cmd = [executable, imagePath, CHESSBOARD_WIDTH, CHESSBOARD_HEIGHT, calibratePath]
-    utils.io.invokeCommandSync(cmd, None, None, False)
+    utils.io.invokeCommandSync(cmd, CalibrateError, "An error occured while creating the calibration data.")
     
     os.chdir(currentDir)
