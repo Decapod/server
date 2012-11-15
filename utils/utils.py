@@ -204,6 +204,7 @@ class io:
             if proc.returncode != 0:
                 raise error, message
             
+            print "Output: {0}".format(output)
             return output
     
 class image:
