@@ -69,7 +69,7 @@ class DewarpProcessor(object):
             utils.io.rmTree(self.dewarpedDir)
             utils.io.rmFile(self.export)
             self.status.update("status", DEWARP_READY)
-            self.status.remove("percentage")
+            self.status.remove("numOfCaptures")
             self.status.remove("currentCapture")
 
     def deleteUpload(self):
@@ -129,13 +129,13 @@ class DewarpProcessor(object):
         if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         else:
-            # perform dewarp, update status including percentage complete
+            # perform dewarp, update status including the current capture that's being processed
             self.status.update("status", DEWARP_IN_PROGRESS)
             try:
                 self.dewarpImp(self.unpackedDir, self.dewarpedDir)
             except Exception as e:
                 self.status.update("status", DEWARP_ERROR)
-                self.status.remove("percentage")
+                self.status.remove("numOfCaptures")
                 self.status.remove("currentCapture")
                 utils.io.rmTree(self.dewarpedDir)
                 
@@ -147,6 +147,8 @@ class DewarpProcessor(object):
             utils.io.zip(".", self.export)
             os.chdir(currentDir)
             
+            self.status.remove("numOfCaptures")
+            self.status.remove("currentCapture")
             self.status.update("status", DEWARP_COMPLETE)
     
     def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
@@ -170,14 +172,13 @@ class DewarpProcessor(object):
             if not os.path.exists(dewarpedDir):
                 os.mkdir(dewarpedDir)
                 
-            self.status.update("percentage", 0)
-            self.status.update("currentCapture", 0)
             numOfMatches = len(matched)
+            self.status.update("numOfCaptures", numOfMatches)
+            self.status.update("currentCapture", 0)
             
             for index, (img1, img2) in enumerate(matched):
                 captureIndex = index + 1
                 self.dewarpController.dewarpPair(self.calibrationDir, dewarpedDir, img1, img2)
-                self.status.update("percentage", int(captureIndex/numOfMatches*100))
                 self.status.update("currentCapture", captureIndex)
     
         return True
