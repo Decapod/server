@@ -95,7 +95,7 @@ class CalibrateServer(object):
 
 class ImagesController(object):
     '''
-    Handler for the /captures resource
+    Handler for the /images resource
     '''
     
     exposed = True
