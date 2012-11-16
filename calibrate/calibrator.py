@@ -151,9 +151,9 @@ class Calibrator(object):
                 raise CalibrateError, e.message
             
             currentDir = os.getcwd()
-            os.chdir(self.dataDir)
+            os.chdir(self.calibrationDir)
             
-            utils.io.zip("calibration", self.export)
+            utils.io.zip(".", self.export)
             os.chdir(currentDir)
             
             self.status.update("status", CALIBRATE_COMPLETE)
