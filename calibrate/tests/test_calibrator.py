@@ -130,7 +130,6 @@ class TestCalibrateProcessor(unittest.TestCase):
         self.assertRaises(calibrator.CalibrateInProgressError, self.calibrator.unzip, "mock")
         
     def test_12_unzip_badZip(self):
-        io.makeDirs(self.calibrator.unpackedDir)
         origFilePath = os.path.join(self.calibrator.dataDir, "capture-0_1.jpg")
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), origFilePath)
         testFile = mockClasses.mockFileStream(origFilePath)

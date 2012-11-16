@@ -104,7 +104,8 @@ class Calibrator(object):
         if fileType != "zip":
             return self.constructErrorStatus("BAD_ZIP", "The zip file is invalid.")
         
-        utils.io.rmTree(self.unpackedDir)
+        self.deleteUpload()
+        self.delete()
         
         name = file.filename if file.filename else utils.io.generateFileName(suffix=fileType)
         zipfilePath = os.path.join(self.dataDir, file.filename)
