@@ -20,6 +20,7 @@ DEFAULT_CAPTURE_NAME_TEMPLATE = "capture-${captureIndex}_${cameraID}"
 class DewarpError(Exception): pass
 class DewarpInProgressError(Exception): pass
 class UnpackedDirNotExistError(Exception): pass
+class CalibrationDirNotExistError(Exception): pass
 
 class DewarpProcessor(object):
     
@@ -27,7 +28,7 @@ class DewarpProcessor(object):
         self.dataDir = dataDir
         self.unpackedDir = os.path.join(self.dataDir, "unpacked")
         self.dewarpedDir = os.path.join(self.dataDir, "dewarped")
-        self.calibrationDir = os.path.join(self.unpackedDir, "calibration")
+        self.calibrationDir = os.path.join(self.dataDir, "calibration")
         self.export = os.path.join(self.dataDir, "export.zip")
         self.statusFilePath = statusFile
         self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
@@ -41,13 +42,14 @@ class DewarpProcessor(object):
     def getStatus(self):
         return self.status.model
     
+    def getCalibrationStatus(self):
+        if not os.path.exists(self.calibrationDir):
+            raise CalibrationDirNotExistError, "The directory \"{0}\" for the calibration zip does not exist.".format(self.calibrationDir)
+    
     def getCapturesStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         if not os.path.exists(self.unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(self.unpackedDir)
         
-        if not os.path.exists(self.calibrationDir):
-            return self.constructErrorStatus("CalibrationDirNotExist", "The calibration directory does not exist.")
-
         matched, unmatched = utils.image.findImagePairs(self.unpackedDir, filenameTemplate)
         
         if unmatched:
@@ -57,7 +59,7 @@ class DewarpProcessor(object):
     
     def delete(self):
         '''
-        Removes the export artifacts.
+        Removes the generated dewarped data and export artifacts.
         
         Exceptions
         ==========
@@ -72,9 +74,22 @@ class DewarpProcessor(object):
             self.status.remove("numOfCaptures")
             self.status.remove("currentCapture")
 
-    def deleteUpload(self):
+    def deleteCalibrationUpload(self):
         '''
-        Removes the export artifacts.
+        Removes the uploaded calibration data.
+        
+        Exceptions
+        ==========
+        DewarpInProgressError: if dewarping is currently in progress
+        '''
+        if self.isInState(DEWARP_IN_PROGRESS):
+            raise DewarpInProgressError, "Dewarping in progress, cannot delete until this process has finished"
+        else:
+            utils.io.rmTree(self.calibrationDir)
+
+    def deleteCapturesUpload(self):
+        '''
+        Removes the uploaded captures.
         
         Exceptions
         ==========
@@ -85,9 +100,9 @@ class DewarpProcessor(object):
         else:
             utils.io.rmTree(self.unpackedDir)
 
-    def unzip(self, file, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+    def unzipCalibration(self, file):
         '''
-        Unzips the uploaded archive and returns a dict of status.
+        Unzips the uploaded calibration archive.
         
         Exceptions
         ==========
@@ -97,26 +112,52 @@ class DewarpProcessor(object):
         if self.isInState(DEWARP_IN_PROGRESS):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         
+        self.deleteCalibrationUpload()
+        self.deleteCapturesUpload()
+        self.delete()
+        
+        self.unzip(file, self.calibrationDir)
+        return self.getCalibrationStatus()
+    
+    def unzipCaptures(self, file, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+        '''
+        Unzips the uploaded captures archive.
+        
+        Exceptions
+        ==========
+        DewarpInProgressError: if dewarping is currently in progress
+        '''
+        
+        if self.isInState(DEWARP_IN_PROGRESS):
+            raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
+        
+        self.deleteCapturesUpload()
+        self.delete()
+        
+        self.unzip(file, self.unpackedDir)
+        return self.getCapturesStatus(filenameTemplate)
+    
+    def unzip(self, file, outputDir):
+        '''
+        Unzips the uploaded archive.
+        '''
+        
         fileType = utils.io.getFileType(file)
         
         if fileType != "zip":
             return self.constructErrorStatus("BAD_ZIP", "The zip file is invalid.")
-        
-        self.deleteUpload()
-        self.delete()
         
         name = file.filename if file.filename else utils.io.generateFileName(suffix=fileType)
         zipfilePath = os.path.join(self.dataDir, file.filename)
         utils.io.writeStreamToFile(file, zipfilePath)
             
         try:
-            utils.io.unzip(zipfilePath, self.unpackedDir)
+            utils.io.unzip(zipfilePath, outputDir)
         except Exception:
             utils.io.rmFile(zipfilePath)
             return self.constructErrorStatus("BAD_ZIP", "The zip file is invalid.")
         
         utils.io.rmFile(zipfilePath)
-        return self.getCapturesStatus(filenameTemplate)
         
     def dewarp(self):
         '''
@@ -135,7 +176,7 @@ class DewarpProcessor(object):
             # perform dewarp, update status including the current capture that's being processed
             self.status.update("status", DEWARP_IN_PROGRESS)
             try:
-                self.dewarpImp(self.unpackedDir, self.dewarpedDir)
+                self.dewarpImp(self.calibrationDir, self.unpackedDir, self.dewarpedDir)
             except Exception as e:
                 self.status.update("status", DEWARP_ERROR)
                 self.status.remove("numOfCaptures")
@@ -154,7 +195,7 @@ class DewarpProcessor(object):
             self.status.remove("currentCapture")
             self.status.update("status", DEWARP_COMPLETE)
     
-    def dewarpImp(self, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
+    def dewarpImp(self, calibrationDir, unpackedDir, dewarpedDir, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         '''
         Dewarps the paired images in the from directory "unpackedDir" and output to "dewarpedDir"
         
@@ -164,7 +205,11 @@ class DewarpProcessor(object):
         Exceptions:
         ==========
         UnpackedDirNotExistError: If the directory for the unpacked dewarping zip does not exist
+        CalibrationDirNotExistError: If the directory for the unpacked dewarping zip does not exist
         '''
+        
+        if not os.path.exists(calibrationDir):
+            raise CalibrationDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(calibrationDir)
         
         if not os.path.exists(unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(unpackedDir)
@@ -181,7 +226,7 @@ class DewarpProcessor(object):
             
             for index, (img1, img2) in enumerate(matched):
                 captureIndex = index + 1
-                self.dewarpController.dewarpPair(self.calibrationDir, dewarpedDir, img1, img2)
+                self.dewarpController.dewarpPair(calibrationDir, dewarpedDir, img1, img2)
                 self.status.update("currentCapture", captureIndex)
     
         return True
