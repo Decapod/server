@@ -85,6 +85,7 @@ class DewarpServer(object):
 
         self.paths = {
             "captures": CapturesController(self.dewarpProcessor),
+            "calibration": CalibrationController(self.dewarpProcessor),
             "dewarpedArchive": DewarpedArchiveController(self.dewarpProcessor)
         }
 
@@ -117,7 +118,7 @@ class CapturesController(object):
     
     def PUT(self, *args, **kwargs):
         try:
-            status = self.dewarpProcessor.unzip(kwargs["file"])
+            status = self.dewarpProcessor.unzipCaptures(kwargs["file"])
         except dewarpProcessor.DewarpInProgressError as e:
             raise cherrypy.HTTPError(409, e.message)
         
@@ -129,7 +130,47 @@ class CapturesController(object):
 
     def DELETE(self):
         try:
-            self.dewarpProcessor.deleteUpload()
+            self.dewarpProcessor.deleteCapturesUpload()
+        except dewarpProcessor.DewarpInProgressError as e:
+            raise cherrypy.HTTPError(409, e.message)
+        
+        cherrypy.response.status = 204
+        
+class CalibrationController(object):
+    '''
+    Handler for the /calibration resource
+    '''
+    
+    exposed = True
+    
+    def __init__(self, dewarpProcessor):
+        self.dewarpProcessor = dewarpProcessor
+        
+    def GET(self):
+        try:
+            status = self.dewarpProcessor.getCalibrationStatus()
+        except dewarpProcessor.CalibrationDirNotExistError as e:
+            raise cherrypy.HTTPError(404)
+        
+        if status is not None and status.get("ERROR_CODE"):
+            cherrypy.response.status = 500
+            server.setAttachmentResponseHeaders(cherrypy, "calibration.json", "application/json")
+            return json.dumps(status)
+        
+    def PUT(self, *args, **kwargs):
+        try:
+            status = self.dewarpProcessor.unzipCalibration(kwargs["file"])
+        except dewarpProcessor.DewarpInProgressError as e:
+            raise cherrypy.HTTPError(409, e.message)
+        
+        if status is not None and status.get("ERROR_CODE"):
+            cherrypy.response.status = 500
+            server.setAttachmentResponseHeaders(cherrypy, "calibration.json", "application/json")
+            return json.dumps(status)
+
+    def DELETE(self):
+        try:
+            self.dewarpProcessor.deleteCalibrationUpload()
         except dewarpProcessor.DewarpInProgressError as e:
             raise cherrypy.HTTPError(409, e.message)
         
