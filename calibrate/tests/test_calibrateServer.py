@@ -101,7 +101,15 @@ class TestCalibrate(ServerTestCase):
         self.assertStatus(200)
         self.assertDictEqual({"status": calibrator.CALIBRATE_READY}, json.loads(self.body))
         
-    def test_03_get_complete(self):
+    def test_03_get_error(self):
+        expected = {"status": calibrator.CALIBRATE_ERROR}
+        io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
+        self.getPage(self.url)
+        self.assertStatus(500)
+        body = json.loads(self.body)
+        self.assertEquals(calibrator.CALIBRATE_ERROR, body["status"])
+
+    def test_04_get_complete(self):
         expected = {"status": calibrator.CALIBRATE_COMPLETE}
         io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url)
@@ -113,11 +121,11 @@ class TestCalibrate(ServerTestCase):
         regex = re.compile(regexPattern)
         self.assertTrue(regex.findall(body["url"]))
         
-    def test_04_delete(self):
+    def test_05_delete(self):
         self.getPage(self.url, method="DELETE")
         self.assertStatus(204)
 
-    def test_05_delete_error(self):
+    def test_06_delete_error(self):
         io.writeToJSONFile({"status": calibrator.CALIBRATE_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
