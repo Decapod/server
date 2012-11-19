@@ -117,7 +117,7 @@ class Capture(object):
                     currentIndex = index
                     position = position + 1
                     
-                arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index=position, cameraID=cameraID) + os.path.splitext(fileName)[1]
+                arcName = Template(DEFAULT_CAPTURE_NAME_TEMPLATE).safe_substitute(index=str(position).zfill(len(str(self.status.model["index"]))), cameraID=cameraID) + os.path.splitext(fileName)[1]
                 zFile.write(fileName, arcName)
 
             
