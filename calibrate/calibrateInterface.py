@@ -12,13 +12,7 @@ class CalibrateError(Exception): pass
 
 def calibrate(imagePath, calibratePath):
 
-    currentDir = os.getcwd()
-    os.chdir(calibratePath)
-    
     # Invokes the calibration command
-    # TODO: Need to update the path when the location of calibrate.py is determined
-    executable = os.path.join("..", "..", "..", "..", "decapod-dewarping", "calibrate.py")
+    executable = os.path.join("..", "..", "decapod-dewarping", "calibrate.py")
     cmd = [executable, imagePath, CHESSBOARD_WIDTH, CHESSBOARD_HEIGHT, calibratePath]
     utils.io.invokeCommandSync(cmd, CalibrateError, "An error occured while creating the calibration data.")
-    
-    os.chdir(currentDir)
