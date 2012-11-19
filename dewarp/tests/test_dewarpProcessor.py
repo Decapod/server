@@ -76,6 +76,23 @@ class TestDewarpProcessor(unittest.TestCase):
     def test_05_getCalibrationStatus(self):
         self.assertRaises(dewarpProcessor.CalibrationDirNotExistError, self.dewarpProcessor.getCalibrationStatus)
 
+    def test_05_getCalibrationStatus_invalid(self):
+        io.makeDirs(self.dewarpProcessor.calibrationDir)
+        shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
+        status = self.dewarpProcessor.getCalibrationStatus()
+        self.assertEqual(status["ERROR_CODE"], "INVALID_CALIBRATION")
+        
+    def test_05_getCalibrationStatus_invalid(self):
+        io.makeDirs(self.dewarpProcessor.calibrationDir)
+        shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
+        status = self.dewarpProcessor.getCalibrationStatus()
+        self.assertEqual(status["ERROR_CODE"], "INVALID_CALIBRATION")
+        
+    def test_05_getCalibrationStatus_valid(self):
+        shutil.copytree(os.path.join(MOCK_DATA_DIR, "valid-calibration"), self.dewarpProcessor.calibrationDir)
+        status = self.dewarpProcessor.getCalibrationStatus()
+        self.assertEqual(status, None)
+        
     def test_06_isInState(self):
         states = ["complete", "in progress", "ready"]
         for state in states:

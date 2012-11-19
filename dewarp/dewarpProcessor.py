@@ -2,11 +2,13 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'decapod-dewarping')))
 import dewarpInterface
 import mockDewarpInterface
 import utils
 from status import Status
 from store import FSStore
+from calib import load
 
 #constants for statuses
 DEWARP_IN_PROGRESS = "in progress"
@@ -45,6 +47,11 @@ class DewarpProcessor(object):
     def getCalibrationStatus(self):
         if not os.path.exists(self.calibrationDir):
             raise CalibrationDirNotExistError, "The directory \"{0}\" for the calibration zip does not exist.".format(self.calibrationDir)
+        
+        try:
+            load(self.calibrationDir)
+        except Exception:
+            return self.constructErrorStatus("INVALID_CALIBRATION", "The calibration data is invalid.")
     
     def getCapturesStatus(self, filenameTemplate=DEFAULT_CAPTURE_NAME_TEMPLATE):
         if not os.path.exists(self.unpackedDir):
