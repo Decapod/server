@@ -190,6 +190,9 @@ class DewarpedArchiveController(object):
         status = self.dewarpProcessor.getStatus()
         if status.get("status") == "complete":
             status["url"] = server.getURL(cherrypy, self.dewarpProcessor.export, CURRENT_DIR)
+        elif status.get("status") == "error":
+            cherrypy.response.status = 500
+            
         server.setAttachmentResponseHeaders(cherrypy, "status.json", "application/json")
         return json.dumps(status)
     
