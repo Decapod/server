@@ -97,12 +97,20 @@ class TestDewarpArchive(ServerTestCase):
     def test_01_unsupportedMethods(self):
         self.assertUnsupportedHTTPMethods(self.url, ["POST"])
         
-    def test_02__get(self):
+    def test_02_get(self):
         self.getPage(self.url)
         self.assertStatus(200)
         self.assertDictEqual({"status": dewarpProcessor.DEWARP_READY}, json.loads(self.body))
         
-    def test_03__get_complete(self):
+    def test_03_get_error(self):
+        expected = {"status": dewarpProcessor.DEWARP_ERROR}
+        io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
+        self.getPage(self.url)
+        self.assertStatus(500)
+        body = json.loads(self.body)
+        self.assertEquals(dewarpProcessor.DEWARP_ERROR, body["status"])
+        
+    def test_04_get_complete(self):
         expected = {"status": dewarpProcessor.DEWARP_COMPLETE}
         io.writeToJSONFile(expected, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url)
@@ -114,11 +122,11 @@ class TestDewarpArchive(ServerTestCase):
         regex = re.compile(regexPattern)
         self.assertTrue(regex.findall(body["url"]))
         
-    def test_04_delete(self):
+    def test_05_delete(self):
         self.getPage(self.url, method="DELETE")
         self.assertStatus(204)
 
-    def test_05_delete_error(self):
+    def test_06_delete_error(self):
         io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.getPage(self.url, method="DELETE")
         self.assertStatus(409)
@@ -135,23 +143,26 @@ class TestCalibration(ServerTestCase):
     def tearDown(self):
         io.rmTree(DATA_DIR)
         
-    def tests_01_get(self):
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.url, ["POST"])
+        
+    def tests_02_get(self):
         io.makeDirs(os.path.join(DATA_DIR, "calibration"))
         self.getPage(self.url)
-        self.assertStatus(200)
+        self.assertStatus(500)
         
-    def tests_02_get_none(self):
+    def tests_03_get_none(self):
         self.getPage(self.url)
         self.assertStatus(404)
         
-    def tests_03_delete(self):
+    def tests_04_delete(self):
         calibrationDir = os.path.join(DATA_DIR, "calibration")
         io.makeDirs(calibrationDir)
         self.getPage(self.url, method="DELETE")
         self.assertStatus(204)
         self.assertFalse(os.path.exists(calibrationDir))
         
-    def tests_04_delete_inProgress(self):
+    def tests_05_delete_inProgress(self):
         calibrationDir = os.path.join(DATA_DIR, "calibration")
         io.makeDirs(calibrationDir)
         io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
@@ -160,17 +171,21 @@ class TestCalibration(ServerTestCase):
         self.assertInBody("Dewarping in progress, cannot delete until this process has finished")
         self.assertTrue(os.path.exists(calibrationDir))
         
-    def tests_05_put(self):
+    def tests_06_put_error(self):
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"), method="PUT")
+        self.assertStatus(500)
+        
+    def tests_07_put(self):
+        self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "valid_calibration.zip"), method="PUT")
         self.assertStatus(200)
         
-    def tests_06_put_inProgress(self):
+    def tests_08_put_inProgress(self):
         io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"), method="PUT")
         self.assertStatus(409)
         self.assertInBody("Dewarping currently in progress, cannot accept another zip until this process has finished")
         
-    def tests_07_put_badZip(self):
+    def tests_09_put_badZip(self):
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), method="PUT")
         self.assertStatus(500)
 
@@ -186,24 +201,27 @@ class TestCaptures(ServerTestCase):
     def tearDown(self):
         io.rmTree(DATA_DIR)
         
-    def tests_01_get(self):
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.url, ["POST"])
+        
+    def tests_02_get(self):
         io.makeDirs(os.path.join(DATA_DIR, "unpacked"))
         self.getPage(self.url)
         self.assertStatus(200)
         self.assertDictEqual({"numOfCaptures": 0}, json.loads(self.body))
         
-    def tests_02_get_none(self):
+    def tests_03_get_none(self):
         self.getPage(self.url)
         self.assertStatus(404)
         
-    def tests_03_delete(self):
+    def tests_04_delete(self):
         unpackedDir = os.path.join(DATA_DIR, "unpacked")
         io.makeDirs(unpackedDir)
         self.getPage(self.url, method="DELETE")
         self.assertStatus(204)
         self.assertFalse(os.path.exists(unpackedDir))
         
-    def tests_04_delete_inProgress(self):
+    def tests_05_delete_inProgress(self):
         unpackedDir = os.path.join(DATA_DIR, "unpacked")
         io.makeDirs(unpackedDir)
         io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
@@ -212,18 +230,18 @@ class TestCaptures(ServerTestCase):
         self.assertInBody("Dewarping in progress, cannot delete until this process has finished")
         self.assertTrue(os.path.exists(unpackedDir))
         
-    def tests_05_put(self):
+    def tests_06_put(self):
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"), method="PUT")
         self.assertStatus(200)
         self.assertDictEqual({"numOfCaptures": 0}, json.loads(self.body))
         
-    def tests_06_put_inProgress(self):
+    def tests_07_put_inProgress(self):
         io.writeToJSONFile({"status": dewarpProcessor.DEWARP_IN_PROGRESS}, os.path.join(DATA_DIR, "status.json"));
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "empty_captures.zip"), method="PUT")
         self.assertStatus(409)
         self.assertInBody("Dewarping currently in progress, cannot accept another zip until this process has finished")
         
-    def tests_07_put_badZip(self):
+    def tests_08_put_badZip(self):
         self.uploadFile(self.url, os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), method="PUT")
         self.assertStatus(500)
 
