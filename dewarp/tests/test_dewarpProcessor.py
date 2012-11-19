@@ -76,33 +76,33 @@ class TestDewarpProcessor(unittest.TestCase):
     def test_05_getCalibrationStatus(self):
         self.assertRaises(dewarpProcessor.CalibrationDirNotExistError, self.dewarpProcessor.getCalibrationStatus)
 
-    def test_05_getCalibrationStatus_invalid(self):
+    def test_06_getCalibrationStatus_invalid(self):
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
         status = self.dewarpProcessor.getCalibrationStatus()
         self.assertEqual(status["ERROR_CODE"], "INVALID_CALIBRATION")
         
-    def test_05_getCalibrationStatus_invalid(self):
+    def test_07_getCalibrationStatus_invalid(self):
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
         status = self.dewarpProcessor.getCalibrationStatus()
         self.assertEqual(status["ERROR_CODE"], "INVALID_CALIBRATION")
         
-    def test_05_getCalibrationStatus_valid(self):
+    def test_08_getCalibrationStatus_valid(self):
         shutil.copytree(os.path.join(MOCK_DATA_DIR, "valid-calibration"), self.dewarpProcessor.calibrationDir)
         status = self.dewarpProcessor.getCalibrationStatus()
         self.assertEqual(status, None)
         
-    def test_06_isInState(self):
+    def test_09_isInState(self):
         states = ["complete", "in progress", "ready"]
         for state in states:
             self.dewarpProcessor.status.update("status", state)
             self.assertTrue(self.dewarpProcessor.isInState(state))
     
-    def test_07_isInState_false(self):
+    def test_10_isInState_false(self):
         self.assertFalse(self.dewarpProcessor.isInState("test"))
     
-    def test_08_delete(self):
+    def test_11_delete(self):
         io.makeDirs(self.dewarpProcessor.dewarpedDir)
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), self.dewarpProcessor.export)
         self.dewarpProcessor.status.update("status", "complete")
@@ -118,33 +118,33 @@ class TestDewarpProcessor(unittest.TestCase):
         self.assertDictEqual(self.status_ready, self.dewarpProcessor.status.model)
         self.assertStatusFile(self.status_ready, self.dewarpProcessor.statusFilePath)
     
-    def test_09_delete_inProgress(self):
+    def test_12_delete_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.delete)
     
-    def test_10_deleteCalibrationUpload(self):
+    def test_13_deleteCalibrationUpload(self):
         self.dewarpProcessor.status.update("status", "complete")
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         self.assertTrue(os.path.exists(self.dewarpProcessor.calibrationDir))
         self.dewarpProcessor.deleteCalibrationUpload()
         self.assertFalse(os.path.exists(self.dewarpProcessor.calibrationDir))
     
-    def test_11_deleteCalibrationUpload_inProgress(self):
+    def test_14_deleteCalibrationUpload_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.deleteCalibrationUpload)
     
-    def test_12_deleteCapturesUpload(self):
+    def test_15_deleteCapturesUpload(self):
         self.dewarpProcessor.status.update("status", "complete")
         io.makeDirs(self.dewarpProcessor.unpackedDir)
         self.assertTrue(os.path.exists(self.dewarpProcessor.unpackedDir))
         self.dewarpProcessor.deleteCapturesUpload()
         self.assertFalse(os.path.exists(self.dewarpProcessor.unpackedDir))
     
-    def test_13_deleteCapturesUpload_inProgress(self):
+    def test_16_deleteCapturesUpload_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.deleteCapturesUpload)
     
-    def test_14_unzip_badZip(self):
+    def test_17_unzip_badZip(self):
         io.makeDirs(self.dewarpProcessor.unpackedDir)
         origFilePath = os.path.join(self.dewarpProcessor.dataDir, "capture-0_1.jpg")
         shutil.copyfile(os.path.join(MOCK_DATA_DIR, "capture-0_1.jpg"), origFilePath)
@@ -152,11 +152,11 @@ class TestDewarpProcessor(unittest.TestCase):
         status = self.dewarpProcessor.unzip(os.path.join(testFile), "mock")
         self.assertEqual(status["ERROR_CODE"], "BAD_ZIP")
 
-    def test_15_unzipCalibration_inProgress(self):
+    def test_18_unzipCalibration_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.unzipCalibration, "mock")
         
-    def test_16_unzipCaptures_inProgress(self):
+    def test_19_unzipCaptures_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.unzipCaptures, "mock")
         
@@ -168,27 +168,27 @@ class TestDewarpProcessor(unittest.TestCase):
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         shutil.copy(os.path.join(MOCK_DATA_DIR, "calibration", "calibration.xml"), os.path.join(self.dewarpProcessor.calibrationDir, "calibration.xml"))
         
-    def test_17_dewarpImp_exceptions(self):
+    def test_20_dewarpImp_exceptions(self):
         self.assertRaises(dewarpProcessor.CalibrationDirNotExistError, self.dewarpProcessor.dewarpImp, "mock1", "mock2", "mock3")
         io.makeDirs(self.dewarpProcessor.calibrationDir)
         self.assertRaises(dewarpProcessor.UnpackedDirNotExistError, self.dewarpProcessor.dewarpImp, self.dewarpProcessor.calibrationDir, "mock2", "mock3")
 
-    def test_18_dewarpImp(self):
+    def test_21_dewarpImp(self):
         self.prepareDewarp()
         self.assertTrue(self.dewarpProcessor.dewarpImp(self.dewarpProcessor.calibrationDir, self.dewarpProcessor.unpackedDir, self.dewarpProcessor.dewarpedDir))
         self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))
         self.assertDictEqual(self.dewarpProcessor.getStatus(), {'currentCapture': 1, 'numOfCaptures': 1, 'status': 'ready'})
 
-    def test_19_dewarp_inProgress(self):
+    def test_22_dewarp_inProgress(self):
         self.dewarpProcessor.status.update("status", "in progress")
         self.assertRaises(dewarpProcessor.DewarpInProgressError, self.dewarpProcessor.dewarp)
 
-    def test_20_dewarp_exception(self):
+    def test_23_dewarp_exception(self):
         self.assertRaises(dewarpProcessor.DewarpError, self.dewarpProcessor.dewarp)
         self.assertFalse(os.path.exists(self.dewarpProcessor.dewarpedDir))
         self.assertDictEqual(self.status_error, self.dewarpProcessor.status.model)
 
-    def test_21_dewarp(self):
+    def test_24_dewarp(self):
         self.prepareDewarp()
         self.dewarpProcessor.dewarp()
         self.assertTrue(os.path.exists(self.dewarpProcessor.dewarpedDir))
