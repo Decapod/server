@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
-sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'decapod-dewarping')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'decapod-dewarping')))
 import dewarpInterface
 import mockDewarpInterface
 import utils

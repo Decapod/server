@@ -5,6 +5,7 @@ import shutil
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'decapod-dewarping')))
 import dewarpProcessor
 from utils import io
 import mockClasses
