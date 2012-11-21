@@ -120,7 +120,6 @@ class DewarpProcessor(object):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         
         self.deleteCalibrationUpload()
-        self.deleteCapturesUpload()
         self.delete()
         
         self.unzip(file, self.calibrationDir)
@@ -139,6 +138,7 @@ class DewarpProcessor(object):
             raise DewarpInProgressError, "Dewarping currently in progress, cannot accept another zip until this process has finished"
         
         self.deleteCapturesUpload()
+        self.deleteCalibrationUpload()
         self.delete()
         
         self.unzip(file, self.unpackedDir)
