@@ -18,6 +18,6 @@ def dewarpPair(calibrationDir, dewarpedPath, img1, img2):
     # TODO: Need to update the path when the location of dewarp.py is determined
     executable = os.path.join("..", "..", "..", "..", "decapod-dewarping", "dewarp.py")
     cmd = [executable, calibrationDir, img1, img2, DEWARP_PREFIX]
-    utils.io.invokeCommandSync(cmd)
+    utils.io.invokeCommandSync(cmd, DewarpError, "Error at dewarping")
     
     os.chdir(currentDir)
