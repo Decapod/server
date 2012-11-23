@@ -4,6 +4,7 @@ import sys
 import simplejson as json
 
 import dewarpProcessor
+import colourPickerProcessor
 
 sys.path.append(os.path.abspath(os.path.join('..', 'utils')))
 import resourcesource as rs
@@ -82,10 +83,12 @@ class DewarpServer(object):
         self.dataDir = rs.path(DATA_DIR)
         self.statusFile = rs.path(STATUS_FILE)
         self.dewarpProcessor = dewarpProcessor.DewarpProcessor(self.dataDir, self.statusFile)
+        self.colourPickerProcessor = colourPickerProcessor.ColourPickerProcessor(os.path.join(self.dataDir, "unpacked"))
 
         self.paths = {
             "captures": CapturesController(self.dewarpProcessor),
             "calibration": CalibrationController(self.dewarpProcessor),
+            "colourPicker": ColourPickerController(self.colourPickerProcessor),
             "dewarpedArchive": DewarpedArchiveController(self.dewarpProcessor)
         }
 
@@ -176,6 +179,19 @@ class CalibrationController(object):
         
         cherrypy.response.status = 204
         
+class ColourPickerController(object):
+    '''
+    Handler for the /colourPicker resource
+    '''
+    
+    exposed = True
+    
+    def __init__(self, colourPickerProcessor):
+        self.colourPickerProcessor = colourPickerProcessor
+    
+    def PUT(self):
+        self.colourPickerProcessor.pickColours()
+    
 class DewarpedArchiveController(object):
     '''
     Handler for the /dewarpedArchive resource

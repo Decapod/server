@@ -217,6 +217,7 @@ class DewarpProcessor(object):
         ==========
         UnpackedDirNotExistError: If the directory for the unpacked dewarping zip does not exist
         CalibrationDirNotExistError: If the directory for the unpacked dewarping zip does not exist
+        ExportAlreadyExists: If the export has already been generated
         '''
         
         if not os.path.exists(calibrationDir):
