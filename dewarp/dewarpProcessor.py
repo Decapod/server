@@ -23,6 +23,7 @@ class DewarpError(Exception): pass
 class DewarpInProgressError(Exception): pass
 class UnpackedDirNotExistError(Exception): pass
 class CalibrationDirNotExistError(Exception): pass
+class ExportAlreadyExist(Exception): pass
 
 class DewarpProcessor(object):
     
@@ -31,7 +32,7 @@ class DewarpProcessor(object):
         self.unpackedDir = os.path.join(self.dataDir, "unpacked")
         self.dewarpedDir = os.path.join(self.dataDir, "dewarped")
         self.calibrationDir = os.path.join(self.dataDir, "calibration")
-        self.export = os.path.join(self.dataDir, "export.zip")
+        self.export = os.path.join(self.dataDir, "captures-dewarped.zip")
         self.statusFilePath = statusFile
         self.dewarpController = mockDewarpInterface if testmode else dewarpInterface
 
@@ -184,6 +185,9 @@ class DewarpProcessor(object):
             self.status.update("status", DEWARP_IN_PROGRESS)
             try:
                 self.dewarpImp(self.calibrationDir, self.unpackedDir, self.dewarpedDir)
+            except ExportAlreadyExist:
+                self.status.update("status", DEWARP_COMPLETE)
+                return
             except Exception as e:
                 self.status.update("status", DEWARP_ERROR)
                 self.status.remove("numOfCaptures")
@@ -220,6 +224,9 @@ class DewarpProcessor(object):
         
         if not os.path.exists(unpackedDir):
             raise UnpackedDirNotExistError, "The directory \"{0}\" for the unpacked dewarping zip does not exist.".format(unpackedDir)
+        
+        if os.path.exists(self.export):
+            raise ExportAlreadyExist, "The dewarped captures zip file \"{0}\" already exists.".format(self.export)
         
         matched, unmatched = utils.image.findImagePairs(unpackedDir, filenameTemplate)
         
