@@ -8,6 +8,7 @@ import simplejson as json
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 sys.path.append(os.path.abspath(os.path.join('..', '..', 'utils')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'decapod-dewarping')))
 import dewarpProcessor
 import dewarpServer
 from utils import io, image
@@ -82,6 +83,21 @@ class TestRoot(ServerTestCase):
         self.getPage(self.expectedRedirectURL)
         self.assertStatus(200)
 
+class TestColourPicker(ServerTestCase):
+    url = "/colourPicker/"
+    
+    setup_server = staticmethod(setup_server)
+    teardown_server = staticmethod(teardown_server)
+    
+    def setUp(self):
+        io.makeDirs(DATA_DIR)
+    
+    def tearDown(self):
+        io.rmTree(DATA_DIR)
+    
+    def test_01_unsupportedMethods(self):
+        self.assertUnsupportedHTTPMethods(self.url, ["POST", "GET", "DELETE"])
+
 class TestDewarpArchive(ServerTestCase):
     url = "/dewarpedArchive/"
     
@@ -118,7 +134,7 @@ class TestDewarpArchive(ServerTestCase):
         body = json.loads(self.body)
         self.assertEquals(dewarpProcessor.DEWARP_COMPLETE, body["status"])
         
-        regexPattern = "http://127.0.0.1:\d*/data/export.zip"           
+        regexPattern = "http://127.0.0.1:\d*/data/captures-dewarped.zip"           
         regex = re.compile(regexPattern)
         self.assertTrue(regex.findall(body["url"]))
         
