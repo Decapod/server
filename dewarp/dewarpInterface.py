@@ -15,8 +15,7 @@ def dewarpPair(calibrationDir, dewarpedPath, img1, img2):
     ColourValuesMissing: If the colours file is missing. This file holds the colours used by dewarping to identify the page separater and background.
     '''
     
-    dewarpDir = os.path.join("..", "..", "decapod-dewarping")
-    colourFile = os.path.join(dewarpDir, ".colors")
+    colourFile = os.path.join(os.getcwd(), ".colors")
     if not os.path.exists(colourFile):
         raise ColourValuesMissing, "The \"{0}\" file is missing.".format(colourFile)
     
