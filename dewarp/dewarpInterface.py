@@ -20,6 +20,6 @@ def dewarpPair(calibrationDir, dewarpedPath, img1, img2):
         raise ColourValuesMissing, "The \"{0}\" file is missing.".format(colourFile)
     
     # Invokes the dewarping command
-    executable = os.path.join(dewarpDir, "dewarp.py")
+    executable = os.path.join("..", "..", "decapod-dewarping", "dewarp.py")
     cmd = [executable, calibrationDir, img1, img2, dewarpedPath]
     utils.io.invokeCommandSync(cmd, DewarpError, "Error at dewarping")
