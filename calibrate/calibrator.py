@@ -53,8 +53,8 @@ class Calibrator(object):
         if actualStereoImages == 0:
             return self.constructErrorStatus("NO_STEREO_IMAGES", "Selected archive does not appear to have stereo images.")
 
-        if actualStereoImages != REQUIRED_STEREO_IMAGES:
-            return self.constructErrorStatus("NOT_ENOUGH_IMAGES", "Not enough calibration images are detected: Need {0} stereo images, found {1}.".format(REQUIRED_STEREO_IMAGES, actualStereoImages), 
+        if actualStereoImages < REQUIRED_STEREO_IMAGES:
+            return self.constructErrorStatus("NOT_ENOUGH_IMAGES", "Not enough calibration images are detected: Need at least {0} stereo images, found {1}.".format(REQUIRED_STEREO_IMAGES, actualStereoImages), 
                                              {"requiredStereoImages": REQUIRED_STEREO_IMAGES, "DetectedStereoImages": actualStereoImages})
 
         return self.constructSucessStatus(len(matched))
